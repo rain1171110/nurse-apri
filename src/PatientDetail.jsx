@@ -12,7 +12,7 @@ export default function PatientDetails({
   setIsEditing,
   onUpdate,
   onErrorsChange,
-  usedRooms = [],
+  usedRoomsForEdit = [],
 }) {
   const {
     control,
@@ -21,16 +21,16 @@ export default function PatientDetails({
     reset,
     clearErrors,
   } = useForm({
-    resolver: zodResolver(makePatientSchemaPartial(usedRooms)),
+    resolver: zodResolver(makePatientSchemaPartial(usedRoomsForEdit)),
     mode: "onSubmit",
     reValidateMode: "onSubmit",
     defaultValues: {
-      name: patient.name,
-      room: patient.room,
-      age: patient.age || "",
-      disease: patient.disease || "",
-      history: patient.history || "",
-      progress: patient.progress || "",
+      name: patient?.name ?? "",
+      room: patient?.room ?? "",
+      age: patient?.age ?? "",
+      disease: patient?.disease ?? "",
+      history: patient?.history ?? "",
+      progress: patient?.progress ?? "",
     },
   });
 

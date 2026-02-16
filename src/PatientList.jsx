@@ -363,7 +363,7 @@ export default function PatientList({ onErrorsChange }) {
             setIsEditing={setIsEditing}
             onUpdate={updatePatient}
             onErrorsChange={onErrorsChange}
-            usedRooms={usedRoomsForEdit}
+            usedRoomsForEdit={usedRoomsForEdit}
           />
         </>
       ) : activeView === "vitals" ? (

@@ -1,0 +1,323 @@
+/* ============================================
+   クリーン医療テーマ - グローバルスタイル基盤
+   ============================================ */
+
+/* CSS変数定義 */
+:root {
+  /* 色 - クリーン医療パレット */
+  --color-primary: #0066cc; /* 医療青 */
+  --color-primary-light: #e6f0ff; /* 薄い医療青（背景） */
+  --color-secondary: #00a86b; /* 淡い緑（成功） */
+  --color-success: #10b981; /* 成功色 */
+  --color-warning: #f59e0b; /* 警告色 */
+  --color-error: #ef4444; /* エラー色 */
+
+  /* ニュートラルトーン */
+  --color-bg: #ffffff; /* 背景白 */
+  --color-bg-secondary: #f5f7fa; /* 薄い灰白（セクション背景） */
+  --color-text-primary: #1f2937; /* テキスト濃灰 */
+  --color-text-secondary: #6b7280; /* テキスト薄灰 */
+  --color-border: #e5e7eb; /* 線色 */
+  --color-divider: #d1d5db; /* 区切り線 */
+
+  /* 余白スケール（4pxベース） */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-2xl: 48px;
+
+  /* タイポグラフィ */
+  --font-family:
+    "BIZ UDPゴシック", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-size-xs: 12px;
+  --font-size-sm: 14px;
+  --font-size-base: 16px;
+  --font-size-lg: 18px;
+  --font-size-xl: 20px;
+  --font-size-2xl: 24px;
+  --font-size-3xl: 32px;
+
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-bold: 700;
+
+  --line-height-tight: 1.3;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.6;
+
+  /* 角丸 */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+
+  /* シャドウ */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+
+  /* トランジション */
+  --transition-fast: 150ms ease-in-out;
+  --transition-normal: 300ms ease-in-out;
+}
+
+/* ============================================
+   リセット・ベーススタイル
+   ============================================ */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-family);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-normal);
+  line-height: var(--line-height-relaxed);
+  color: var(--color-text-primary);
+  background-color: var(--color-bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ============================================
+   タイポグラフィ - 見出し階層
+   ============================================ */
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-tight);
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-md);
+}
+
+h1 {
+  font-size: var(--font-size-3xl);
+  margin-bottom: var(--space-lg);
+  letter-spacing: -0.5px;
+}
+
+h2 {
+  font-size: var(--font-size-2xl);
+  margin-bottom: var(--space-lg);
+  border-bottom: 2px solid var(--color-primary-light);
+  padding-bottom: var(--space-sm);
+}
+
+h3 {
+  font-size: var(--font-size-xl);
+  margin-bottom: var(--space-md);
+}
+
+h4 {
+  font-size: var(--font-size-lg);
+  margin-bottom: var(--space-sm);
+  font-weight: var(--font-weight-medium);
+}
+
+h5,
+h6 {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  margin-bottom: var(--space-sm);
+}
+
+/* ============================================
+   本文・パラグラフ
+   ============================================ */
+
+p {
+  margin-bottom: var(--space-md);
+}
+
+p:last-child {
+  margin-bottom: 0;
+}
+
+small {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+/* リンク */
+a {
+  color: var(--color-primary);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+a:hover {
+  color: var(--color-primary);
+  text-decoration: underline;
+}
+
+/* コード */
+code {
+  font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
+  background-color: var(--color-bg-secondary);
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+}
+
+/* ============================================
+   フォーム要素のリセット
+   ============================================ */
+
+input,
+textarea,
+select,
+button {
+  font-family: var(--font-family);
+  font-size: var(--font-size-base);
+}
+
+button {
+  cursor: pointer;
+  padding: var(--space-sm) var(--space-lg);
+  margin-bottom: var(--space-lg);
+  transition:
+    background-color var(--transition-fast),
+    color var(--transition-fast);
+}
+
+/* ============================================
+   行間と余白ルール
+   ============================================ */
+
+/* セクション間の余白 */
+section {
+  margin-bottom: var(--space-2xl);
+}
+
+section:last-child {
+  margin-bottom: 0;
+}
+
+/* リスト */
+ul,
+ol {
+  margin-left: var(--space-lg);
+  margin-bottom: var(--space-md);
+}
+
+li {
+  margin-bottom: var(--space-sm);
+}
+
+/* テーブル */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: var(--space-lg);
+}
+
+thead {
+  background-color: var(--color-primary-light);
+  border-bottom: 2px solid var(--color-primary);
+}
+
+th {
+  padding: var(--space-md);
+  text-align: left;
+  font-weight: var(--font-weight-bold);
+  color: var(--color-primary);
+}
+
+td {
+  padding: var(--space-md);
+  border-bottom: 1px solid var(--color-border);
+}
+
+tbody tr:hover {
+  background-color: var(--color-bg-secondary);
+}
+
+/* ============================================
+   ユーティリティクラス
+   ============================================ */
+
+/* テキスト配置 */
+.text-center {
+  text-align: center;
+}
+
+.text-right {
+  text-align: right;
+}
+
+/* テキスト色 */
+.text-primary {
+  color: var(--color-primary);
+}
+
+.text-secondary {
+  color: var(--color-text-secondary);
+}
+
+.text-success {
+  color: var(--color-success);
+}
+
+.text-warning {
+  color: var(--color-warning);
+}
+
+.text-error {
+  color: var(--color-error);
+}
+
+/* テキストサイズ */
+.text-sm {
+  font-size: var(--font-size-sm);
+}
+
+.text-lg {
+  font-size: var(--font-size-lg);
+}
+
+/* 太さ */
+.font-medium {
+  font-weight: var(--font-weight-medium);
+}
+
+.font-bold {
+  font-weight: var(--font-weight-bold);
+}
+
+/* 余白ユーティリティ */
+.mb-sm {
+  margin-bottom: var(--space-sm);
+}
+
+.mb-md {
+  margin-bottom: var(--space-md);
+}
+
+.mb-lg {
+  margin-bottom: var(--space-lg);
+}
+
+.mt-md {
+  margin-top: var(--space-md);
+}
+
+.p-md {
+  padding: var(--space-md);
+}
+
+.p-lg {
+  padding: var(--space-lg);
+}

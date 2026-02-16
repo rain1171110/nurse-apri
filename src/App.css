@@ -1,0 +1,599 @@
+/* ============================================
+   App.css - ページレイアウト基盤
+   ============================================ */
+
+/* ============================================
+   ルートコンテナ（#root）
+   ============================================ */
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--color-bg);
+}
+
+/* ============================================
+   ヘッダー
+   ============================================ */
+
+.app-header {
+  background-color: var(--color-primary);
+  color: white;
+  padding: var(--space-lg) var(--space-md);
+  box-shadow: var(--shadow-md);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.app-header h1 {
+  font-size: var(--font-size-2xl);
+  margin: 0;
+  color: white;
+}
+/* テーブルのヘッダー固定 */
+table thead {
+  position: sticky;
+  top: 0;
+  background-color: var(--color-primary-light);
+  z-index: 10;
+}
+
+/* ============================================
+   メイン コンテンツエリア
+   ============================================ */
+
+.app-main {
+  flex: 1;
+  padding: var(--space-lg);
+  overflow-y: auto;
+}
+
+/* コンテナ - 最大幅制限 */
+.container {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.container-sm {
+  max-width: 900px;
+}
+
+.container-md {
+  max-width: 1000px;
+}
+
+/* ============================================
+   グリッド・レイアウト
+   ============================================ */
+
+/* 2カラムレイアウト（一覧 + 詳細） */
+.layout-two-column {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-lg);
+  align-items: start;
+}
+
+/* サイドバー + メイン */
+.layout-sidebar {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: var(--space-lg);
+}
+
+/* 3カラムレイアウト */
+.layout-three-column {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-lg);
+}
+
+/* ============================================
+   セクション・エリア
+   ============================================ */
+
+.section {
+  margin-bottom: var(--space-2xl);
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-lg);
+  padding-bottom: var(--space-md);
+  border-bottom: 2px solid var(--color-primary-light);
+}
+
+.section-title {
+  margin: 0;
+  font-size: var(--font-size-2xl);
+  color: var(--color-text-primary);
+}
+
+.section-actions {
+  display: flex;
+  gap: var(--space-md);
+}
+
+/* ============================================
+   カード・パネル
+   ============================================ */
+
+.card {
+  background-color: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  box-shadow: var(--shadow-sm);
+  transition:
+    box-shadow var(--transition-normal),
+    transform var(--transition-normal);
+}
+
+.card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-md);
+  padding-bottom: var(--space-md);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.card-title {
+  margin: 0;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+}
+
+.card-body {
+  padding: 0;
+}
+
+.card-footer {
+  display: flex;
+  gap: var(--space-md);
+  margin-top: var(--space-lg);
+  padding-top: var(--space-lg);
+  border-top: 1px solid var(--color-border);
+}
+
+.panel {
+  background-color: var(--color-bg-secondary);
+  border-radius: var(--radius-md);
+  padding: var(--space-lg);
+  border-left: 4px solid var(--color-primary);
+}
+
+.panel.panel-success {
+  background-color: #f0fdf4;
+  border-left-color: var(--color-success);
+}
+
+.panel.panel-warning {
+  background-color: #fffbeb;
+  border-left-color: var(--color-warning);
+}
+
+.panel.panel-error {
+  background-color: #fef2f2;
+  border-left-color: var(--color-error);
+}
+
+/* ============================================
+   リスト・グリッド
+   ============================================ */
+
+.item-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.item-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: var(--space-lg);
+}
+
+/* ============================================
+   フォーム
+   ============================================ */
+
+.form-group {
+  margin-bottom: var(--space-lg);
+}
+
+.form-group:last-child {
+  margin-bottom: 0;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: var(--space-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
+}
+
+.form-required::after {
+  content: " *";
+  color: var(--color-error);
+}
+
+.form-actions {
+  display: flex;
+  gap: var(--space-md);
+  margin-top: var(--space-2xl);
+  justify-content: flex-end;
+}
+
+/* ============================================
+   ボタン（基本） */
+
+button {
+  padding: var(--space-sm) var(--space-lg);
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition:
+    background-color var(--transition-fast),
+    opacity var(--transition-fast);
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* プライマリボタン */
+.btn-primary {
+  background-color: var(--color-primary);
+  color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background-color: #0052a3;
+}
+
+/* セカンダリボタン */
+.btn-secondary {
+  background-color: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background-color: var(--color-border);
+}
+
+/* 危険ボタン */
+.btn-danger {
+  background-color: var(--color-error);
+  color: white;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background-color: #dc2626;
+}
+
+/* 成功ボタン */
+.btn-success {
+  background-color: var(--color-success);
+  color: white;
+}
+
+.btn-success:hover:not(:disabled) {
+  background-color: #059669;
+}
+
+/* ============================================
+   スピナー・ローディング
+   ============================================ */
+
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+}
+
+.loading-text {
+  margin-left: var(--space-md);
+  color: var(--color-text-secondary);
+}
+
+/* ============================================
+   開発用エラーパネル
+   ============================================ */
+
+.dev-error-panel {
+  position: fixed;
+  bottom: 0;
+  right: 0;
+  background: #fee;
+  padding: var(--space-md);
+  max-width: 400px;
+  font-size: 12px;
+  z-index: 9999;
+  color: #333;
+  border-left: 4px solid var(--color-error);
+  box-shadow: var(--shadow-lg);
+}
+
+.dev-error-panel pre {
+  background-color: #fff;
+  padding: var(--space-sm);
+  border-radius: var(--radius-sm);
+  overflow-y: auto;
+  max-height: 300px;
+}
+
+/* ============================================
+   モバイル対応（768px以下）
+   ============================================ */
+
+@media (max-width: 768px) {
+  .app-main {
+    padding: var(--space-md);
+  }
+
+  .layout-two-column {
+    grid-template-columns: 1fr;
+  }
+
+  .layout-sidebar {
+    grid-template-columns: 1fr;
+  }
+
+  .layout-three-column {
+    grid-template-columns: 1fr;
+  }
+
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .section-actions {
+    width: 100%;
+    margin-top: var(--space-md);
+  }
+
+  .card {
+    padding: var(--space-md);
+  }
+
+  .item-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .form-actions {
+    flex-direction: column-reverse;
+  }
+
+  .form-actions button {
+    width: 100%;
+  }
+}
+
+/* ============================================
+   ダークモード対応（将来用）
+   ============================================ */
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg: #1a1a1a;
+    --color-bg-secondary: #2d2d2d;
+    --color-text-primary: #f5f5f5;
+    --color-text-secondary: #b0b0b0;
+    --color-border: #3d3d3d;
+  }
+
+  .card {
+    background-color: var(--color-bg);
+  }
+
+  .app-header {
+    background-color: var(--color-primary);
+  }
+
+  .app-header h1 {
+    color: white;
+  }
+
+  /* フォーム要素をダークモード対応 */
+  input,
+  textarea,
+  input[type="text"],
+  input[type="number"],
+  input[type="date"],
+  input[type="email"] {
+    background-color: var(--color-bg-secondary) !important;
+    color: var(--color-text-primary) !important;
+    border-color: var(--color-border) !important;
+  }
+
+  /* すべてのテキスト要素を白く */
+  p,
+  span,
+  div,
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  a,
+  label {
+    color: var(--color-text-primary);
+  }
+
+  /* ボタンは個別に色を維持 */
+  button.btn-primary {
+    background-color: var(--color-primary);
+    color: white;
+  }
+
+  button.btn-secondary {
+    background-color: var(--color-bg-secondary);
+    color: var(--color-text-primary);
+    border: 1px solid var(--color-border);
+  }
+
+  button.btn-danger {
+    background-color: var(--color-error);
+    color: white;
+  }
+
+  button.btn-success {
+    background-color: var(--color-success);
+    color: white;
+  }
+
+  /* クラスのないボタンは白文字 */
+  button:not([class*="btn"]) {
+    color: var(--color-text-primary);
+  }
+
+  /* MUI TextField & Autocomplete対応 */
+  .MuiOutlinedInput-root {
+    color: var(--color-text-primary) !important;
+  }
+
+  .MuiOutlinedInput-root fieldset {
+    border-color: var(--color-border) !important;
+  }
+
+  .MuiInputBase-root {
+    color: var(--color-text-primary) !important;
+  }
+
+  .MuiInputBase-input {
+    background-color: var(--color-bg-secondary) !important;
+    color: var(--color-text-primary) !important;
+  }
+
+  .MuiInputBase-input::placeholder {
+    color: var(--color-text-secondary);
+    opacity: 0.7;
+  }
+
+  .MuiInputAdornment-root {
+    color: var(--color-text-secondary);
+  }
+
+  .MuiAutocomplete-paper {
+    background-color: var(--color-bg-secondary) !important;
+  }
+
+  .MuiAutocomplete-option {
+    color: var(--color-text-primary) !important;
+  }
+
+  .MuiAutocomplete-option[aria-selected="true"] {
+    background-color: #3d5a80 !important;
+  }
+
+  .MuiAutocomplete-option:hover {
+    background-color: #4a5f7f !important;
+  }
+
+  .MuiFormHelperText-root {
+    color: var(--color-text-secondary) !important;
+  }
+
+  .MuiFormLabel-root {
+    color: var(--color-text-secondary) !important;
+  }
+
+  /* Snackbar / Alert 対応 */
+  .MuiAlert-root {
+    background-color: var(--color-bg-secondary) !important;
+    color: var(--color-text-primary) !important;
+  }
+
+  .MuiAlert-standardSuccess {
+    background-color: rgba(16, 185, 129, 0.2) !important;
+    color: var(--color-success) !important;
+  }
+
+  .MuiAlert-standardError {
+    background-color: rgba(239, 68, 68, 0.2) !important;
+    color: var(--color-error) !important;
+  }
+
+  .MuiAlert-icon {
+    color: inherit !important;
+  }
+
+  /* DatePicker対応 */
+  .MuiTextField-root input {
+    background-color: var(--color-bg-secondary) !important;
+    color: var(--color-text-primary) !important;
+  }
+
+  .MuiPickersCalendarHeader-root {
+    background-color: var(--color-bg-secondary);
+    color: var(--color-text-primary);
+  }
+
+  /* DatePickerのカレンダー全体 */
+  .MuiPickersPopper-root,
+  .MuiPickersPopperPaper-root,
+  .MuiDateCalendar-root {
+    background-color: var(--color-bg-secondary) !important;
+    color: var(--color-text-primary) !important;
+  }
+
+  /* 日付ボタン */
+  .MuiPickersDay-root {
+    color: var(--color-text-primary) !important;
+  }
+
+  .MuiPickersDay-today {
+    border-color: var(--color-primary) !important;
+  }
+
+  .MuiPickersDay-root.Mui-selected {
+    background-color: var(--color-primary) !important;
+    color: white !important;
+  }
+
+  /* 月選択などのヘッダー */
+  .MuiPickersToolbar-root {
+    background-color: var(--color-bg-secondary) !important;
+    color: var(--color-text-primary) !important;
+  }
+
+  /* テキストフィールド入力 */
+  .MuiOutlinedInput-input {
+    color: var(--color-text-primary) !important;
+  }
+
+  /* 背景色の確実な指定 */
+  .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+    border-color: var(--color-primary) !important;
+  }
+
+  /* 開発用エラーパネルをダークモード対応 */
+  .dev-error-panel {
+    background: #2d2d2d;
+    color: #f5f5f5;
+    border-left-color: var(--color-error);
+  }
+
+  .dev-error-panel pre {
+    background-color: var(--color-bg);
+    color: var(--color-text-primary);
+  }
+}

@@ -232,7 +232,6 @@ table thead {
   display: flex;
   gap: var(--space-md);
   margin-top: var(--space-2xl);
-  justify-content: flex-end;
 }
 
 /* ============================================

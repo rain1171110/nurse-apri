@@ -35,13 +35,14 @@ export default function PatientDetails({
   });
 
   useEffect(() => {
+    if (!patient) return;
     reset({
-      name: patient.name,
-      room: patient.room,
-      age: patient.age || "",
-      disease: patient.disease || "",
-      history: patient.history || "",
-      progress: patient.progress || "",
+      name: patient.name ?? "",
+      room: patient.room ?? "",
+      age: patient.age ?? "",
+      disease: patient.disease ?? "",
+      history: patient.history ?? "",
+      progress: patient.progress ?? "",
     });
   }, [patient, reset]);
 

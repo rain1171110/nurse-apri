@@ -111,6 +111,7 @@ export default function PatientDetails({
           <form
             onSubmit={handleSubmit((data) => {
               const updated = { ...patient, ...data };
+              reset(updated);
               onUpdate(updated);
               clearErrors();
               if (onErrorsChange) {

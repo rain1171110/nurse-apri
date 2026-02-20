@@ -8,14 +8,13 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { makePatientSchemaPartial } from "./schema";
 import { extractUsedRoomNumbers } from "./Utils";
+import { fetchAppData, saveAppData } from "./api/patientApi";
 
 import { CircularProgress, Snackbar, Alert, TextField } from "@mui/material";
 
 import { useEffect, useState, useMemo } from "react";
 
 export default function PatientList({ onErrorsChange }) {
-  const API_BASE = "http://localhost:3001/api";
-
   const [patients, setPatients] = useState([]);
 
   const [selectedPatient, setSelectedPatient] = useState(null);
@@ -34,11 +33,7 @@ export default function PatientList({ onErrorsChange }) {
       setIsLoading(true);
       setApiError("");
       try {
-        const res = await fetch(`${API_BASE}/data`);
-        if (!res.ok) {
-          throw new Error(`API error:${res.status}`);
-        }
-        const data = await res.json();
+        const data = await fetchAppData();
         setPatients(Array.isArray(data.patients) ? data.patients : []);
         setRecords(Array.isArray(data.records) ? data.records : []);
         setHasLoaded(true);
@@ -59,15 +54,8 @@ export default function PatientList({ onErrorsChange }) {
     const saveData = async () => {
       setIsSaving(true);
       try {
-        const res = await fetch(`${API_BASE}/data`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ patients, records }),
-        });
+        await saveAppData({ patients, records });
         setSaveSuccess(true);
-        if (!res.ok) {
-          throw new Error(`API error:${res.status}`);
-        }
       } catch (error) {
         console.error(error);
         setApiError("APIへの保存に失敗しました");

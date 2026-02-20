@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { makePatientSchemaPartial } from "./schema";
+import { makePatientSchemaPartial, runPatientValidationCases } from "./schema";
 
 import { TextField } from "@mui/material";
 
@@ -60,6 +60,12 @@ export default function PatientDetails({
       }
     }
   }, [isEditing, clearErrors, onErrorsChange]);
+
+  useEffect(() => {
+    if (!import.meta.env.DEV) return;
+    const results = runPatientValidationCases();
+    console.table(results);
+  }, []);
 
   return (
     <div className="container-sm">

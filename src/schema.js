@@ -50,6 +50,78 @@ export const makePatientSchemaPartial = (usedRooms) => {
     });
 };
 
+export const createPatientValidationCases = () => [
+  {
+    id: "normal-input",
+    label: "正常入力",
+    usedRooms: [101, 102],
+    input: {
+      name: "山田太郎",
+      room: "103",
+      age: "70",
+      disease: "肺炎",
+      history: "高血圧",
+      progress: "解熱傾向",
+    },
+    expectValid: true,
+  },
+  {
+    id: "duplicate-room",
+    label: "重複部屋",
+    usedRooms: [101, 102],
+    input: {
+      name: "山田太郎",
+      room: "101",
+      age: "70",
+      disease: "肺炎",
+      history: "高血圧",
+      progress: "解熱傾向",
+    },
+    expectValid: false,
+    expectErrorPath: "room",
+  },
+  {
+    id: "required-missing",
+    label: "必須未入力",
+    usedRooms: [101, 102],
+    input: {
+      name: "",
+      room: "103",
+      age: "70",
+      disease: "肺炎",
+      history: "高血圧",
+      progress: "解熱傾向",
+    },
+    expectValid: false,
+    expectErrorPath: "name",
+  },
+];
+
+export const runPatientValidationCases = () => {
+  return createPatientValidationCases().map((testCase) => {
+    const schema = makePatientSchemaPartial(testCase.usedRooms);
+    const result = schema.safeParse(testCase.input);
+    const firstPath = result.success
+      ? ""
+      : (result.error.issues[0]?.path ?? []).join(".");
+
+    return {
+      id: testCase.id,
+      label: testCase.label,
+      expected: testCase.expectValid ? "valid" : "invalid",
+      actual: result.success ? "valid" : "invalid",
+      ok:
+        result.success === testCase.expectValid &&
+        (testCase.expectErrorPath == null ||
+          firstPath === testCase.expectErrorPath),
+      firstErrorPath: firstPath,
+      firstErrorMessage: result.success
+        ? ""
+        : (result.error.issues[0]?.message ?? ""),
+    };
+  });
+};
+
 export const recordSchema = z.object({
   date: z.string().trim().min(1, "日付は必須").optional(),
   author: z.string().trim().min(1, "記録者は必須"),

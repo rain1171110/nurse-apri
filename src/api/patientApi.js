@@ -18,6 +18,5 @@ export const saveAppData = async (payload) => {
   if (!response.ok) {
     throw new Error(`API error:${response.status}`);
   }
-
   return response.json();
 };

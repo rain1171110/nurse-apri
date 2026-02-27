@@ -121,6 +121,10 @@ export const runPatientValidationCases = () => {
     };
   });
 };
+// ブラウザのコンソールから叩けるようにする（安全ガード付き）
+if (typeof window !== "undefined") {
+  window.runPatientValidationCases = runPatientValidationCases;
+}
 
 export const recordSchema = z.object({
   date: z.string().trim().min(1, "日付は必須").optional(),

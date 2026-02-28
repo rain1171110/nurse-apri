@@ -22,18 +22,8 @@ export const makePatientSchemaPartial = (usedRooms) => {
         .refine((v) => !/\d/.test(v), {
           message: "氏名に数字を含めることはできません",
         }),
-      room: z.preprocess(
-        (v) => (v === "" || v == null ? undefined : Number(v)),
-        z
-          .number()
-          .min(1, "部屋番号は1以上")
-          .max(999, "部屋番号は999以下")
-          .optional(),
-      ),
-      age: z.preprocess(
-        (v) => (v === "" || v == null ? undefined : Number(v)),
-        z.number().min(0, "年齢は0以上").max(150, "年齢は150以下").optional(),
-      ),
+      room: optionalNumber(1, 999, "部屋番号は1以上", "部屋番号は999以下"),
+      age: optionalNumber(0, 150, "年齢は0以上", "年齢は150以下"),
       disease: z.string().trim().optional(),
       history: z.string().trim().optional(),
       progress: z.string().trim().optional(),
@@ -79,6 +69,7 @@ export const createPatientValidationCases = () => [
     },
     expectValid: false,
     expectErrorPath: "room",
+    expectErrorMessage: "この部屋番号は既に使用されています",
   },
   {
     id: "required-missing",
@@ -94,6 +85,23 @@ export const createPatientValidationCases = () => [
     },
     expectValid: false,
     expectErrorPath: "name",
+    expectErrorMessage: "氏名は必須です",
+  },
+  {
+    id: "room-not-number",
+    label: "部屋番号が数字でない",
+    usedRooms: [101, 102],
+    input: {
+      name: "山田太郎",
+      room: "abc", // 数字でない部屋番号の入力
+      age: "70",
+      disease: "肺炎",
+      history: "高血圧",
+      progress: "解熱傾向",
+    },
+    expectValid: false,
+    expectErrorPath: "room",
+    expectErrorMessage: "数字を入力して下さい",
   },
 ];
 
@@ -122,14 +130,14 @@ export const runPatientValidationCases = () => {
   });
 };
 // ブラウザのコンソールから叩けるようにする（安全ガード付き）
-if (typeof window !== "undefined") {
+if (import.meta.env?.DEV && typeof window !== "undefined") {
   window.runPatientValidationCases = runPatientValidationCases;
 }
 
 export const recordSchema = z.object({
   date: z.string().trim().min(1, "日付は必須").optional(),
   author: z.string().trim().min(1, "記録者は必須"),
-  content: z.string().optional(),
+  content: z.string().trim().optional(),
   vitals: z.object({
     T: optionalNumber(35, 42, "体温は35以上", "体温は42以下"),
     P: optionalNumber(0, 200, "脈拍は0以上", "脈拍は200以下"),

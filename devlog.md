@@ -480,3 +480,194 @@ Vitest は画面のテストではなく、
 
 「なぜテストがあると“安心してリファクタリングできる”のか」
 をやると、テストの価値が一気に腑に落ちます。
+
+## 2026-03-01 学習ログ（Vitest導入 / Zodリファクタリング）
+
+---
+
+### 1. Vitestをターミナルで実行できるようになった
+
+```bash
+npm exec vitest run
+```
+
+- ターミナルから自動テストを実行できた
+- watchモードでは保存するたびにテストが自動実行される
+- テストの役割は「正しいか確認」ではなく
+  **リファクタリングしても壊れていないことを保証する保険**
+
+---
+
+### 2. フォーム入力とZodのズレを理解
+
+ユーザーがフォームに入力：
+
+```html
+<input name="age" />
+```
+
+画面では
+
+```
+70
+```
+
+と入力しているが、JavaScriptに届く値は
+
+```js
+"70";
+```
+
+数値ではなく「文字列」。
+
+そのため、これだけでは失敗する：
+
+```js
+z.number().safeParse("70");
+// ❌ 失敗
+```
+
+---
+
+### 3. preprocess の役割（検証前の通訳）
+
+```js
+z.preprocess((v) => Number(v), z.number());
+```
+
+処理の流れ：
+
+```
+"70"
+↓
+70 に変換
+↓
+number検証
+```
+
+つまり
+**Zodが理解できる形に直してから検証する仕組み。**
+
+---
+
+### 4. optionalNumber の理解（今日の核心）
+
+作成した関数：
+
+```js
+export const optionalNumber = (min, max, msgMin, msgMax) =>
+  z
+    .union([z.string(), z.number()])
+    .optional()
+    .transform((v) => (v == null ? "" : String(v).trim()))
+    .transform((v) => (v === "" ? undefined : Number(v)))
+    .refine((v) => v === undefined || Number.isFinite(v), {
+      message: "数字を入力して下さい",
+    })
+    .refine((v) => v === undefined || v >= min, { message: msgMin })
+    .refine((v) => v === undefined || v <= max, { message: msgMax });
+```
+
+これは単なる「数値チェック関数」ではない。
+
+#### この関数が定義しているもの
+
+- 空欄 → 未入力として扱う
+- 数字以外 → 「数字を入力して下さい」
+- 範囲外 → min/maxエラー
+- 空白付き → 自動補正
+
+つまり
+
+> このアプリにおける「数値入力の仕様」を定義している
+
+Zodを使っているのではなく
+**Zodでアプリのルールを作っている状態**と理解した。
+
+---
+
+### 5. リファクタリング（重要）
+
+修正前（項目ごとに別ルール）：
+
+```js
+room: z.preprocess(
+  (v) => (v === "" || v == null ? undefined : Number(v)),
+  z.number().min(1).max(999).optional()
+),
+
+age: z.preprocess(
+  (v) => (v === "" || v == null ? undefined : Number(v)),
+  z.number().min(0).max(150).optional()
+),
+```
+
+修正後（ルールを統一）：
+
+```js
+room: optionalNumber(1, 999, "部屋番号は1以上", "部屋番号は999以下"),
+age: optionalNumber(0, 150, "年齢は0以上", "年齢は150以下"),
+```
+
+効果：
+
+- 数値入力の仕様を1箇所に集約
+- 将来の仕様変更は `optionalNumber` だけ直せばよい
+- バグが入りにくくなる
+
+---
+
+### 6. テストの追加（仕様を守る）
+
+テストケースを追加：
+
+```js
+{
+  id: "room-not-number",
+  label: "部屋番号が数字でない",
+  usedRooms: [101, 102],
+  input: {
+    name: "山田太郎",
+    room: "abc",
+    age: "70",
+    disease: "肺炎",
+    history: "高血圧",
+    progress: "解熱傾向",
+  },
+  expectValid: false,
+  expectErrorPath: "room",
+  expectErrorMessage: "数字を入力して下さい",
+}
+```
+
+テスト側：
+
+```js
+expect(firstIssue?.message).toBe(c.expectErrorMessage);
+```
+
+ここで理解したこと：
+
+- テストはコードを守るものではない
+- **ユーザーに見える挙動（仕様）を守るもの**
+
+---
+
+### 7. 今日の最重要理解
+
+リファクタリングとは
+
+```
+コードを綺麗にすること
+ではない
+↓
+動きを変えずに壊れにくくすること
+```
+
+Vitestにより開発スタイルが変化した：
+
+- Before：ブラウザを触って確認する開発
+- After：テストで安全を確保して変更できる開発
+
+つまり今日、
+**「動けばOKの学習アプリ」から「壊れない設計のアプリ」へ一歩進んだ。**

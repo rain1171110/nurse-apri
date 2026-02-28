@@ -25,11 +25,13 @@ describe("Patient Schema Validation - Invalid Cases", () => {
       const result = schema.safeParse(c.input);
       expect(result.success).toBe(false);
       if (!result.success) {
-        const firstErrorPath = result.error.issues[0]?.path.join(".") || "";
+        const firstIssue = result.error.issues[0];
+        const firstErrorPath = firstIssue?.path.join(".") || "";
         expect(firstErrorPath).toBe(c.expectErrorPath);
+        if (c.expectErrorMessage) {
+          expect(firstIssue?.message).toBe(c.expectErrorMessage);
+        }
       }
     });
   });
 });
-
-

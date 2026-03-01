@@ -671,3 +671,156 @@ Vitestにより開発スタイルが変化した：
 
 つまり今日、
 **「動けばOKの学習アプリ」から「壊れない設計のアプリ」へ一歩進んだ。**
+
+## 2026-03-02
+
+### 学習ログ（PatientList 通信分離 DRAFT）
+
+#### 1. 通信分離とは
+
+通信分離とは、`fetch` を別ファイルに置くことではない。
+画面コンポーネントがサーバーと直接通信しない構造にすること。
+
+役割分担：
+
+| 役割             | 担当           |
+| ---------------- | -------------- |
+| 画面表示・操作   | PatientList    |
+| データ管理・保存 | App            |
+| データ保管       | Express Server |
+
+PatientListは「この状態にしたい」と提案するだけで、保存はAppが行う。
+
+#### 2. 変更前（通信分離前）
+
+PatientList が直接保存していた：
+
+```js
+useEffect(() => {
+  if (!hasLoaded) return;
+
+  const saveData = async () => {
+    setIsSaving(true);
+    try {
+      await saveAppData({ patients, records });
+      setSaveSuccess(true);
+    } catch (error) {
+      setApiError("APIへの保存に失敗しました");
+      setSaveSuccess(false);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+  saveData();
+}, [patients, records, hasLoaded]);
+```
+
+問題：
+
+- `patients` / `records` が変わるたびに自動保存
+- PatientList が保存係になってしまう
+- データの正本が画面側に存在してしまう
+
+#### 3. 変更後（通信分離DRAFT）
+
+自動保存 `useEffect` を削除し、保存ボタン方式へ変更。
+
+PatientList：
+
+```js
+const handleSave = async () => {
+  setIsSaving(true);
+  setApiError("");
+  try {
+    await onSaveData({ patients, records });
+    setSaveSuccess(true);
+  } catch (e) {
+    setApiError("APIへの保存に失敗しました");
+    setSaveSuccess(false);
+  } finally {
+    setIsSaving(false);
+  }
+};
+```
+
+ボタンで保存：
+
+```jsx
+<button onClick={handleSave} disabled={isSaving}>
+  保存
+</button>
+```
+
+ポイント：
+
+- PatientList は `saveAppData` を呼ばない
+- 親に保存を依頼するだけ
+
+#### 4. Appが保存係になる
+
+App が保存処理を担当：
+
+```js
+import { saveAppData } from "./api/patientApi";
+
+const onSaveData = async (payload) => {
+  await saveAppData(payload);
+};
+```
+
+そして PatientList に渡す：
+
+```jsx
+<PatientList onErrorsChange={setGlobalErrors} onSaveData={onSaveData} />
+```
+
+これで通信は App に1箇所だけ存在する。
+
+#### 5. サーバー側の修正理由
+
+PUTの返り値を変更：
+
+変更前：
+
+```js
+res.json({ ok: true });
+```
+
+変更後：
+
+```js
+const next = { patients, records };
+writeData(next);
+res.json(next);
+```
+
+理由：
+Reactが必要なのは「成功したか」だけではなく、
+保存後の正式なデータだから。
+
+#### 6. なぜ必要か（Single Source of Truth）
+
+データの正解（正本）は1か所に集める必要がある。
+
+もし PatientList が保存すると：
+
+- 画面ごとに保存処理が生まれる
+- `patients` と `records` の整合性が崩れる
+- 上書き事故が起きる
+
+Reactではこれを防ぐために
+Single Source of Truth（単一の情報源）を作る。
+
+今回の正本は App。
+
+### 今日の結論（つまり）
+
+通信分離とは
+「画面コンポーネントが直接サーバー保存する構造」をやめ、
+
+- PatientList：変更案を作る
+- App：保存して正本を管理する
+
+という責任分離の設計である。
+
+これにより、アプリ全体のデータ整合性が保たれる。

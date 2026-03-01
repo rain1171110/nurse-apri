@@ -2,11 +2,15 @@ import { useState, useEffect, useRef } from "react";
 import PatientList from "./PatientList";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { saveAppData } from "./api/patientApi";
 
 function App() {
   const [globalErrors, setGlobalErrors] = useState({});
   const [displayErrors, setDisplayErrors] = useState({});
   const timerRef = useRef(null);
+  const onSaveData = async (payload) => {
+    await saveAppData(payload);
+  };
 
   useEffect(() => {
     // エラーが新しく出た時
@@ -36,7 +40,7 @@ function App() {
         <h1>看護記録システム</h1>
       </header>
       <main className="app-main">
-        <PatientList onErrorsChange={setGlobalErrors} />
+        <PatientList onErrorsChange={setGlobalErrors} onSaveData={onSaveData} />
         {import.meta.env.DEV && Object.keys(displayErrors).length > 0 && (
           <div className="dev-error-panel">
             <strong>Validation Errors:</strong>

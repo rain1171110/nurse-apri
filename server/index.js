@@ -39,8 +39,9 @@ app.put("/api/data", (req, res) => {
     if (!Array.isArray(patients) || !Array.isArray(records)) {
       return res.status(400).json({ error: "invalid payload" });
     }
-    writeData({ patients, records });
-    res.json({ ok: true });
+    const next = { patients, records };
+    writeData(next);
+    res.json(next);
   } catch (error) {
     console.error("PUT /api/data error:", error);
     res.status(500).json({ error: "Failed to write data" });

@@ -48,24 +48,38 @@ export default function PatientList({ onErrorsChange }) {
     fetchData();
   }, []);
 
-  useEffect(() => {
-    if (!hasLoaded) return;
+  // useEffect(() => {
+  //   if (!hasLoaded) return;
+  //   const saveData = async () => {
+  //     setIsSaving(true);
+  //     try {
+  //       await saveAppData({ patients, records });
+  //       setSaveSuccess(true);
+  //     } catch (error) {
+  //       console.error(error);
+  //       setApiError("APIへの保存に失敗しました");
+  //       setSaveSuccess(false);
+  //     } finally {
+  //       setIsSaving(false);
+  //     }
+  //   };
+  //   saveData();
+  // }, [patients, records, hasLoaded]);
 
-    const saveData = async () => {
-      setIsSaving(true);
-      try {
-        await saveAppData({ patients, records });
-        setSaveSuccess(true);
-      } catch (error) {
-        console.error(error);
-        setApiError("APIへの保存に失敗しました");
-        setSaveSuccess(false);
-      } finally {
-        setIsSaving(false);
-      }
-    };
-    saveData();
-  }, [patients, records, hasLoaded]);
+  const handleSave = async () => {
+    setIsSaving(true);
+    setApiError("");
+    try {
+      await onSaveData({ patients, records });
+      setSaveSuccess(true);
+    } catch (e) {
+      console.error(e);
+      setApiError("APIへの保存に失敗しました");
+      setSaveSuccess(false);
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   useEffect(() => {
     if (!saveSuccess) return;
@@ -249,6 +263,14 @@ export default function PatientList({ onErrorsChange }) {
 
       {!selectedPatient ? (
         <section className="section">
+          {/* 仮ボタン */}
+          <button
+            onClick={handleSave}
+            disabled={isSaving}
+            className="btn-primary"
+          >
+            保存
+          </button>
           <div className="section-header">
             <h1 className="section-title">患者一覧</h1>
             <div className="section-actions">

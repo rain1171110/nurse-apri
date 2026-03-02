@@ -8,73 +8,36 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { makePatientSchemaPartial } from "./schema";
 import { extractUsedRoomNumbers } from "./Utils";
-import { fetchAppData, saveAppData } from "./api/patientApi";
-
 import { CircularProgress, Snackbar, Alert, TextField } from "@mui/material";
 
 import { useEffect, useState, useMemo } from "react";
 
-export default function PatientList({ onErrorsChange }) {
-  const [patients, setPatients] = useState([]);
-
+export default function PatientList({
+  onErrorsChange,
+  onSaveData,
+  patients,
+  records,
+  setPatients,
+  setRecords,
+  isLoading,
+  apiError,
+}) {
   const [selectedPatient, setSelectedPatient] = useState(null);
-  const [records, setRecords] = useState([]);
+  const [saveError, setSaveError] = useState("");
 
-  const [apiError, setApiError] = useState("");
-
-  const [isLoading, setIsLoading] = useState(true);
-
-  const [hasLoaded, setHasLoaded] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setIsLoading(true);
-      setApiError("");
-      try {
-        const data = await fetchAppData();
-        setPatients(Array.isArray(data.patients) ? data.patients : []);
-        setRecords(Array.isArray(data.records) ? data.records : []);
-        setHasLoaded(true);
-      } catch (error) {
-        console.error(error);
-        setApiError("APIから読み込めませんでした");
-        setHasLoaded(true);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchData();
-  }, []);
-
-  // useEffect(() => {
-  //   if (!hasLoaded) return;
-  //   const saveData = async () => {
-  //     setIsSaving(true);
-  //     try {
-  //       await saveAppData({ patients, records });
-  //       setSaveSuccess(true);
-  //     } catch (error) {
-  //       console.error(error);
-  //       setApiError("APIへの保存に失敗しました");
-  //       setSaveSuccess(false);
-  //     } finally {
-  //       setIsSaving(false);
-  //     }
-  //   };
-  //   saveData();
-  // }, [patients, records, hasLoaded]);
 
   const handleSave = async () => {
     setIsSaving(true);
-    setApiError("");
+    setSaveError("");
     try {
       await onSaveData({ patients, records });
       setSaveSuccess(true);
     } catch (e) {
       console.error(e);
-      setApiError("APIへの保存に失敗しました");
+      setSaveError("APIへの保存に失敗しました");
       setSaveSuccess(false);
     } finally {
       setIsSaving(false);
@@ -90,12 +53,12 @@ export default function PatientList({ onErrorsChange }) {
   }, [saveSuccess]);
 
   useEffect(() => {
-    if (apiError === "") return;
+    if (saveError === "") return;
     const timer = setTimeout(() => {
-      setApiError("");
+      setSaveError("");
     }, 5000);
     return () => clearTimeout(timer);
-  }, [apiError]);
+  }, [saveError]);
 
   const [selectedRecordId, setSelectedRecordId] = useState(null);
 
@@ -255,9 +218,19 @@ export default function PatientList({ onErrorsChange }) {
           anchorOrigin={{ vertical: "top", horizontal: "center" }}
           open={true}
           autoHideDuration={5000}
-          onClose={() => setApiError("")}
         >
           <Alert severity="error">{apiError}</Alert>
+        </Snackbar>
+      )}
+
+      {saveError && (
+        <Snackbar
+          anchorOrigin={{ vertical: "top", horizontal: "center" }}
+          open={true}
+          autoHideDuration={5000}
+          onClose={() => setSaveError("")}
+        >
+          <Alert severity="error">{saveError}</Alert>
         </Snackbar>
       )}
 

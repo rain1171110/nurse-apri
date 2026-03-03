@@ -22,12 +22,11 @@ export default function PatientList({
   isLoading,
   apiError,
 }) {
-  const [selectedPatient, setSelectedPatient] = useState(null);
+  const [selectedPatientId, setSelectedPatientId] = useState(null);
   const [saveError, setSaveError] = useState("");
 
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
-
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -74,7 +73,7 @@ export default function PatientList({
   const [showAddForm, setShowAddForm] = useState(false);
 
   const handleSelect = (patient, view = "menu", recordId) => {
-    setSelectedPatient(patient);
+    setSelectedPatientId(patient.id);
     if (view === "recordItem") {
       setSelectedRecordId(recordId);
     } else {
@@ -84,7 +83,7 @@ export default function PatientList({
   };
 
   const handleBack = () => {
-    setSelectedPatient(null);
+    setSelectedPatientId(null);
     setActiveView("list");
   };
 
@@ -113,8 +112,8 @@ export default function PatientList({
     : [];
 
   const updatePatient = (updated) => {
-    setPatients((prevPatients) => {
-      return prevPatients.map((patient) => {
+    setPatients((prev) => {
+      return prev.map((patient) => {
         if (patient.id === updated.id) {
           return updated;
         } else {
@@ -122,8 +121,12 @@ export default function PatientList({
         }
       });
     });
-    setSelectedPatient(updated);
   };
+
+  const selectedPatient = useMemo(() => {
+    if (selectedPatientId === null) return null;
+    return patients.find((p) => p.id === selectedPatientId) ?? null;
+  }, [patients, selectedPatientId]);
 
   const addPatient = (added) => {
     const patientToAdd = {
@@ -149,7 +152,7 @@ export default function PatientList({
   const deletePatient = (id) => {
     setPatients((prev) => prev.filter((p) => p.id !== id));
     setRecords((prev) => prev.filter((r) => r.patientId !== id));
-    setSelectedPatient(null);
+    setSelectedPatientId(null);
     setActiveView("list");
   };
   const deleteRecord = (id) =>

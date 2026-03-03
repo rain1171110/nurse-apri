@@ -1122,3 +1122,94 @@ const handleSave = async () => {
 - 配列は `map/filter` を使う前提なので、初期値・型チェックが重要
 
 次は「自動保存に戻すならどう設計するか（保存頻度・保存中の二重送信防止・差分保存）」に進めるけど、今はこのDRAFTが動いていることが最高に価値ある。
+
+## 2026-03-04 学習ログ（appData方式の理解）
+
+### 1) appData方式とは何か
+
+```js
+const [appData, setAppData] = useState({
+  patients: [],
+  records: [],
+});
+```
+
+- `patients` と `records` を1つの箱で管理している
+- APIが `{ patients, records }` を丸ごと扱うため自然な設計
+- 正本（データの本体）は `App` にある
+
+### 2) setAppData は「箱ごと更新」
+
+```js
+setAppData({ patients: newPatients });
+```
+
+この書き方だと `records` が消えるので危険。
+
+### 3) 部分更新が必要になる
+
+子で「患者だけ更新したい / 記録は触りたくない」時は、以下のように書く必要がある。
+
+```js
+setAppData((prev) => ({
+  ...prev,
+  patients: prev.patients.map(...),
+}));
+```
+
+### 4) 自作 setPatients の正体
+
+```js
+const setPatients = (updater) => {
+  setAppData((prev) => ({
+    ...prev,
+    patients: typeof updater === "function" ? updater(prev.patients) : updater,
+  }));
+};
+```
+
+これは `appData` の中の `patients` だけ安全に更新するためのショートカット。
+
+### 5) typeof updater === "function" の意味
+
+`typeof updater === "function"` は「`updater` が関数だったら実行する」という意味。
+
+Reactの `setState` は2種類あるため、それに対応している。
+
+- `setState(newValue)`
+- `setState((prev) => newValue)`
+
+### 6) 今日一番大事な気づき
+
+疑問：
+
+「同時に両方更新すればよくない？」
+
+答え：
+
+- できる
+- でも毎回コードが長くなる
+- ミスしやすい
+- 責任が子に広がる
+
+だから「部分更新専用の窓口」を作る。
+
+### 今日の本質
+
+- `appData` = 大きな箱
+- `setAppData` = 箱ごと交換
+- `setPatients` = 箱の中の患者だけ交換
+
+### いまモヤる理由
+
+いま触っているのは「stateの抽象化レベル」。
+これは初心者ゾーンを抜け始めた証拠。
+
+### 明日やること（おすすめ）
+
+「自作関数を消して、全部 `setAppData` で書いてみる」を1回やる。
+
+そうすると体感で分かる：
+
+- なぜ長くなるか
+- なぜ自作関数が楽か

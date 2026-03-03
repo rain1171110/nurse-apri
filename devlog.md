@@ -973,3 +973,152 @@ Reactアプリも、悪意サイトも、同じ仕組みの上で動いている
 
 そしてCSRFはサーバー攻撃ではなく、
 「ユーザーのブラウザを利用したなりすまし通信」であると理解した。
+
+## 2026-03-03 学習ログ（通信分離DRAFT / 正本をAppへ）
+
+### 1) 何をしたか（結論）
+
+- `patients` / `records` の正本（Single Source of Truth）を `App.jsx` に移動
+- `PatientList` は表示と操作だけを担当
+- API通信（fetch/PUT）は `App.jsx` + apiファイルだけに置く
+
+### 2) なぜ App に正本を置くのか
+
+`PatientList` が勝手に `useState(patients)` を持つと正本が2つになる。
+→ データの分裂（画面・保存・サーバーがズレる）→ バグの原因。
+
+### 3) App.jsx 側：正本 appData を持つ
+
+```js
+const [appData, setAppData] = useState({ patients: [], records: [] });
+```
+
+初期値を `[]` にしているのは、`patients.map()` / `records.filter()` を安全に動かすため。
+
+- `null` や `{}` だと `.map()` が使えず落ちる
+
+### 4) App.jsx 側：読み込み（非同期）を App に集約
+
+```js
+useEffect(() => {
+  const run = async () => {
+    setLoading(true);
+    setApiError("");
+    try {
+      const data = await fetchAppData();
+      setAppData({
+        patients: Array.isArray(data.patients) ? data.patients : [],
+        records: Array.isArray(data.records) ? data.records : [],
+      });
+    } catch (e) {
+      console.error(e);
+      setApiError("APIから読み込めませんでした");
+    } finally {
+      setLoading(false);
+    }
+  };
+  run();
+}, []);
+```
+
+`Array.isArray` は「本当に配列か？」の型チェック。
+
+- `data.patients || []` だと `{}` が来たときにすり抜けて `.map()` で落ちる
+
+### 5) App.jsx 側：保存（PUT）も App に集約
+
+```js
+const onSaveData = async (payload) => {
+  const saved = await saveAppData(payload);
+  setAppData(saved);
+};
+```
+
+`PatientList` は「保存して」とお願いするだけ。
+実際の通信は App が担当。
+
+### 6) PatientList から App の正本を更新できるよう「窓口」を用意
+
+PatientList 内の `setPatients((prev)=>...)` を活かすため、App 側でラップ関数を作る。
+
+```js
+const setPatients = (updater) => {
+  setAppData((prev) => {
+    const nextPatients =
+      typeof updater === "function" ? updater(prev.patients) : updater;
+    return { ...prev, patients: nextPatients };
+  });
+};
+
+const setRecords = (updater) => {
+  setAppData((prev) => {
+    const nextRecords =
+      typeof updater === "function" ? updater(prev.records) : updater;
+    return { ...prev, records: nextRecords };
+  });
+};
+```
+
+`{ ...prev, patients: nextPatients }` は records を消さないため（`useState`は部分更新ではなく丸ごと置き換え）。
+
+- `...prev` を書かないと records が消える
+
+### 7) PatientList.jsx 側：propsで受け取って使う
+
+```jsx
+<PatientList
+  onErrorsChange={setGlobalErrors}
+  onSaveData={onSaveData}
+  patients={appData.patients}
+  records={appData.records}
+  setPatients={setPatients}
+  setRecords={setRecords}
+  isLoading={loading}
+  apiError={apiError}
+/>
+```
+
+`PatientList` は「正本を持たない」：
+
+```js
+export default function PatientList({
+  onSaveData,
+  patients,
+  records,
+  setPatients,
+  setRecords,
+  isLoading,
+  apiError,
+}) {
+  // ここでは useState で patients/records を作らない
+}
+```
+
+### 8) 保存ボタン（自動保存をやめて、必要な時だけ保存）
+
+```js
+const handleSave = async () => {
+  setIsSaving(true);
+  setSaveError("");
+  try {
+    await onSaveData({ patients, records });
+    setSaveSuccess(true);
+  } catch (e) {
+    console.error(e);
+    setSaveError("APIへの保存に失敗しました");
+  } finally {
+    setIsSaving(false);
+  }
+};
+```
+
+- 「いつ保存が走るか」が明確で初心者に分かりやすい
+- 後で自動保存（`useEffect`）に戻すこともできる
+
+### 9) 学び（結論）
+
+- 責任の分離（通信はApp、画面はPatientList）が一番大事
+- 正本を1つにしないとデータの分裂が起きてバグる
+- 配列は `map/filter` を使う前提なので、初期値・型チェックが重要
+
+次は「自動保存に戻すならどう設計するか（保存頻度・保存中の二重送信防止・差分保存）」に進めるけど、今はこのDRAFTが動いていることが最高に価値ある。

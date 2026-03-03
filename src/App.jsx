@@ -8,6 +8,7 @@ function App() {
   const [globalErrors, setGlobalErrors] = useState({});
   const [displayErrors, setDisplayErrors] = useState({});
   const timerRef = useRef(null);
+
   const [appData, setAppData] = useState({ patients: [], records: [] });
   const [loading, setLoading] = useState(true);
   const [apiError, setApiError] = useState("");
@@ -32,6 +33,8 @@ function App() {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
   }, [globalErrors]);
+
+  
 
   useEffect(() => {
     const run = async () => {

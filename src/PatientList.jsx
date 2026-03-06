@@ -123,6 +123,7 @@ export default function PatientList({
     });
   };
 
+
   const selectedPatient = useMemo(() => {
     if (selectedPatientId === null) return null;
     return patients.find((p) => p.id === selectedPatientId) ?? null;
@@ -146,6 +147,7 @@ export default function PatientList({
       patientId: selectedPatient.id,
       id: Date.now(),
     };
+
     setRecords((prev) => [...prev, recordToAdd]);
   };
 

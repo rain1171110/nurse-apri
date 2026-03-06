@@ -1213,3 +1213,132 @@ Reactの `setState` は2種類あるため、それに対応している。
 
 - なぜ長くなるか
 - なぜ自作関数が楽か
+
+## 2026-03-07 学習ログ（React 状態設計の理解：selectedPatient と selectedPatientId）
+
+### 1) データの分裂（stateを増やしすぎる問題）
+
+最初は次のように state を持っていた。
+
+```js
+const [patients, setPatients] = useState([]);
+const [selectedPatient, setSelectedPatient] = useState(null);
+```
+
+この場合、患者を選ぶと以下になる。
+
+```js
+setSelectedPatient(patient);
+```
+
+状態イメージ：
+
+```text
+patients
+ └ { id: 3, name: "田中" }
+
+selectedPatient
+ └ { id: 3, name: "田中" }
+```
+
+同じ患者データが2箇所に存在する。
+
+この状態で患者を更新すると、
+
+- `patients` は更新される
+- `selectedPatient` は古いままになる可能性がある
+
+その結果、
+
+- 患者一覧は新しい
+- 患者詳細は古い
+
+というデータのズレ（同期ズレ）が起きる。
+
+### 2) 解決方法：selectedPatientId方式
+
+患者データは `patients` に1箇所だけ持つ。
+
+```js
+const [patients, setPatients] = useState([]);
+const [selectedPatientId, setSelectedPatientId] = useState(null);
+```
+
+患者を選ぶときは ID だけ保存する。
+
+```js
+setSelectedPatientId(patient.id);
+```
+
+表示するときは `patients` から探す。
+
+```js
+const selectedPatient =
+  patients.find((p) => p.id === selectedPatientId) ?? null;
+```
+
+状態イメージ：
+
+```text
+patients
+ └ { id: 3, name: "田中" }
+
+selectedPatientId
+ └ 3
+```
+
+患者データは `patients` にしか存在しない。
+
+そのため、
+
+`patients` 更新 -> `find` 再実行 -> `selectedPatient` も最新
+
+となり、データのズレが起きにくい。
+
+### 3) React設計の重要原則
+
+Reactでは「stateは最小限にする」が重要。
+
+ルール：
+
+- 保存が必要なもの -> state
+- 計算できるもの -> stateにしない
+
+今回の整理：
+
+- `patients` -> 保存データ
+- `selectedPatientId` -> UI状態
+- `selectedPatient` -> 計算結果
+
+### 4) useMemoについて
+
+次のコードは、`patients` または `selectedPatientId` が変わったときだけ再計算するためのもの。
+
+```js
+const selectedPatient = useMemo(() => {
+  if (selectedPatientId === null) return null;
+  return patients.find((p) => p.id === selectedPatientId) ?? null;
+}, [patients, selectedPatientId]);
+```
+
+ただし `patients.find(...)` は軽い処理なので、実務では以下のように直接書くことも多い。
+
+```js
+const selectedPatient =
+  patients.find((p) => p.id === selectedPatientId) ?? null;
+```
+
+### 今日の重要理解
+
+- `patients` -> 本物データ
+- `selectedPatientId` -> 選択状態
+- `selectedPatient` -> `patients` から計算
+
+これによりデータの分裂を防げる。
+
+React の Single Source of Truth（データの真実は1箇所）を守る設計になる。
+
+### 次の一歩
+
+`nurse-apri` の設計がさらに良くなる「React状態設計の黄金ルール」を学ぶと、
+`useState` をどこに置くべきかを素早く判断できるようになる。

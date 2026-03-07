@@ -258,7 +258,62 @@ a ?? b;
 つまり
 `??` は「本当に値がない時だけ代わりを使う」。
 
-## 10. 関数をその場で書く（無名関数）
+## 10. `?.`（Optional chaining）
+
+役割
+左側の値がある時だけ先を読む。
+
+例
+
+```js
+selectedPatient?.name;
+```
+
+意味
+
+- 患者がいれば `name`
+- いなければ `undefined`
+
+つまり
+`?.` は「あれば読む」。
+
+## 11. `...`（展開）
+
+役割
+オブジェクトをコピーして結合する。
+
+例
+
+```js
+const updated = { ...patient, ...data };
+```
+
+意味
+
+- 元データに変更分を上書きする
+
+つまり
+`...` は「コピーして上書き」。
+
+## 12. `=>`（アロー関数）
+
+役割
+関数を短く書く。
+
+例
+
+```js
+patients.find((p) => p.id === selectedPatientId);
+```
+
+意味
+
+- `p` を受け取って条件判定する
+
+つまり
+`=>` は「関数を短く書く記法」。
+
+## 13. 関数をその場で書く（無名関数）
 
 例
 
@@ -281,7 +336,7 @@ onClick={setCount(count + 1)}
 つまり
 `() => ...` は「あとで実行するための包み紙」。
 
-## 11. 親で状態を持つ理由
+## 14. 親で状態を持つ理由
 
 よくある形
 
@@ -304,7 +359,7 @@ const [selectedPatientId, setSelectedPatientId] = useState(null);
 つまり
 「本物のデータは1か所」にするほうが安全。
 
-## 12. よくある更新処理
+## 15. よくある更新処理
 
 患者を更新する例
 
@@ -321,7 +376,7 @@ setPatients((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
 つまり
 `map` を使うと「1人だけ差し替え」ができる。
 
-## 13. 今日の超重要まとめ
+## 16. 今日の超重要まとめ
 
 - `useState` = 変わる値を保存
 - `props` = 親から子へ渡す
@@ -331,8 +386,11 @@ setPatients((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
 - `find` = 1件探す
 - `filter` = 条件で絞る
 - `??` = 値がない時だけ代わりを使う
+- `?.` = あれば読む
+- `...` = コピーして上書き
+- `=>` = 関数を短く書く
 
-## 14. よく使う形だけ一覧で見る
+## 17. よく使う形だけ一覧で見る
 
 ```js
 const [value, setValue] = useState("");
@@ -342,12 +400,15 @@ useEffect(() => {
 }, [value]);
 
 const item = items.find((x) => x.id === id) ?? null;
+const safeName = item?.name;
 
 const list = items.filter((x) => x.id !== id);
 
 const memoValue = useMemo(() => {
   return heavyCalc(items);
 }, [items]);
+
+const updated = { ...item, name: "新しい名前" };
 
 setItems((prev) => prev.map((x) => (x.id === updated.id ? updated : x)));
 ```

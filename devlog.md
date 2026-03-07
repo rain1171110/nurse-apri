@@ -1370,3 +1370,204 @@ Uncaught ReferenceError: Cannot access 'selectedPatient' before initialization
 
 `selectedPatientId` 設計は正しかった。
 今回の問題は設計ではなく、参照順（初期化前アクセス）だった。
+
+## 2026-03-08 学習ログ（React基礎整理）
+
+### 1) stateは最小限にする
+
+Reactでは「計算できるものは state にしない」が基本。
+
+悪い例（データ分裂）：
+
+```js
+const [patients, setPatients] = useState([]);
+const [selectedPatient, setSelectedPatient] = useState(null);
+```
+
+問題：
+
+- `patients` と `selectedPatient` の2箇所に同じデータが存在する
+- `patients` 更新 -> `selectedPatient` が古い
+
+というバグが起こる可能性がある。
+
+良い設計：
+
+```js
+const [patients, setPatients] = useState([]);
+const [selectedPatientId, setSelectedPatientId] = useState(null);
+
+const selectedPatient =
+  patients.find((p) => p.id === selectedPatientId) ?? null;
+```
+
+保存しているのは `patients` と `selectedPatientId` だけ。
+`selectedPatient` は計算値。
+
+これを Single Source of Truth（真実のデータは1つ）という。
+
+### 2) Reactは state が変わると再実行される
+
+例：
+
+```js
+setSelectedPatientId(3);
+```
+
+すると React はコンポーネントをもう一度実行する。
+
+その時、
+
+```js
+const selectedPatient = patients.find((p) => p.id === selectedPatientId);
+```
+
+も再計算される。
+
+つまり `selectedPatient` は保存データではなく、毎回計算される値。
+
+### 3) 配列操作（Reactでよく使う）
+
+`find`
+
+- 最初の1つを取得
+
+```js
+patients.find((p) => p.id === selectedPatientId);
+```
+
+見つからなければ `undefined`。
+
+`map`
+
+- 配列を変換する
+
+```jsx
+patients.map((p) => <li key={p.id}>{p.name}</li>);
+```
+
+Reactでは一覧表示によく使う。
+
+`filter`
+
+- 条件に合うものだけ残す
+
+```js
+patients.filter((p) => p.id !== id);
+```
+
+削除処理で使う。
+
+### 4) Reactの配列更新パターン
+
+追加：
+
+```js
+setPatients((prev) => [...prev, newPatient]);
+```
+
+更新：
+
+```js
+setPatients((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
+```
+
+削除：
+
+```js
+setPatients((prev) => prev.filter((p) => p.id !== id));
+```
+
+### 5) immutable更新
+
+Reactでは state を直接変更しない。
+
+NG：
+
+```js
+patient.age = 81;
+```
+
+OK：
+
+```js
+const updated = { ...patient, age: 81 };
+```
+
+### 6) スプレッド構文
+
+```js
+const updated = { ...patient, ...data };
+```
+
+意味：
+
+- `patient` をコピー
+- `data` で上書き
+
+### 7) 三項演算子
+
+`condition ? A : B`
+
+例：
+
+```js
+p.id === updated.id ? updated : p;
+```
+
+意味：
+
+- 条件 `true` -> `updated`
+- 条件 `false` -> `p`
+
+### 8) JavaScript演算子
+
+optional chaining：
+
+```js
+selectedPatient?.name;
+```
+
+- 存在すれば読む
+- 無ければ `undefined`
+
+null合体演算子：
+
+```js
+value ?? defaultValue;
+```
+
+- `null` / `undefined` の時だけ `defaultValue`
+
+OR演算子：
+
+```js
+value || defaultValue;
+```
+
+- falsy なら `defaultValue`
+
+falsy：
+
+- `false`
+- `0`
+- `""`
+- `null`
+- `undefined`
+- `NaN`
+
+### 9) keyの役割
+
+```jsx
+patients.map((p) => <li key={p.id}>{p.name}</li>);
+```
+
+`key` は React が要素を識別するための ID。
+これにより「どの要素が変わったか」を React が判断できる。
+
+### 今日の重要ポイント
+
+- state = 保存するデータ
+- 変数 = 計算値
+
+React設計の基本：stateは最小限。

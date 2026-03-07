@@ -107,6 +107,15 @@ export default function PatientList({
     setSelectedRecordId(null);
   };
 
+  // const selectedPatient = useMemo(() => {
+  //   if (selectedPatientId === null) return null;
+  //   return patients.find((p) => p.id === selectedPatientId) ?? null;
+  // }, [patients, selectedPatientId]);
+  const selectedPatient =
+    selectedPatientId === null
+      ? null
+      : (patients.find((p) => p.id === selectedPatientId) ?? null);
+
   const patientRecords = selectedPatient
     ? records.filter((r) => r.patientId === selectedPatient.id)
     : [];
@@ -122,12 +131,6 @@ export default function PatientList({
       });
     });
   };
-
-
-  const selectedPatient = useMemo(() => {
-    if (selectedPatientId === null) return null;
-    return patients.find((p) => p.id === selectedPatientId) ?? null;
-  }, [patients, selectedPatientId]);
 
   const addPatient = (added) => {
     const patientToAdd = {

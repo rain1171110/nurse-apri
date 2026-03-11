@@ -34,8 +34,6 @@ function App() {
     };
   }, [globalErrors]);
 
-  
-
   useEffect(() => {
     const run = async () => {
       setLoading(true);
@@ -56,9 +54,22 @@ function App() {
     run();
   }, []);
 
+  const isValidAppData = (data) => {
+    return (
+      data &&
+      typeof data === "object" &&
+      Array.isArray(data.patients) &&
+      Array.isArray(data.records)
+    );
+  };
+
   const onSaveData = async (payload) => {
     const saved = await saveAppData(payload);
-    setAppData(saved);
+    if (isValidAppData(saved)) {
+      setAppData(saved);
+    } else {
+      console.error("保存のレスポンス形式が不正です", saved);
+    }
   };
 
   const setPatients = (updater) => {

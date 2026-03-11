@@ -1571,3 +1571,96 @@ patients.map((p) => <li key={p.id}>{p.name}</li>);
 - 変数 = 計算値
 
 React設計の基本：stateは最小限。
+
+## 2026-03-12 学習ログ（患者追加処理の理解）
+
+### 1) フォーム送信の流れ
+
+```jsx
+<form
+  onSubmit={handleSubmit(async (data) => {
+    const patientToAdd = { ...data, id: crypto.randomUUID() };
+    const nextPatients = [...patients, patientToAdd];
+    await onSaveData({ patients: nextPatients, records });
+    setShowAddForm(false);
+    reset();
+  })}
+>
+```
+
+処理の順番：
+
+1. フォーム送信
+2. 入力データ取得
+3. `patientToAdd` 作成
+4. `nextPatients` 作成
+5. サーバー保存
+6. フォームを閉じる
+7. 入力リセット
+
+### 2) handleSubmit の役割
+
+`handleSubmit(async (data) => { ... })` は `react-hook-form` の送信管理関数。
+
+- 入力値を集める
+- Zodでバリデーション
+- 問題なければ `data` を渡す
+
+### 3) patientToAdd（患者データ作成）
+
+```js
+const patientToAdd = { ...data, id: crypto.randomUUID() };
+```
+
+意味：
+
+- フォーム入力 `data` をコピー
+- 新しいIDを追加
+- 保存する患者オブジェクトを作る
+
+### 4) nextPatients（新しい患者リスト）
+
+```js
+const nextPatients = [...patients, patientToAdd];
+```
+
+意味：
+
+- 既存配列を壊さず
+- 追加後の新しい配列を作る
+
+### 5) サーバー保存
+
+```js
+await onSaveData({ patients: nextPatients, records });
+```
+
+意味：
+
+- 追加後データをそのまま保存する
+- `await` で保存完了を待ってから次に進む
+
+### 6) なぜ `setPatients(nextPatients)` を先に呼ばないのか
+
+今回の設計では `onSaveData` 側が保存成功後に state を更新する。
+
+```js
+const onSaveData = async (payload) => {
+  const saved = await saveAppData(payload);
+  setAppData(saved);
+};
+```
+
+このため、呼び出し側で先に `setPatients(nextPatients)` を実行すると、
+更新責務が2か所になって理解と保守が難しくなる。
+
+結論：
+
+- 更新責務は `onSaveData` に集約
+- 呼び出し側は「保存依頼」に専念
+
+### まとめ（つまり）
+
+- `patientToAdd` と `nextPatients` は「保存に渡す完成データ」を作るため
+- 画面更新は `onSaveData` 成功後に一元管理
+- これで state の正解が1か所にまとまり、ズレが起きにくい

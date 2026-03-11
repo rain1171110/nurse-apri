@@ -107,10 +107,6 @@ export default function PatientList({
     setSelectedRecordId(null);
   };
 
-  // const selectedPatient = useMemo(() => {
-  //   if (selectedPatientId === null) return null;
-  //   return patients.find((p) => p.id === selectedPatientId) ?? null;
-  // }, [patients, selectedPatientId]);
   const selectedPatient =
     selectedPatientId === null
       ? null
@@ -244,14 +240,6 @@ export default function PatientList({
 
       {!selectedPatient ? (
         <section className="section">
-          {/* 仮ボタン */}
-          <button
-            onClick={handleSave}
-            disabled={isSaving}
-            className="btn-primary"
-          >
-            保存
-          </button>
           <div className="section-header">
             <h1 className="section-title">患者一覧</h1>
             <div className="section-actions">
@@ -290,8 +278,10 @@ export default function PatientList({
                 <h3 className="card-title">患者を追加</h3>
               </div>
               <form
-                onSubmit={handleSubmit((data) => {
-                  addPatient(data);
+                onSubmit={handleSubmit(async (data) => {
+                  const patientToAdd = {...data,id:crypto.randomUUID()};
+                  const nextPatients = [...patients, patientToAdd];
+                  await onSaveData({ patients: nextPatients, records });
                   setShowAddForm(false);
                   reset();
                 })}
@@ -328,7 +318,7 @@ export default function PatientList({
                 </div>
                 <div className="form-actions">
                   <button type="submit" className="btn-primary">
-                    患者を追加
+                    保存
                   </button>
                   <button
                     type="button"

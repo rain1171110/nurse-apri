@@ -1664,3 +1664,156 @@ const onSaveData = async (payload) => {
 - `patientToAdd` と `nextPatients` は「保存に渡す完成データ」を作るため
 - 画面更新は `onSaveData` 成功後に一元管理
 - これで state の正解が1か所にまとまり、ズレが起きにくい
+
+## 2026-03-12 学習ログ（React / コンポーネント分離）
+
+### 1) AddPatientForm をコンポーネント分離
+
+以前は `PatientList` の中に追加フォームが直接書かれていた。
+
+Before:
+
+```jsx
+{showAddForm && (
+  <form onSubmit={handleSubmit(...)}>
+    ...
+  </form>
+)}
+```
+
+この状態では `PatientList` が次の責任を同時に持ってしまう。
+
+- 患者一覧
+- 追加フォーム
+- バリデーション
+- 保存処理
+
+After:
+
+追加フォームを `AddPatientForm` として分離。
+
+```jsx
+<AddPatientForm
+  patients={patients}
+  records={records}
+  onSaveData={onSaveData}
+  onErrorsChange={onErrorsChange}
+  showAddForm={showAddForm}
+  setShowAddForm={setShowAddForm}
+/>
+```
+
+### 2) AddPatientForm の役割
+
+`AddPatientForm` は次の責任を持つ。
+
+- 入力フォーム表示
+- react-hook-form 管理
+- Zod バリデーション
+- 新規患者データ作成
+- 保存処理呼び出し
+
+保存処理:
+
+```jsx
+onSubmit={handleSubmit(async (data) => {
+  const patientToAdd = { ...data, id: crypto.randomUUID() };
+  const nextPatients = [...patients, patientToAdd];
+  await onSaveData({ patients: nextPatients, records });
+  setShowAddForm(false);
+  reset();
+})}
+```
+
+### 3) データ追加の流れ
+
+患者追加の流れ:
+
+1. AddPatientForm
+2. `patientToAdd` 作成
+3. `nextPatients` 作成
+4. `onSaveData` 呼び出し
+5. App が state 更新
+6. React 再描画
+7. 画面更新
+
+重要ポイント: 画面更新は state 更新のときに起こる。
+
+### 4) patientToAdd と nextPatients
+
+`patientToAdd`:
+
+- 新しく追加する患者1人
+
+```js
+const patientToAdd = { ...data, id: crypto.randomUUID() };
+```
+
+`nextPatients`:
+
+- 追加後の患者一覧
+
+```js
+const nextPatients = [...patients, patientToAdd];
+```
+
+### 5) なぜ PatientList が patients を持たないのか
+
+理由: 情報の分裂を防ぐため。
+
+もし `PatientList` も state を持つと、
+
+- App の `patients`
+- PatientList の `patients`
+
+のように本物のデータが2つできる。
+
+これが Single Source of Truth（本物のデータは1つ）という考え方。
+
+### 6) state を置く場所のルール
+
+state は「誰が使うか」で決める。
+
+- 1つのコンポーネントだけ使う -> そのコンポーネントに置く
+- 複数コンポーネントで使う -> 共通の親に置く
+
+### 7) 今のアプリ構造
+
+```text
+App
+ └ PatientList
+     ├ PatientDetails
+     ├ NursingRecordList
+     ├ NursingRecordItem
+     ├ PatientVitals
+     └ AddPatientForm
+```
+
+`patients` は `PatientList` / `PatientDetails` / `AddPatientForm` で使うため、App に state を置く。
+
+### 8) リファクタリング結果
+
+PatientList の役割:
+
+- 患者一覧表示
+- 画面切り替え
+- 患者更新
+- 記録更新
+- AddPatientForm の表示制御
+
+AddPatientForm の役割:
+
+- 追加フォーム
+- 入力管理
+- バリデーション
+- 保存処理
+
+### 今日の重要ポイント
+
+- state は「誰が使うか」で置く場所を決める
+- 複数コンポーネントで使うデータは共通の親に置く
+- Reactでは state が変わると画面が再描画される
+
+### 今日の一言まとめ
+
+`PatientList` は `patients` を使う側であり、`patients` の本物を持つ側ではない。

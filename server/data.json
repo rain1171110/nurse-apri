@@ -1,55 +1,6 @@
 {
   "patients": [
     {
-      "name": "okazaki",
-      "id": 1770842683465,
-      "disease": "小細胞肺がん",
-      "history": "",
-      "progress": "",
-      "age": 1
-    },
-    {
-      "name": "鈴木次郎",
-      "room": 1,
-      "id": 1771017095890,
-      "disease": "",
-      "history": "",
-      "progress": ""
-    },
-    {
-      "name": "鈴木次郎",
-      "room": 108,
-      "id": 1771027954592,
-      "disease": "",
-      "history": "",
-      "progress": ""
-    },
-    {
-      "name": "鈴木次郎",
-      "id": 1771029514476
-    },
-    {
-      "name": "削除",
-      "room": 2,
-      "id": 1771188652731,
-      "disease": "",
-      "history": "",
-      "progress": ""
-    },
-    {
-      "name": "鈴木次郎",
-      "room": 111,
-      "id": 1771277263767,
-      "disease": "",
-      "history": "",
-      "progress": ""
-    },
-    {
-      "name": "鈴木次郎",
-      "room": 4,
-      "id": 1771356983380
-    },
-    {
       "name": "鈴木次郎",
       "id": 1771359676324
     },
@@ -98,17 +49,5 @@
       "id": "0848af4a-f1c9-4c7e-979a-d0b6aa8b59ec"
     }
   ],
-  "records": [
-    {
-      "date": "2026-02-14",
-      "author": "大泉洋",
-      "content": "",
-      "vitals": {
-        "T": 35,
-        "P": 50
-      },
-      "patientId": 1770842683465,
-      "id": 1771017339662
-    }
-  ]
+  "records": []
 }

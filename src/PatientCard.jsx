@@ -1,3 +1,5 @@
+import DeleteButton from "./DeleteButton";
+
 export default function PatientCard({ patient, onSelect, onBack, onDelete }) {
   return (
     <div className="card">
@@ -39,9 +41,7 @@ export default function PatientCard({ patient, onSelect, onBack, onDelete }) {
         >
           戻る
         </button>
-        <button type="button" className="btn-danger" onClick={onDelete}>
-          削除
-        </button>
+        <DeleteButton onDelete={() => onDelete(patient.id)} />
       </div>
     </div>
   );

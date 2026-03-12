@@ -89,21 +89,27 @@ export default function PatientList({
   const addRecord = (record) => {
     const recordToAdd = {
       ...record,
-      patientId: selectedPatient.id,
+      patientId: selectedPatient?.id,
       id: Date.now(),
     };
 
     setRecords((prev) => [...prev, recordToAdd]);
   };
 
-  const deletePatient = (id) => {
-    setPatients((prev) => prev.filter((p) => p.id !== id));
-    setRecords((prev) => prev.filter((r) => r.patientId !== id));
+  const deletePatient = async (id) => {
+    const nextPatients = patients.filter((p) => p.id !== id);
+    const nextRecords = records.filter((r) => r.patientId !== id);
+    await onSaveData({ patients: nextPatients, records: nextRecords });
     setSelectedPatientId(null);
+    setSelectedRecordId(null);
     setActiveView("list");
   };
-  const deleteRecord = (id) =>
-    setRecords((prev) => prev.filter((r) => r.id !== id));
+  const deleteRecord = async (id) => {
+    const nextRecords = records.filter((r) => r.id !== id);
+    await onSaveData({ patients, records: nextRecords });
+    setSelectedRecordId(null);
+    setActiveView("records");
+  };
 
   const usedRoomsForEdit = useMemo(
     () => extractUsedRoomNumbers(patients, selectedPatient?.id),

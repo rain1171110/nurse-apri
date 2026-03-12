@@ -43,7 +43,8 @@ export default function AddPatientForm({
         onSubmit={handleSubmit(async (data) => {
           const patientToAdd = { ...data, id: crypto.randomUUID() };
           const nextPatients = [...patients, patientToAdd];
-          await onSaveData({ patients: nextPatients, records });
+          const nextRecords = [...records];
+          await onSaveData({ patients: nextPatients, records: nextRecords });
           setShowAddForm(false);
           reset();
         })}

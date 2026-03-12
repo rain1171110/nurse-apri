@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { formatBpText, formatValue } from "./Utils";
 import NursingRecordForm from "./NursingRecordForm";
+import DeleteButton from "./DeleteButton";
 
 export default function NursingRecordItem({
   patient,
@@ -98,16 +99,7 @@ export default function NursingRecordItem({
           >
             戻る
           </button>
-          <button
-            type="button"
-            className="btn-danger"
-            onClick={() => {
-              onDeleteRecord(record.id);
-              onBackToRecords();
-            }}
-          >
-            削除
-          </button>
+          <DeleteButton onDelete={() => onDeleteRecord(record.id)} />
         </div>
       )}
     </div>

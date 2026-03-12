@@ -1817,3 +1817,185 @@ AddPatientForm の役割:
 ### 今日の一言まとめ
 
 `PatientList` は `patients` を使う側であり、`patients` の本物を持つ側ではない。
+
+## 2026-03-13 学習ログ（削除処理 / patientId の理解）
+
+### 1. record のデータ構造
+
+看護記録（record）は患者データと紐づいている。
+
+```js
+{
+  id: 101,         // 記録ID
+  patientId: 2,    // 患者ID
+  note: "発熱"
+}
+```
+
+役割:
+
+- `id` -> 記録そのもののID
+- `patientId` -> この記録がどの患者のものか
+
+つまり:
+
+`record -> patient`
+
+という関係になっている。
+
+### 2. patientId はどこで作られているか
+
+serverではなく、Reactアプリ側で作っている。
+
+```js
+const addRecord = (record) => {
+  const recordToAdd = {
+    ...record,
+    patientId: selectedPatient.id,
+    id: Date.now(),
+  };
+
+  setRecords((prev) => [...prev, recordToAdd]);
+};
+```
+
+ここで
+
+`patientId: selectedPatient.id`
+
+としているので
+
+今選択している患者ID
+↓
+record に保存
+
+される。
+
+### 3. 患者削除時に record も削除する理由
+
+削除処理:
+
+```js
+const deletePatient = async (id) => {
+  const nextPatients = patients.filter((p) => p.id !== id);
+  const nextRecords = records.filter((r) => r.patientId !== id);
+
+  await onSaveData({ patients: nextPatients, records: nextRecords });
+
+  setSelectedPatientId(null);
+  setSelectedRecordId(null);
+  setActiveView("list");
+};
+```
+
+ポイント:
+
+`records.filter((r) => r.patientId !== id)`
+
+意味:
+
+削除する患者に紐づく記録を消す。
+
+もしこれがないと
+
+存在しない患者の記録
+
+が残ってしまう。
+
+これを
+
+孤児データ（orphan data）
+
+という。
+
+### 4. p.id と r.patientId の違い
+
+patients:
+
+```js
+patients.filter((p) => p.id !== id);
+```
+
+患者データ:
+
+```js
+{ id: 2, name: "佐藤" }
+```
+
+なので `p.id` を比較する。
+
+records:
+
+```js
+records.filter((r) => r.patientId !== id);
+```
+
+recordデータ:
+
+```js
+{ id: 101, patientId: 2 }
+```
+
+なので `patientId` で比較する。
+
+### 5. なぜ await が必要か
+
+`await onSaveData(...)`
+
+これは
+
+サーバー保存完了
+
+を待つため。
+
+もし await を消すと
+
+保存が終わる前にUI処理が進む
+
+可能性がある。
+
+つまり
+
+サーバー保存
+↓
+state更新
+↓
+画面描画
+
+という順番を守るために必要。
+
+### 6. 今回の重要な理解
+
+患者と記録は
+
+```text
+patients
+   ↑
+records
+```
+
+というリレーション構造になっている。
+
+そのため
+
+患者削除
+↓
+その患者のrecord削除
+
+が必要になる。
+
+これは
+
+- SQL
+- MongoDB
+- Firebase
+
+などでも同じ設計になる。
+
+### 今日の理解（まとめ）
+
+- record は `patientId` で患者と紐づいている
+- `patientId` は React側で作っている
+- 患者削除時はその患者の記録も削除する必要がある
+- `p.id` は患者ID、`r.patientId` は記録が属する患者ID
+- `await` はサーバー保存完了を待つため

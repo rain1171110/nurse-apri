@@ -12,6 +12,7 @@ function App() {
   const [appData, setAppData] = useState({ patients: [], records: [] });
   const [loading, setLoading] = useState(true);
   const [apiError, setApiError] = useState("");
+  const [selectedPatientId, setSelectedPatientId] = useState(null);
 
   useEffect(() => {
     // エラーが新しく出た時
@@ -72,6 +73,21 @@ function App() {
     }
   };
 
+  const addRecord = async (record) => {
+    if (selectedPatientId === null) return;
+
+    const recordToAdd = {
+      ...record,
+      patientId: selectedPatientId,
+      id: Date.now(),
+    };
+    const nextRecords = [...appData.records, recordToAdd];
+    await onSaveData({
+      patients: appData.patients,
+      records: nextRecords,
+    });
+  };
+
   const setPatients = (updater) => {
     setAppData((prev) => {
       const nextPatients =
@@ -101,9 +117,13 @@ function App() {
           records={appData.records}
           setPatients={setPatients}
           setRecords={setRecords}
+          selectedPatientId={selectedPatientId}
+          setSelectedPatientId={setSelectedPatientId}
           isLoading={loading}
           apiError={apiError}
+          addRecord={addRecord}
         />
+
         {import.meta.env.DEV && Object.keys(displayErrors).length > 0 && (
           <div className="dev-error-panel">
             <strong>Validation Errors:</strong>

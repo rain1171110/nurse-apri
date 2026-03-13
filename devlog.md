@@ -1659,6 +1659,232 @@ const onSaveData = async (payload) => {
 - 更新責務は `onSaveData` に集約
 - 呼び出し側は「保存依頼」に専念
 
+## 2026-03-13
+
+### 学習ログ（selectedPatientId / addRecord / App に state を上げる理解）
+
+### 1) selectedPatientId を使う理由
+
+以前は `selectedPatient` のように患者オブジェクトを直接使う考えがあった。
+でも React では `patients` と `selectedPatient` の両方を state に持つと、同じ患者データが2か所に存在して分裂しやすい。
+
+そのため、
+
+```jsx
+const [selectedPatientId, setSelectedPatientId] = useState(null);
+```
+
+のように「IDだけを state に持つ」方が安全。
+
+### 2) selectedPatient は state ではなく計算して作る
+
+```jsx
+const selectedPatient =
+  selectedPatientId === null
+    ? null
+    : (patients.find((p) => p.id === selectedPatientId) ?? null);
+```
+
+意味:
+
+- `selectedPatientId` が `null` なら患者未選択なので `null`
+- `selectedPatientId` があるなら `patients` 配列から一致する患者を探す
+- 見つからなければ `null`
+
+つまり:
+
+- 選択状態は ID で持つ
+- 必要な患者データは `patients` から探す
+
+という設計。
+
+### 3) patientRecords も selectedPatientId から作る
+
+```jsx
+const patientRecords = useMemo(() => {
+  if (selectedPatientId === null) return [];
+  return records.filter((r) => r.patientId === selectedPatientId);
+}, [records, selectedPatientId]);
+```
+
+意味:
+
+- 患者未選択なら空配列
+- 選択中なら、その患者IDに紐づく記録だけ取り出す
+
+ここでも `selectedPatient.id` ではなく `selectedPatientId` を使うことで、ID参照設計にそろっている。
+
+### 4) patientId は record がどの患者のものかを表す
+
+record はこういう構造になる。
+
+```js
+{
+  id: 171000000000,
+  patientId: 2,
+  note: "発熱あり"
+}
+```
+
+役割:
+
+- `id` -> 記録そのもののID
+- `patientId` -> この記録がどの患者のものか
+
+つまり `record -> patient` を `patientId` で結びつけている。
+
+### 5) addRecord を App に置く理由
+
+以前は PatientList 内で
+
+```jsx
+setRecords((prev) => [...prev, recordToAdd]);
+```
+
+としていた。これは state を直接更新して画面を変える処理。
+
+でも今は `records` の本体は App にあるので、
+
+- stateを持つ場所 = 更新責任を持つ場所
+
+に合わせて、`addRecord` も App に置く方がよい。
+
+### 6) App 側の addRecord
+
+```jsx
+const addRecord = async (record) => {
+  if (selectedPatientId === null) return;
+
+  const recordToAdd = {
+    ...record,
+    patientId: selectedPatientId,
+    id: Date.now(),
+  };
+
+  const nextRecords = [...appData.records, recordToAdd];
+
+  await onSaveData({
+    patients: appData.patients,
+    records: nextRecords,
+  });
+};
+```
+
+流れ:
+
+- 患者未選択なら何もしない
+- 入力データに `patientId` と `id` を足して record を完成させる
+- `nextRecords` を作る
+- `onSaveData` でサーバー保存する
+
+### 7) なぜ await onSaveData(...) が大事か
+
+`await onSaveData(...)` があることで
+
+- サーバー保存
+- App state更新
+- 画面描画
+
+の順番を守れる。
+
+もし先に `setRecords(...)` すると、
+
+- 画面だけ先に変わる
+- サーバー保存失敗
+
+となり、画面と保存データがズレる危険がある。
+
+### 8) App に上げた state は子で再び持たない
+
+App で
+
+```jsx
+const [selectedPatientId, setSelectedPatientId] = useState(null);
+```
+
+を持つなら、PatientList 側ではもう
+
+```jsx
+const [selectedPatientId, setSelectedPatientId] = useState(null);
+```
+
+を作らない。子は props で受け取って使う。
+
+つまり:
+
+- App が持つ
+- PatientList は受け取る
+
+にする。
+
+### 9) 今の PatientList で良いところ
+
+```jsx
+const selectedPatient =
+  selectedPatientId === null
+    ? null
+    : (patients.find((p) => p.id === selectedPatientId) ?? null);
+
+const patientRecords = useMemo(() => {
+  if (selectedPatientId === null) return [];
+  return records.filter((r) => r.patientId === selectedPatientId);
+}, [records, selectedPatientId]);
+```
+
+この2つはとても良い。
+
+理由:
+
+- IDで選択状態を管理している
+- 必要なデータは配列から探している
+- stateの分裂を防げる
+
+### 10) 今の段階でまだ途中のところ
+
+`updatePatient` や `updateRecord` はまだ PatientList で
+
+- `setPatients(...)`
+- `setRecords(...)`
+
+を使っている。
+
+```jsx
+const updatePatient = (updated) => {
+  setPatients((prev) => {
+    return prev.map((patient) => {
+      if (patient.id === updated.id) {
+        return updated;
+      } else {
+        return patient;
+      }
+    });
+  });
+};
+
+const updateRecord = (updateRecord) => {
+  setRecords((prev) =>
+    prev.map((r) => (r.id === updateRecord.id ? updateRecord : r)),
+  );
+};
+```
+
+これはまだ「画面state直接更新」の設計が残っている。
+将来的にはこれも App 側責任に寄せるとさらにきれいになる。
+
+### 今日の一番大事な理解
+
+- `selectedPatientId` は選択状態
+- `patientId` は record がどの患者に属するか
+- どちらも ID参照で設計すると分かりやすい
+- `selectedPatient` や `patientRecords` は state ではなく、`patients` / `records` から計算して作る
+- `records` の本体が App にあるなら、`addRecord` も App に置く方が自然
+
+ひとことでまとめると:
+
+- 本体データは App に置く
+- 選択は ID で持つ
+- 必要な値は配列から探して作る
+
 ### まとめ（つまり）
 
 - `patientToAdd` と `nextPatients` は「保存に渡す完成データ」を作るため

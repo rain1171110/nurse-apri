@@ -19,9 +19,10 @@ export default function PatientList({
   setRecords,
   isLoading,
   apiError,
+  selectedPatientId,
+  setSelectedPatientId,
+  addRecord,
 }) {
-  const [selectedPatientId, setSelectedPatientId] = useState(null);
-
   const [selectedRecordId, setSelectedRecordId] = useState(null);
 
   const [activeView, setActiveView] = useState("list");
@@ -70,9 +71,10 @@ export default function PatientList({
       ? null
       : (patients.find((p) => p.id === selectedPatientId) ?? null);
 
-  const patientRecords = selectedPatient
-    ? records.filter((r) => r.patientId === selectedPatient.id)
-    : [];
+  const patientRecords = useMemo(() => {
+    if (selectedPatientId === null) return [];
+    return records.filter((r) => r.patientId === selectedPatientId);
+  }, [records, selectedPatientId]);
 
   const updatePatient = (updated) => {
     setPatients((prev) => {
@@ -84,16 +86,6 @@ export default function PatientList({
         }
       });
     });
-  };
-
-  const addRecord = (record) => {
-    const recordToAdd = {
-      ...record,
-      patientId: selectedPatient?.id,
-      id: Date.now(),
-    };
-
-    setRecords((prev) => [...prev, recordToAdd]);
   };
 
   const deletePatient = async (id) => {

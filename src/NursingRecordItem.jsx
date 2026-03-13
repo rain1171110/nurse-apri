@@ -9,9 +9,9 @@ export default function NursingRecordItem({
   record,
   isEditing,
   setIsEditing,
-  onUpdate,
   onDeleteRecord,
   onErrorsChange,
+  updateRecord,
 }) {
   const [formData] = useState({
     date: record?.date || "",
@@ -27,9 +27,9 @@ export default function NursingRecordItem({
   const bpText = formatBpText(SBP, DBP);
   const bpDisplay = bpText === "--" ? "--" : `${bpText}mmHg`;
 
-  const handleSubmit = (data) => {
-    const updateRecord = { ...record, ...data };
-    onUpdate(updateRecord);
+  const handleSubmit = async (data) => {
+    const updatedRecord = { ...record, ...data };
+    await updateRecord(updatedRecord);
     setIsEditing(false);
     onBackToRecords();
   };

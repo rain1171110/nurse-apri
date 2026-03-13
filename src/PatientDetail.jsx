@@ -10,7 +10,7 @@ export default function PatientDetails({
   onBackToMenu,
   isEditing,
   setIsEditing,
-  onUpdate,
+  updatePatient,
   onErrorsChange,
   usedRoomsForEdit = [],
 }) {
@@ -119,7 +119,7 @@ export default function PatientDetails({
             onSubmit={handleSubmit((data) => {
               const updated = { ...patient, ...data };
               reset(updated);
-              onUpdate(updated);
+              updatePatient(updated);
               clearErrors();
               if (onErrorsChange) {
                 onErrorsChange({});

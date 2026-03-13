@@ -15,13 +15,13 @@ export default function PatientList({
   onSaveData,
   patients,
   records,
-  setPatients,
-  setRecords,
   isLoading,
   apiError,
   selectedPatientId,
   setSelectedPatientId,
   addRecord,
+  updatePatient,
+  updateRecord,
 }) {
   const [selectedRecordId, setSelectedRecordId] = useState(null);
 
@@ -46,11 +46,6 @@ export default function PatientList({
     setActiveView("list");
   };
 
-  const updateRecord = (updateRecord) => {
-    setRecords((prev) =>
-      prev.map((r) => (r.id === updateRecord.id ? updateRecord : r)),
-    );
-  };
 
   const patientRecordItem = selectedRecordId
     ? records.find((r) => r.id === selectedRecordId)
@@ -76,17 +71,7 @@ export default function PatientList({
     return records.filter((r) => r.patientId === selectedPatientId);
   }, [records, selectedPatientId]);
 
-  const updatePatient = (updated) => {
-    setPatients((prev) => {
-      return prev.map((patient) => {
-        if (patient.id === updated.id) {
-          return updated;
-        } else {
-          return patient;
-        }
-      });
-    });
-  };
+ 
 
   const deletePatient = async (id) => {
     const nextPatients = patients.filter((p) => p.id !== id);
@@ -178,7 +163,7 @@ export default function PatientList({
             onBackToMenu={handleBackToMenu}
             isEditing={isEditing}
             setIsEditing={setIsEditing}
-            onUpdate={updatePatient}
+            updatePatient={updatePatient}
             onErrorsChange={onErrorsChange}
             usedRoomsForEdit={usedRoomsForEdit}
           />
@@ -215,7 +200,8 @@ export default function PatientList({
             onBackToRecords={handleBackToRecords}
             isEditing={isEditing}
             setIsEditing={setIsEditing}
-            onUpdate={updateRecord}
+            updateRecord={updateRecord}
+            updatePatient={updatePatient}
             onDeleteRecord={deleteRecord}
             onErrorsChange={onErrorsChange}
           />

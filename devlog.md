@@ -2225,3 +2225,146 @@ records
 - 患者削除時はその患者の記録も削除する必要がある
 - `p.id` は患者ID、`r.patientId` は記録が属する患者ID
 - `await` はサーバー保存完了を待つため
+
+## 2026-03-14 学習ログ React state更新と保存処理の理解（updatePatient / updateRecord）
+
+### 1. React の state 更新は「即更新ではない」
+
+React の setState（例: `setPatients`）は、その場で値を書き換える処理ではない。
+
+React に対して、
+
+「次の描画で state を更新してください」
+
+という更新予約を出しているだけ。
+
+例:
+
+```js
+setPatients((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
+```
+
+この時点ではまだ `appData.patients` は古い値のまま。
+
+### 2. だからこのコードはズレる可能性がある
+
+```js
+setPatients((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
+
+await onSaveData({
+  patients: appData.patients,
+  records: appData.records,
+});
+```
+
+一見すると
+
+- 患者更新
+- 保存
+
+に見えるが、実際は
+
+- `setPatients` -> 更新予約
+- `onSaveData` -> 古い `appData` を保存
+
+になる可能性がある。
+
+つまり、更新前のデータを保存してしまう可能性がある。
+
+### 3. 解決方法
+
+先に `next` データを作る。
+
+保存するデータは自分で作ってから保存する。
+
+```js
+const nextPatients = appData.patients.map((p) =>
+  p.id === updated.id ? updated : p,
+);
+
+await onSaveData({
+  patients: nextPatients,
+  records: appData.records,
+});
+```
+
+こうすると
+
+- 保存する配列
+- 更新した配列
+
+が完全に同じものになる。
+
+### 4. updatePatient の正しい形
+
+```js
+const updatePatient = async (updated) => {
+  const nextPatients = appData.patients.map((p) =>
+    p.id === updated.id ? updated : p,
+  );
+
+  await onSaveData({
+    patients: nextPatients,
+    records: appData.records,
+  });
+};
+```
+
+### 5. updateRecord も同じ考え
+
+```js
+const updateRecord = async (updatedRecord) => {
+  const nextRecords = appData.records.map((r) =>
+    r.id === updatedRecord.id ? updatedRecord : r,
+  );
+
+  await onSaveData({
+    patients: appData.patients,
+    records: nextRecords,
+  });
+};
+```
+
+### 6. 設計の考え方
+
+今回の設計の目的は「データ分裂を防ぐこと」。
+
+そのために、
+
+```text
+データの真実の場所（Single Source of Truth）
+App
+ ├ patients
+ └ records
+```
+
+更新処理も App に寄せる。
+
+```text
+App
+ ├ addPatient
+ ├ updatePatient
+ ├ deletePatient
+ ├ addRecord
+ ├ updateRecord
+ └ deleteRecord
+```
+
+子コンポーネントは「表示 + 入力」だけ担当する。
+
+### 7. 今日の一番大事な理解
+
+React では `setState` は即更新ではない。
+
+なので、保存する配列は先に `next` を作ってから使う。
+
+まとめ（超重要）:
+
+- `setState` は更新予約
+- `appData` はまだ古い
+
+だから
+
+`nextPatients` を作る
+↓
+それを保存する

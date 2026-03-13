@@ -104,6 +104,20 @@ function App() {
     });
   };
 
+  const updatePatient = async (updated) => {
+    const nextPatients = appData.patients.map((p) =>
+      p.id === updated.id ? updated : p
+    );
+    await onSaveData({ patients: nextPatients, records: appData.records });
+  };
+
+  const updateRecord = async (updatedRecord) => {
+    const nextRecords = appData.records.map((r) =>
+      r.id === updatedRecord.id ? updatedRecord : r
+    );
+    await onSaveData({ patients: appData.patients, records: nextRecords });
+  };
+
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
       <header className="app-header">
@@ -116,12 +130,14 @@ function App() {
           patients={appData.patients}
           records={appData.records}
           setPatients={setPatients}
+          updatePatient={updatePatient}
           setRecords={setRecords}
           selectedPatientId={selectedPatientId}
           setSelectedPatientId={setSelectedPatientId}
           isLoading={loading}
           apiError={apiError}
           addRecord={addRecord}
+          updateRecord={updateRecord}
         />
 
         {import.meta.env.DEV && Object.keys(displayErrors).length > 0 && (

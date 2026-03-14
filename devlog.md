@@ -2368,3 +2368,179 @@ React では `setState` は即更新ではない。
 `nextPatients` を作る
 ↓
 それを保存する
+
+## 2026-03-15 学習ログ（React state更新 / setPatients の仕組み）
+
+### 1. 自作 setPatients の役割
+
+App では `patients` と `records` をまとめて `appData` という state で管理している。
+
+```js
+const [appData, setAppData] = useState({
+  patients: [],
+  records: [],
+});
+```
+
+そのため `patients` だけ更新するための関数を自作している。
+
+```js
+const setPatients = (updater) => {
+  setAppData((prev) => {
+    const nextPatients =
+      typeof updater === "function" ? updater(prev.patients) : updater;
+
+    return { ...prev, patients: nextPatients };
+  });
+};
+```
+
+この関数は **patients だけ更新するラッパー関数** として作られている。
+
+### 2. updater の意味
+
+`setPatients()` に渡した値が `updater` になる。
+
+例：
+
+```js
+setPatients(nextPatients);
+```
+
+この場合
+
+```text
+updater = nextPatients
+```
+
+になる。
+
+### 3. updater が関数かどうかを判定
+
+```js
+typeof updater === "function";
+```
+
+これは `updater` が関数かどうかをチェックしている。
+
+### 4. updater が関数の場合
+
+例：
+
+```js
+setPatients((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
+```
+
+この場合 `updater` は関数なので
+
+```js
+nextPatients = updater(prev.patients);
+```
+
+が実行される。
+
+つまり `prev.patients.map(...)` が実行されて、新しい配列が作られる。
+
+### 5. updater が関数じゃない場合
+
+例：
+
+```js
+setPatients(nextPatients);
+```
+
+この場合 `updater` は配列なので
+
+```js
+nextPatients = updater;
+```
+
+になる。
+
+つまり **渡された配列をそのまま使う** という意味になる。
+
+### 6. なぜこの設計なのか
+
+React の `setState` と同じ仕組みだから。
+
+React では
+
+```js
+setState(value);
+setState((prev) => newValue);
+```
+
+の2つの書き方ができる。
+
+今回の `setPatients` は、この仕組みを**自作で再現している**。
+
+### 7. prev の意味
+
+```js
+setAppData((prev) => {
+```
+
+この `prev` は **現在の `appData`** を表す。
+
+つまり
+
+```js
+prev = {
+  patients: [...],
+  records: [...],
+};
+```
+
+になる。
+
+### 8. prev.patients
+
+```js
+updater(prev.patients);
+```
+
+の `prev.patients` は **現在の patients 配列** である。
+
+### 9. React state更新の重要ルール
+
+Reactでは **state を直接変更しない** ため、`map` / `filter` / スプレッド構文 `...` を使って新しい配列を作る。
+
+更新：
+
+```js
+patients.map((p) => (p.id === updated.id ? updated : p));
+```
+
+削除：
+
+```js
+patients.filter((p) => p.id !== id);
+```
+
+追加：
+
+```js
+[...patients, newPatient];
+```
+
+### 今日の理解ポイント
+
+| 概念                            | 意味                              |
+| ------------------------------- | --------------------------------- |
+| `setPatients`                   | patients だけ更新するラッパー関数 |
+| `updater`                       | `setPatients()` に渡した引数      |
+| `typeof updater === "function"` | 関数か値かの判定                  |
+| `updater(prev.patients)`        | 関数なら実行して新しい配列を作る  |
+| `updater` をそのまま使う        | 配列なら直接 nextPatients にする  |
+| `prev`                          | 現在の `appData`                  |
+
+### 明日やること
+
+`setPatients` と `onSaveData` の役割の違いを整理する。
+
+| 関数          | 役割                           |
+| ------------- | ------------------------------ |
+| `setPatients` | React 画面更新（state の予約） |
+| `onSaveData`  | サーバー保存（fetch / PUT）    |
+
+Reactの基本思想 `UI = state` を理解する。

@@ -2544,3 +2544,447 @@ patients.filter((p) => p.id !== id);
 | `onSaveData`  | サーバー保存（fetch / PUT）    |
 
 Reactの基本思想 `UI = state` を理解する。
+
+## 2026-03-16 学習ログ（setPatients / 関数の外と中 / prev / updater の理解）
+
+### 1. 今回理解したいコード
+
+```js
+const [appData, setAppData] = useState({ patients: [], records: [] });
+
+const setPatients = (updater) => {
+  setAppData((prev) => {
+    const nextPatients =
+      typeof updater === "function" ? updater(prev.patients) : updater;
+
+    return { ...prev, patients: nextPatients };
+  });
+};
+```
+
+このコードのポイントは、React が本当に持っている state は `appData` であり、
+`patients` は単独の state ではなく `appData.patients` の一部だということ。
+
+### 2. setPatients は React の関数ではなく、自分で作った関数
+
+React がくれるのは本来これだけ。
+
+```js
+const [appData, setAppData] = useState({ patients: [], records: [] });
+```
+
+つまり React が持っているのは
+
+- `appData`
+- `setAppData`
+
+の2つだけ。
+
+`setPatients` は React がくれたものではなく、自分で作った便利関数。
+
+```js
+const setPatients = (updater) => {
+  setAppData((prev) => {
+    const nextPatients =
+      typeof updater === "function" ? updater(prev.patients) : updater;
+
+    return { ...prev, patients: nextPatients };
+  });
+};
+```
+
+これは一言でいうと、
+
+`setAppData` を patients 専用に使いやすくしたラッパー関数。
+
+### 3. 関数の「外」と「中」
+
+このコードを理解するには、2つの関数があることを分けて考える必要がある。
+
+```js
+const setPatients = (updater) => {
+  setAppData((prev) => {
+    const nextPatients =
+      typeof updater === "function" ? updater(prev.patients) : updater;
+
+    return { ...prev, patients: nextPatients };
+  });
+};
+```
+
+外の関数：
+
+```js
+const setPatients = (updater) => {
+```
+
+ここが外。自分が呼ぶ側の関数。
+
+例えばこう呼ぶ。
+
+```js
+setPatients((prev) => [...prev, newPatient]);
+```
+
+このときの `(prev) => [...prev, newPatient]` は、
+`setPatients` の引数 `updater` に入る。
+
+つまり
+
+```js
+updater = (prev) => [...prev, newPatient];
+```
+
+になる。
+
+中の関数：
+
+```js
+setAppData((prev) => {
+```
+
+ここが中。これは React に渡している関数で、React があとで実行する関数。
+
+この中の `prev` は React が渡してくる。
+
+つまり
+
+```js
+prev = 前の appData;
+```
+
+例：
+
+```js
+prev = {
+  patients: [...],
+  records: [...],
+};
+```
+
+### 4. prev が2つあるので混乱しやすい
+
+今回いちばん大事だったのは、`prev` が2種類あること。
+
+1つ目：外の prev
+
+```js
+setPatients((prev) => [...prev, newPatient]);
+```
+
+この `prev` は `patients` を表す。
+
+つまり
+
+```js
+prev = appData.patients;
+```
+
+2つ目：中の prev
+
+```js
+setAppData((prev) => {
+```
+
+この `prev` は `appData` を表す。
+
+つまり
+
+```js
+prev = {
+  patients: [...],
+  records: [...],
+};
+```
+
+### 5. 外と中を図で整理
+
+外：
+
+```text
+setPatients((prev) => [...prev, newPatient])
+            ↑
+      これは patients
+```
+
+中：
+
+```text
+setAppData((prev) => { ... })
+             ↑
+        これは appData
+```
+
+ここを混同すると、
+
+- `prev` は `appData` なのか
+- `patients` なのか
+
+が分からなくなる。
+
+でも実際は、
+
+- 外の `prev` = `patients`
+- 中の `prev` = `appData`
+
+である。
+
+### 6. updater は何者か
+
+`updater` は引数。
+ただし、その中身が関数のこともあるし、配列のこともある。
+
+パターン1：関数を渡す
+
+```js
+setPatients((prev) => [...prev, newPatient]);
+```
+
+このとき
+
+```js
+updater = (prev) => [...prev, newPatient];
+```
+
+つまり `updater` は関数。
+
+なので
+
+```js
+typeof updater === "function";
+```
+
+は `true`。
+
+パターン2：配列を渡す
+
+```js
+const nextPatients = [...patients, newPatient];
+setPatients(nextPatients);
+```
+
+このとき
+
+```js
+updater = nextPatients;
+```
+
+つまり `updater` は配列。
+
+なので
+
+```js
+typeof updater === "function";
+```
+
+は `false`。
+
+### 7. typeof updater === "function" の意味
+
+この部分は、
+
+```js
+const nextPatients =
+  typeof updater === "function" ? updater(prev.patients) : updater;
+```
+
+`updater` が関数なら、
+
+```js
+updater(prev.patients);
+```
+
+を実行する。
+
+つまり
+
+```js
+(prev) => [...prev, newPatient]
+```
+
+に対して
+
+```js
+prev.patients
+```
+
+を渡している。
+
+結果、
+
+```js
+[...prev.patients, newPatient]
+```
+
+が作られる。
+
+一方、`updater` が配列なら、そのまま使う。
+
+```js
+nextPatients = updater;
+```
+
+### 8. 本物の更新は setAppData
+
+`setPatients` がなかったら、`patients` を更新するには本当はこう書く必要がある。
+
+```js
+setAppData((prev) => ({
+  ...prev,
+  patients: [...prev.patients, newPatient],
+}));
+```
+
+つまり、本当の更新関数は `setAppData`。
+
+`setPatients` はこれを短く、分かりやすくするための自作関数。
+
+### 9. ...prev が必要な理由
+
+```js
+return { ...prev, patients: nextPatients };
+```
+
+ここでの `...prev` は、`patients` 以外のデータを消さないために必要。
+
+今の state はこう。
+
+```js
+{
+  patients: [...],
+  records: [...],
+}
+```
+
+もし `...prev` がなくてこうすると、
+
+```js
+return { patients: nextPatients };
+```
+
+新しい state は
+
+```js
+{
+  patients: nextPatients,
+}
+```
+
+だけになる。
+
+すると `records` が消える。
+
+だから `...prev` を使って、前の state を全部コピーしてから
+`patients` だけ上書きする必要がある。
+
+```js
+return { ...prev, patients: nextPatients };
+```
+
+これで結果は
+
+```js
+{
+  patients: nextPatients,
+  records: 前のrecords,
+}
+```
+
+になる。
+
+### 10. React では直接 state を変更しない
+
+React では state を直接変更するとバグの原因になる。
+
+NG：
+
+```js
+prev.patients.push(newPatient);
+return prev;
+```
+
+これは
+
+- 元の配列を直接変更している
+- 元のオブジェクトをそのまま返している
+
+ので、React が変化をうまく検知できないことがある。
+
+OK：
+
+```js
+return {
+  ...prev,
+  patients: [...prev.patients, newPatient],
+};
+```
+
+これは
+
+- 新しい配列を作る
+- 新しいオブジェクトを作る
+
+ので、React が「新しい state になった」と判断しやすい。
+
+### 11. setPatients(prev => prev) の意味
+
+```js
+setPatients((prev) => prev);
+```
+
+これは
+
+- 前の patients をそのまま返す
+
+という意味。
+
+つまり結果は `patients` は変わらない。
+更新処理自体は走るが、返している値が同じなので、結果として state は変わらない。
+
+### 12. 今回の一番大事な理解
+
+今回の理解を一言でまとめるとこうなる。
+
+- React が本当に持っている state は `appData`
+- `patients` は `appData` の中の一部
+- `setPatients` は自作の便利関数
+- 外の `prev` は `patients`
+- 中の `prev` は `appData`
+- `...prev` は他の値（`records`）を消さないために必要
+- React では直接変更せず、新しい配列・新しいオブジェクトを作る
+
+### 13. 自分用の覚え方
+
+迷ったらこう考える。
+
+- `setPatients(...)` は外
+- `setAppData((prev) => ...)` は中
+- 外の `prev` は `patients`
+- 中の `prev` は `appData`
+
+### 14. 最後にコードを1本で見る
+
+```js
+const [appData, setAppData] = useState({ patients: [], records: [] });
+
+const setPatients = (updater) => {
+  setAppData((prev) => {
+    const nextPatients =
+      typeof updater === "function" ? updater(prev.patients) : updater;
+
+    return { ...prev, patients: nextPatients };
+  });
+};
+
+setPatients((prev) => [...prev, newPatient]);
+```
+
+この流れはこう。
+
+1. 自分が `setPatients(...)` を呼ぶ
+2. `updater` に関数が入る
+3. `setAppData` に関数を渡す
+4. React が中の `prev` に `appData` を渡す
+5. `updater(prev.patients)` を実行する
+6. 新しい `patients` を作る
+7. `return { ...prev, patients: nextPatients }` で `appData` を更新する

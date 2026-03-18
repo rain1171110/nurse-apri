@@ -71,7 +71,6 @@ export default function PatientList({
     return records.filter((r) => r.patientId === selectedPatientId);
   }, [records, selectedPatientId]);
 
- 
 
   const deletePatient = async (id) => {
     const nextPatients = patients.filter((p) => p.id !== id);

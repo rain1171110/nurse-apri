@@ -249,6 +249,234 @@ UIを触らずに通信仕様を変更できる。
 テストコードは「アプリの機能」ではなく、プログラムが壊れていないか確認するためのコード。
 ユーザーのためではなく、開発者（未来の自分）のための安全装置。
 
+## 2026-03-18
+
+### 学習ログ（React データフロー / state管理 / setPatients の設計理解）
+
+#### 1. Reactのデータの流れ（超重要）
+
+Reactでは、データは上から下へ流れる。
+
+App
+↓ props
+PatientList
+↓ props
+PatientDetails
+
+これを一方向データフロー（One-way Data Flow）という。
+
+基本ルールは以下の通り。
+
+- データ → 親から子へ
+- 更新要求 → 子から親へ
+
+#### 2. stateを親（App）で管理する理由
+
+今回のアプリでは state を App に集中させている。
+
+```js
+const [appData, setAppData] = useState({
+  patients: [],
+  records: [],
+});
+```
+
+構造は以下の通り。
+
+appData
+├ patients
+└ records
+
+理由は Single Source of Truth（データの真実は1か所にする）ため。
+
+もし子で state を持つと、
+
+- App.patients
+- PatientList.patients
+
+のようにデータが分裂する。
+
+すると、
+
+- 更新したのに画面が変わらない
+- 古いデータが残る
+
+などのバグになる。
+
+#### 3. 子コンポーネントはデータ本体を持たない
+
+子は表示と操作だけ担当する。
+
+例：
+
+```js
+function PatientList({ patients }) {
+```
+
+これは App の patients を表示しているだけ。
+
+子は「患者データの本体」を持っていない。
+
+#### 4. 子が持ってよい state
+
+子が持つのは UI 状態。
+
+例えば、
+
+```js
+const [selectedPatientId, setSelectedPatientId] = useState(null);
+const [selectedRecordId, setSelectedRecordId] = useState(null);
+const [activeView, setActiveView] = useState("list");
+```
+
+これは、
+
+- どの患者を選んでいるか
+- どの画面を表示しているか
+
+なので UI 専用 state。
+
+#### 5. selectedPatientId を持つ理由
+
+患者データ本体をコピーするとズレが起きる。
+
+危険な例：
+
+```js
+const [selectedPatient, setSelectedPatient] = useState(patient);
+```
+
+すると、
+
+- patients
+- selectedPatient
+
+の2つになる。
+
+更新ズレが起きる可能性がある。
+
+そのため、
+
+```js
+const [selectedPatientId, setSelectedPatientId] = useState(null);
+```
+
+にして、
+
+```js
+patients.find((p) => p.id === selectedPatientId);
+```
+
+で取得する。
+
+これにより患者データは1か所だけになる。
+
+#### 6. setPatients を自作している理由
+
+App の state は以下の形。
+
+```js
+const [appData, setAppData] = useState({
+  patients: [],
+  records: [],
+});
+```
+
+なので普通はこう更新する必要がある。
+
+```js
+setAppData((prev) => ({
+  ...prev,
+  patients: nextPatients,
+}));
+```
+
+しかしこれを子が書くと、App の内部構造を子が知る必要がある。
+
+そこで、
+
+```js
+const setPatients = (updater) => {
+  setAppData((prev) => {
+    const nextPatients =
+      typeof updater === "function" ? updater(prev.patients) : updater;
+
+    return { ...prev, patients: nextPatients };
+  });
+};
+```
+
+を作る。
+
+これにより子は、
+
+```js
+setPatients(nextPatients);
+```
+
+だけ書けばよい。
+
+つまり App の内部構造を隠す（カプセル化）ため。
+
+#### 7. 患者追加の流れ
+
+```js
+const patientToAdd = { ...data, id: crypto.randomUUID() };
+
+const nextPatients = [...patients, patientToAdd];
+
+await onSaveData({ patients: nextPatients, records });
+
+setPatients(nextPatients);
+```
+
+流れは以下の通り。
+
+1. フォーム入力
+2. patientToAdd 作成
+3. nextPatients 作成
+4. サーバー保存
+5. App の state 更新
+6. React 再描画
+7. 新しい patients が props で子へ渡る
+
+#### 8. React再描画の仕組み
+
+```js
+setPatients(nextPatients);
+```
+
+が実行されると、
+
+App の state 変更
+↓
+React が App を再実行
+↓
+新しい props が子に渡る
+↓
+子が再描画
+
+つまり、親 state 更新 → 再描画 → 新しい props の流れ。
+
+#### 9. React設計まとめ
+
+今回のアプリ設計は、
+
+- state集中（Single Source of Truth）
+- 一方向データフロー
+- 責任の分離
+- カプセル化
+
+という React の基本設計を使っている。
+
+### 今日の理解
+
+- stateは親に集中させる
+- 子はデータ本体を持たない
+- propsは親のstateを表示する仕組み
+- 更新は子→親の関数を呼ぶ
+- setPatientsはappData構造を隠すため
+
 手動確認：
 
 - フォームを開く
@@ -2799,13 +3027,13 @@ updater(prev.patients);
 つまり
 
 ```js
-(prev) => [...prev, newPatient]
+(prev) => [...prev, newPatient];
 ```
 
 に対して
 
 ```js
-prev.patients
+prev.patients;
 ```
 
 を渡している。
@@ -2813,7 +3041,7 @@ prev.patients
 結果、
 
 ```js
-[...prev.patients, newPatient]
+[...prev.patients, newPatient];
 ```
 
 が作られる。

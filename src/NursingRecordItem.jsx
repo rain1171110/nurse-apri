@@ -99,7 +99,7 @@ export default function NursingRecordItem({
           >
             戻る
           </button>
-          <DeleteButton onDelete={() => onDeleteRecord(record.id)} />
+          <DeleteButton handleDelete={() => onDeleteRecord(record.id)} />
         </div>
       )}
     </div>

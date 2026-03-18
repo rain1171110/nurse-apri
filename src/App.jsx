@@ -118,6 +118,17 @@ function App() {
     await onSaveData({ patients: appData.patients, records: nextRecords });
   };
 
+  const deletePatient = async (id) => {
+    const nextPatients = appData.patients.filter((p) => p.id !== id);
+    const nextRecords = appData.records.filter((r) => r.patientId !== id);
+    await onSaveData({ patients: nextPatients, records: nextRecords });
+    setSelectedPatientId(null);
+  };
+  const deleteRecord = async (id) => {
+    const nextRecords = appData.records.filter((r) => r.id !== id);
+    await onSaveData({ patients: appData.patients, records: nextRecords });
+  };
+
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
       <header className="app-header">
@@ -138,6 +149,8 @@ function App() {
           apiError={apiError}
           addRecord={addRecord}
           updateRecord={updateRecord}
+          deletePatient={deletePatient}
+          deleteRecord={deleteRecord}
         />
 
         {import.meta.env.DEV && Object.keys(displayErrors).length > 0 && (

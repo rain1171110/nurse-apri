@@ -22,6 +22,8 @@ export default function PatientList({
   addRecord,
   updatePatient,
   updateRecord,
+  deletePatient,
+  deleteRecord,
 }) {
   const [selectedRecordId, setSelectedRecordId] = useState(null);
 
@@ -43,9 +45,9 @@ export default function PatientList({
 
   const handleBack = () => {
     setSelectedPatientId(null);
+    setSelectedRecordId(null);
     setActiveView("list");
   };
-
 
   const patientRecordItem = selectedRecordId
     ? records.find((r) => r.id === selectedRecordId)
@@ -71,26 +73,23 @@ export default function PatientList({
     return records.filter((r) => r.patientId === selectedPatientId);
   }, [records, selectedPatientId]);
 
-
-  const deletePatient = async (id) => {
-    const nextPatients = patients.filter((p) => p.id !== id);
-    const nextRecords = records.filter((r) => r.patientId !== id);
-    await onSaveData({ patients: nextPatients, records: nextRecords });
-    setSelectedPatientId(null);
-    setSelectedRecordId(null);
-    setActiveView("list");
-  };
-  const deleteRecord = async (id) => {
-    const nextRecords = records.filter((r) => r.id !== id);
-    await onSaveData({ patients, records: nextRecords });
-    setSelectedRecordId(null);
-    setActiveView("records");
-  };
-
   const usedRoomsForEdit = useMemo(
     () => extractUsedRoomNumbers(patients, selectedPatient?.id),
     [patients, selectedPatient?.id],
   );
+
+  const handleDeletePatient = async () => {
+    if (!selectedPatient) return;
+    await deletePatient(selectedPatient.id);
+    setSelectedRecordId(null);
+    setActiveView("list");
+  };
+
+  const handleDeleteRecord = async (id) => {
+    await deleteRecord(id);
+    setSelectedRecordId(null);
+    setActiveView("records");
+  };
 
   return (
     <div className="container">
@@ -186,6 +185,7 @@ export default function PatientList({
             onSelect={handleSelect}
             addRecord={addRecord}
             onErrorsChange={onErrorsChange}
+            deleteRecord={handleDeleteRecord}
           />
         </>
       ) : activeView === "recordItem" ? (
@@ -201,7 +201,7 @@ export default function PatientList({
             setIsEditing={setIsEditing}
             updateRecord={updateRecord}
             updatePatient={updatePatient}
-            onDeleteRecord={deleteRecord}
+            onDeleteRecord={handleDeleteRecord}
             onErrorsChange={onErrorsChange}
           />
         </>
@@ -212,7 +212,7 @@ export default function PatientList({
             records={patientRecords}
             onBack={handleBack}
             onSelect={handleSelect}
-            onDelete={() => deletePatient(selectedPatient.id)}
+            onDelete={handleDeletePatient}
           />
         </>
       ) : (

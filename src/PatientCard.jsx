@@ -41,7 +41,7 @@ export default function PatientCard({ patient, onSelect, onBack, onDelete }) {
         >
           戻る
         </button>
-        <DeleteButton onDelete={() => onDelete(patient.id)} />
+        <DeleteButton handleDelete={onDelete} />
       </div>
     </div>
   );

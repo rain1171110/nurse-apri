@@ -3216,3 +3216,184 @@ ReactがAppを再実行
 - propsは親のstateを表示する仕組み
 - 更新は子→親の関数を呼ぶ
 - setPatientsはappData構造を隠すため
+
+## 2026-03-19
+
+### 学習ログ（削除機能 / ラッパー関数 / 責任の分離）
+
+---
+
+#### 1. 削除処理の全体の流れ
+
+削除機能は以下の流れで実装されている。
+
+```text
+DeleteButton
+  ↓
+PatientCard
+  ↓
+PatientList（ラッパー関数）
+  ↓
+App（データ削除・保存）
+```
+
+---
+
+#### 2. App の役割（データの本体）
+
+Appでは「実際の削除処理」を担当する。
+
+```js
+const deletePatient = async (id) => {
+  const nextPatients = appData.patients.filter((p) => p.id !== id);
+  const nextRecords = appData.records.filter((r) => r.patientId !== id);
+  await onSaveData({ patients: nextPatients, records: nextRecords });
+  setSelectedPatientId(null);
+};
+```
+
+```js
+const deleteRecord = async (id) => {
+  const nextRecords = appData.records.filter((r) => r.id !== id);
+  await onSaveData({ patients: appData.patients, records: nextRecords });
+};
+```
+
+ポイント：
+
+- `filter` を使って削除対象以外を残す
+- `nextPatients / nextRecords` を作ってから保存
+- データの責任はすべて App にある
+
+---
+
+#### 3. PatientList の役割（ラッパー関数）
+
+削除後の画面制御は PatientList が担当する。
+
+```js
+const handleDeletePatient = async () => {
+  if (!selectedPatient) return;
+  await deletePatient(selectedPatient.id);
+  setSelectedRecordId(null);
+  setActiveView("list");
+};
+```
+
+```js
+const handleDeleteRecord = async (id) => {
+  await deleteRecord(id);
+  setSelectedRecordId(null);
+  setActiveView("records");
+};
+```
+
+ポイント：
+
+- delete関数（App）を呼び出す
+- その後にUI状態を更新する
+- これが「ラッパー関数」
+
+---
+
+#### 4. ラッパー関数の理解
+
+ラッパー関数とは、
+
+「元の関数 + 追加処理」をまとめた関数
+
+例：
+
+```js
+const handleDeleteRecord = async (id) => {
+  await deleteRecord(id); // 元の関数（データ削除）
+  setSelectedRecordId(null); // 追加処理（UI更新）
+  setActiveView("records"); // 追加処理（画面遷移）
+};
+```
+
+---
+
+#### 5. 引数あり・なしの判断
+
+判断基準：
+
+- 関数の中で値が取れる → 引数いらない
+- 外から渡さないと分からない → 引数いる
+
+例：
+
+```js
+// 引数いらない（selectedPatientがある）
+const handleDeletePatient = () => {
+  deletePatient(selectedPatient.id);
+};
+
+// 引数いる（どのrecordか分からない）
+const handleDeleteRecord = (id) => {
+  deleteRecord(id);
+};
+```
+
+---
+
+#### 6. UIコンポーネントの役割
+
+DeleteButton：
+
+```js
+export default function DeleteButton({ handleDelete }) {
+  return <button onClick={handleDelete}>削除</button>;
+}
+```
+
+PatientCard：
+
+```js
+<DeleteButton handleDelete={onDelete} />
+```
+
+ポイント：
+
+- UIは処理を持たない
+- ただ関数を呼ぶだけ
+
+---
+
+#### 7. 責任の分離（最重要）
+
+今回の一番重要な学び：
+
+- App → データの責任（削除・保存）
+- PatientList → 画面状態の責任（遷移・選択解除）
+- PatientCard / Button → UI表示
+
+つまり
+
+「UI・ロジック・データ」を分ける
+
+---
+
+#### 8. 今回の理解ポイントまとめ
+
+- filterで削除する仕組み
+- next配列を作ってから保存する流れ
+- ラッパー関数の役割
+- 引数あり / なしの判断
+- propsの正しい受け渡し
+- 責任の分離（最重要）
+
+---
+
+#### 9. 感想（重要）
+
+削除処理を通して、
+
+- stateの持ち場所
+- 関数の役割分担
+- UIとロジックの分離
+
+が理解できてきた。
+
+特に「ラッパー関数」と「責任の分離」は
+React設計の基礎として重要。

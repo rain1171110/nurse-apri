@@ -3397,3 +3397,140 @@ PatientCard：
 
 特に「ラッパー関数」と「責任の分離」は
 React設計の基礎として重要。
+
+## 2026-03-20
+
+### 学習ログ（削除処理 / ラッパー関数 / イベント設計）
+
+---
+
+### ① 削除処理の全体構造
+
+削除は1つのコンポーネントでやっているのではなく、役割が分かれている。
+
+- **DeleteButton**
+  - ボタン表示のみ
+  - `onClick` を実行するだけ（削除処理はしない）
+
+- **PatientCard**
+  - `patient.id` を持っている
+  - 押されたときに `onDelete(patient.id)` を呼ぶ
+  - 削除対象を特定して親に渡す役割
+
+- **PatientList**
+  - 実際の削除処理を行う
+  - `filter` を使って対象データを除外
+  - `onSaveData` を通して保存・state更新
+
+---
+
+### ② データの流れ（重要）
+
+削除の流れは以下の通り
+
+DeleteButton
+→ クリック
+→ PatientCard の handleDelete 実行
+→ onDelete(patient.id)
+→ PatientList の deletePatient(id)
+→ filterで削除
+→ onSaveDataで保存
+→ Appのstate更新
+→ 再描画
+
+---
+
+### ③ ラッパー関数の理解
+
+ラッパー関数は難しいものではなく、
+
+```jsx
+const handleDelete = () => {
+  onDelete(patient.id);
+};
+```
+
+のように、
+
+**「必要な値をつけて親の関数を呼ぶための関数」**
+
+---
+
+### ④ なぜ () => が必要か（重要）
+
+```jsx
+onClick={onDelete(patient.id)} ❌
+```
+
+これはその場で実行されてしまう
+
+```jsx
+onClick={() => onDelete(patient.id)} ✅
+```
+
+これはクリックされたときに実行される
+
+---
+
+### ⑤ ルールまとめ
+
+- 引数なし → そのまま渡す
+
+```jsx
+onClick = { handleDelete };
+```
+
+- 引数あり → ラッパー関数
+
+```jsx
+onClick={() => onDelete(patient.id)}
+```
+
+---
+
+### ⑥ idを渡す理由（重要）
+
+削除は必ず対象を特定する必要があるため、
+
+```jsx
+onDelete(patient.id);
+```
+
+のように **idを渡す設計が安全**
+
+- 選択状態に依存するとバグの原因になる
+- 一覧画面では特に危険
+
+---
+
+### ⑦ 設計の理解（Reactの本質）
+
+- イベントは **子 → 親に通知**
+- stateは **親 → 子へ流れる**
+
+---
+
+### ⑧ DeleteButtonの改善
+
+```jsx
+export default function DeleteButton({ onClick }) {
+  return <button onClick={onClick}>削除</button>;
+}
+```
+
+- UI専用コンポーネントになった
+- 再利用しやすい設計
+
+---
+
+### ⑨ 今日の一番大事な理解
+
+- ボタンは削除していない
+- 削除は親がやる
+- 子は「どれを削除するか」を伝えるだけ
+
+---
+
+### ⑩ 一言まとめ
+
+ラッパー関数 = イベント + 必要な値を親に渡すための関数

@@ -185,7 +185,6 @@ export default function PatientList({
             onSelect={handleSelect}
             addRecord={addRecord}
             onErrorsChange={onErrorsChange}
-            deleteRecord={handleDeleteRecord}
           />
         </>
       ) : activeView === "recordItem" ? (

@@ -2,18 +2,8 @@
   "patients": [
     {
       "name": "鈴木次郎",
-      "room": 444,
-      "id": "5db619f2-5cb1-4395-ad8b-c5159317f606"
-    },
-    {
-      "name": "鈴木次郎",
-      "room": 555,
-      "id": "7ed47e0f-4259-46a1-9ebb-30485ac95080"
-    },
-    {
-      "name": "okazaki hinano",
-      "room": 10,
-      "id": "0848af4a-f1c9-4c7e-979a-d0b6aa8b59ec"
+      "room": 101,
+      "id": "10d5422f-a7da-4851-b941-c3dc631bd5d0"
     }
   ],
   "records": []

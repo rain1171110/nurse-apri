@@ -91,6 +91,65 @@ export default function PatientList({
     setActiveView("records");
   };
 
+  const viewMap = {
+    details: (
+      <PatientDetails
+        patient={selectedPatient}
+        onBack={handleBack}
+        onBackToMenu={handleBackToMenu}
+        isEditing={isEditing}
+        setIsEditing={setIsEditing}
+        updatePatient={updatePatient}
+        onErrorsChange={onErrorsChange}
+        usedRoomsForEdit={usedRoomsForEdit}
+      />
+    ),
+    vitals: (
+      <PatientVitals
+        patient={selectedPatient}
+        records={patientRecords}
+        onBackToRecords={handleBackToRecords}
+        onBackToMenu={handleBackToMenu}
+      />
+    ),
+    records: (
+      <NursingRecordList
+        patient={selectedPatient}
+        records={patientRecords}
+        onBack={handleBack}
+        onBackToMenu={handleBackToMenu}
+        onSelect={handleSelect}
+        addRecord={addRecord}
+        onErrorsChange={onErrorsChange}
+      />
+    ),
+    recordItem: (
+      <NursingRecordItem
+        key={patientRecordItem?.id}
+        patient={selectedPatient}
+        record={patientRecordItem}
+        onBack={handleBack}
+        onSelect={handleSelect}
+        onBackToRecords={handleBackToRecords}
+        isEditing={isEditing}
+        setIsEditing={setIsEditing}
+        updateRecord={updateRecord}
+        updatePatient={updatePatient}
+        onDeleteRecord={handleDeleteRecord}
+        onErrorsChange={onErrorsChange}
+      />
+    ),
+    menu: (
+      <PatientCard
+        patient={selectedPatient}
+        records={patientRecords}
+        onBack={handleBack}
+        onSelect={handleSelect}
+        onDelete={handleDeletePatient}
+      />
+    ),
+  };
+
   return (
     <div className="container">
       {isLoading && (
@@ -153,69 +212,8 @@ export default function PatientList({
             setShowAddForm={setShowAddForm}
           />
         </section>
-      ) : activeView === "details" ? (
-        <>
-          <PatientDetails
-            patient={selectedPatient}
-            onBack={handleBack}
-            onBackToMenu={handleBackToMenu}
-            isEditing={isEditing}
-            setIsEditing={setIsEditing}
-            updatePatient={updatePatient}
-            onErrorsChange={onErrorsChange}
-            usedRoomsForEdit={usedRoomsForEdit}
-          />
-        </>
-      ) : activeView === "vitals" ? (
-        <>
-          <PatientVitals
-            patient={selectedPatient}
-            records={patientRecords}
-            onBackToRecords={handleBackToRecords}
-            onBackToMenu={handleBackToMenu}
-          />
-        </>
-      ) : activeView === "records" ? (
-        <>
-          <NursingRecordList
-            patient={selectedPatient}
-            records={patientRecords}
-            onBack={handleBack}
-            onBackToMenu={handleBackToMenu}
-            onSelect={handleSelect}
-            addRecord={addRecord}
-            onErrorsChange={onErrorsChange}
-          />
-        </>
-      ) : activeView === "recordItem" ? (
-        <>
-          <NursingRecordItem
-            key={patientRecordItem?.id}
-            patient={selectedPatient}
-            record={patientRecordItem}
-            onBack={handleBack}
-            onSelect={handleSelect}
-            onBackToRecords={handleBackToRecords}
-            isEditing={isEditing}
-            setIsEditing={setIsEditing}
-            updateRecord={updateRecord}
-            updatePatient={updatePatient}
-            onDeleteRecord={handleDeleteRecord}
-            onErrorsChange={onErrorsChange}
-          />
-        </>
-      ) : activeView === "menu" ? (
-        <>
-          <PatientCard
-            patient={selectedPatient}
-            records={patientRecords}
-            onBack={handleBack}
-            onSelect={handleSelect}
-            onDelete={handleDeletePatient}
-          />
-        </>
       ) : (
-        <div>未実装</div>
+        (viewMap[activeView] ?? <div>未実装</div>)
       )}
     </div>
   );

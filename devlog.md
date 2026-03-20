@@ -3534,3 +3534,162 @@ export default function DeleteButton({ onClick }) {
 ### ⑩ 一言まとめ
 
 ラッパー関数 = イベント + 必要な値を親に渡すための関数
+
+## 2026-03-21
+
+### 学習ログ（viewMap / 画面切り替え設計の理解）
+
+---
+
+### ① activeView と viewMap の関係
+
+- `activeView` は「今どの画面を表示するか」を表す state
+- `viewMap` は「画面名とコンポーネントの対応表」
+
+```txt
+activeView（状態） → viewMap[activeView] → 表示UI
+```
+
+---
+
+### ② viewMap の正体
+
+```jsx
+const viewMap = {
+  details: <PatientDetails />,
+  vitals: <PatientVitals />,
+  menu: <PatientMenu />,
+};
+```
+
+- 配列ではなく **オブジェクト**
+- キー（"details"など）で管理している
+
+---
+
+### ③ viewMap[activeView] の意味
+
+```jsx
+viewMap[activeView]
+```
+
+これは
+
+```jsx
+viewMap["details"]
+```
+
+のように変換され、
+
+対応するコンポーネントを取り出している
+
+---
+
+### ④ 配列との違い
+
+- 配列 → index（0,1,2）で管理
+- オブジェクト → 名前（details, vitals）で管理
+
+```txt
+配列 = 順番で管理
+オブジェクト = 名前で管理
+```
+
+画面は「名前」で管理した方が分かりやすいため、オブジェクトを使う
+
+---
+
+### ⑤ [] 記法の意味
+
+```jsx
+viewMap[activeView]
+```
+
+- これは配列ではなく **オブジェクトアクセス（ブラケット記法）**
+- 変数を使ってキーを指定できる
+
+```txt
+[] = データ取得（オブジェクトから値を取り出す）
+```
+
+---
+
+### ⑥ ${} との違い
+
+```js
+`${value}`
+```
+
+- 文字列の中で変数を使うときに使う
+
+今回の `viewMap` とは無関係
+
+```txt
+${} = 文字列
+[] = データ取得
+```
+
+---
+
+### ⑦ ?? の役割
+
+```jsx
+viewMap[activeView] ?? <div>未実装</div>
+```
+
+- 存在しないキーの場合 `undefined` になる
+- `??` によって代替UIを表示
+
+```txt
+?? = フォールバック（保険）
+```
+
+---
+
+### ⑧ なぜ viewMap を使うのか
+
+三項演算子との比較
+
+```jsx
+activeView === "details" ? (...) :
+activeView === "vitals" ? (...) :
+...
+```
+
+問題点
+
+- 長くなると読みにくい
+
+viewMapにすると
+
+- 条件分岐が1箇所にまとまる
+- 追加・変更が簡単
+- 見通しが良くなる
+
+---
+
+### ⑨ React設計とのつながり
+
+- Reactは「state → UI」の仕組み
+- viewMapはそのルールを整理したもの
+
+```txt
+state（activeView） → UI（viewMap）
+```
+
+---
+
+### ⑩ 今日の一番重要な理解
+
+- viewMapは配列ではなくオブジェクト
+- []は配列ではなく「オブジェクトアクセス」
+- activeViewをキーとしてUIを取り出している
+
+---
+
+### ⑪ 一言まとめ
+
+```txt
+viewMapは「画面名 → 表示コンポーネント」の対応表で、
+activeViewを使って表示するUIを取り出している
+```

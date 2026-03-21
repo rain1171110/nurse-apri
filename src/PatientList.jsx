@@ -92,63 +92,80 @@ export default function PatientList({
   };
 
   const viewMap = {
-    details: (
-      <PatientDetails
-        patient={selectedPatient}
-        onBack={handleBack}
-        onBackToMenu={handleBackToMenu}
-        isEditing={isEditing}
-        setIsEditing={setIsEditing}
-        updatePatient={updatePatient}
-        onErrorsChange={onErrorsChange}
-        usedRoomsForEdit={usedRoomsForEdit}
-      />
-    ),
-    vitals: (
-      <PatientVitals
-        patient={selectedPatient}
-        records={patientRecords}
-        onBackToRecords={handleBackToRecords}
-        onBackToMenu={handleBackToMenu}
-      />
-    ),
-    records: (
-      <NursingRecordList
-        patient={selectedPatient}
-        records={patientRecords}
-        onBack={handleBack}
-        onBackToMenu={handleBackToMenu}
-        onSelect={handleSelect}
-        addRecord={addRecord}
-        onErrorsChange={onErrorsChange}
-      />
-    ),
-    recordItem: (
-      <NursingRecordItem
-        key={patientRecordItem?.id}
-        patient={selectedPatient}
-        record={patientRecordItem}
-        onBack={handleBack}
-        onSelect={handleSelect}
-        onBackToRecords={handleBackToRecords}
-        isEditing={isEditing}
-        setIsEditing={setIsEditing}
-        updateRecord={updateRecord}
-        updatePatient={updatePatient}
-        onDeleteRecord={handleDeleteRecord}
-        onErrorsChange={onErrorsChange}
-      />
-    ),
-    menu: (
-      <PatientCard
-        patient={selectedPatient}
-        records={patientRecords}
-        onBack={handleBack}
-        onSelect={handleSelect}
-        onDelete={handleDeletePatient}
-      />
-    ),
+    details: () =>
+      !selectedPatient ? (
+        <div>未選択</div>
+      ) : (
+        <PatientDetails
+          patient={selectedPatient}
+          onBack={handleBack}
+          onBackToMenu={handleBackToMenu}
+          isEditing={isEditing}
+          setIsEditing={setIsEditing}
+          updatePatient={updatePatient}
+          onErrorsChange={onErrorsChange}
+          usedRoomsForEdit={usedRoomsForEdit}
+        />
+      ),
+    vitals: () =>
+      !selectedPatient ? (
+        <div>未選択</div>
+      ) : (
+        <PatientVitals
+          patient={selectedPatient}
+          records={patientRecords}
+          onBackToRecords={handleBackToRecords}
+          onBackToMenu={handleBackToMenu}
+        />
+      ),
+    records: () =>
+      !selectedPatient ? (
+        <div>未選択</div>
+      ) : (
+        <NursingRecordList
+          patient={selectedPatient}
+          records={patientRecords}
+          onBack={handleBack}
+          onBackToMenu={handleBackToMenu}
+          onSelect={handleSelect}
+          addRecord={addRecord}
+          onErrorsChange={onErrorsChange}
+        />
+      ),
+    recordItem: () =>
+      !selectedPatient || !patientRecordItem ? (
+        <div>未選択</div>
+      ) : (
+        <NursingRecordItem
+          key={patientRecordItem?.id}
+          patient={selectedPatient}
+          record={patientRecordItem}
+          onBack={handleBack}
+          onSelect={handleSelect}
+          onBackToRecords={handleBackToRecords}
+          isEditing={isEditing}
+          setIsEditing={setIsEditing}
+          updateRecord={updateRecord}
+          updatePatient={updatePatient}
+          onDeleteRecord={handleDeleteRecord}
+          onErrorsChange={onErrorsChange}
+        />
+      ),
+    menu: () =>
+      !selectedPatient ? (
+        <div>未選択</div>
+      ) : (
+        <PatientCard
+          patient={selectedPatient}
+          records={patientRecords}
+          onBack={handleBack}
+          onSelect={handleSelect}
+          onDelete={handleDeletePatient}
+        />
+      ),
   };
+
+  const CurrentView = viewMap[activeView];
 
   return (
     <div className="container">
@@ -212,8 +229,10 @@ export default function PatientList({
             setShowAddForm={setShowAddForm}
           />
         </section>
+      ) : CurrentView ? (
+        CurrentView()
       ) : (
-        (viewMap[activeView] ?? <div>未実装</div>)
+        <div>未実装</div>
       )}
     </div>
   );

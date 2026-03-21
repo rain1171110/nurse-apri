@@ -3570,13 +3570,13 @@ const viewMap = {
 ### ③ viewMap[activeView] の意味
 
 ```jsx
-viewMap[activeView]
+viewMap[activeView];
 ```
 
 これは
 
 ```jsx
-viewMap["details"]
+viewMap["details"];
 ```
 
 のように変換され、
@@ -3602,7 +3602,7 @@ viewMap["details"]
 ### ⑤ [] 記法の意味
 
 ```jsx
-viewMap[activeView]
+viewMap[activeView];
 ```
 
 - これは配列ではなく **オブジェクトアクセス（ブラケット記法）**
@@ -3617,7 +3617,7 @@ viewMap[activeView]
 ### ⑥ ${} との違い
 
 ```js
-`${value}`
+`${value}`;
 ```
 
 - 文字列の中で変数を使うときに使う
@@ -3634,7 +3634,7 @@ ${} = 文字列
 ### ⑦ ?? の役割
 
 ```jsx
-viewMap[activeView] ?? <div>未実装</div>
+viewMap[activeView] ?? <div>未実装</div>;
 ```
 
 - 存在しないキーの場合 `undefined` になる
@@ -3693,3 +3693,142 @@ state（activeView） → UI（viewMap）
 viewMapは「画面名 → 表示コンポーネント」の対応表で、
 activeViewを使って表示するUIを取り出している
 ```
+
+## 2026-03-22 学習ログ（viewMap と CurrentView の理解）
+
+### ① viewMap の役割
+
+- `viewMap` は「画面ごとの表示方法（関数）」をまとめたオブジェクト。
+- 各プロパティには JSX ではなく「JSX を返す関数」を入れている。
+
+```js
+const viewMap = {
+  details: () => <PatientDetails />,
+  records: () => <NursingRecordList />,
+};
+```
+
+👉 画面そのものではなく「画面の作り方」を管理している
+
+---
+
+### ② viewMap[activeView] の意味（重要）
+
+```js
+const CurrentView = viewMap[activeView];
+```
+
+これは
+
+👉 オブジェクトから値を1つ取り出しているだけ
+
+---
+
+#### 分解して理解
+
+```js
+const activeView = "details";
+
+viewMap[activeView]
+// ↓
+viewMap["details"]
+// ↓
+() => <PatientDetails />
+```
+
+つまり
+
+```js
+const CurrentView = () => <PatientDetails />;
+```
+
+と同じ状態になる
+
+---
+
+### ③ CurrentView の正体
+
+- `CurrentView` は「関数が入った変数」
+- 関数を新しく作っているのではなく、**viewMap に入っている関数を取り出しているだけ**
+
+---
+
+### ④ なぜ CurrentView() と書くのか
+
+```js
+CurrentView();
+```
+
+👉 関数を実行して JSX を作るため
+
+---
+
+#### 前との違い
+
+【前】
+
+```js
+viewMap[activeView];
+```
+
+👉 JSX（完成品）を直接表示していた
+
+【今】
+
+```js
+viewMap[activeView];
+```
+
+👉 関数が返ってくるので、実行が必要
+
+---
+
+### ⑤ 安全な表示方法
+
+```js
+CurrentView ? CurrentView() : <div>未実装</div>;
+```
+
+- 関数がある → 実行
+- 関数がない → 未実装
+
+👉 undefined() を防ぐために必要
+
+---
+
+### ⑥ 設計の理解（重要）
+
+今回の変更で
+
+- JSX（値）で管理 → ❌
+- 関数（作り方）で管理 → ✅
+
+に変わった
+
+---
+
+### ⑦ 今の理解まとめ
+
+- viewMap は「画面の辞書」
+- activeView は「どの画面かのキー」
+- CurrentView は「取り出した関数」
+- CurrentView() で画面が生成される
+
+---
+
+### 明日の学習ポイント
+
+👉 `const CurrentView = viewMap[activeView];` の理解を深める
+
+特にここを意識する
+
+- オブジェクトから値を取り出しているだけ
+- 関数を代入しているだけ
+- 実行しているわけではない（←重要）
+
+---
+
+### 一言まとめ
+
+👉 「関数を作っている」のではなく
+👉 「関数を取り出しているだけ」

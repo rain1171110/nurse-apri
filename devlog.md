@@ -3832,3 +3832,129 @@ CurrentView ? CurrentView() : <div>未実装</div>;
 
 👉 「関数を作っている」のではなく
 👉 「関数を取り出しているだけ」
+
+## 2026-03-23 学習ログ（activeView / viewMap / CurrentView の完全理解）
+
+### ① activeView の役割
+
+```js
+const activeView = "records";
+```
+
+- 「今どの画面を表示するか」を表す値
+- `viewMap` のキーと対応している
+
+👉 画面を切り替えるスイッチの役割
+
+### ② viewMap の役割
+
+```js
+const viewMap = {
+  details: () => <PatientDetails />,
+  records: () => <NursingRecordList />,
+};
+```
+
+- 画面ごとの表示方法（関数）をまとめたオブジェクト
+- JSXではなく「JSXを返す関数」を入れている
+
+👉 画面そのものではなく「画面の作り方」を管理
+
+### ③ viewMap[activeView] の意味（最重要）
+
+```js
+const CurrentView = viewMap[activeView];
+```
+
+分解:
+
+```txt
+activeView = "records"
+↓
+viewMap["records"]
+↓
+() => <NursingRecordList />
+```
+
+👉 関数を取り出しているだけ
+
+### ④ CurrentView の正体
+
+- 関数が入った変数
+- 新しく作っているのではなく、`viewMap`から取り出しているだけ
+
+### ⑤ 関数と実行の違い（重要）
+
+関数を取り出す:
+
+```js
+viewMap["details"];
+```
+
+👉 中身は `() => ...`
+
+実行する:
+
+```js
+viewMap["details"]();
+```
+
+👉 中身は JSX
+
+まとめ:
+
+| 書き方           | 中身 |
+| ---------------- | ---- |
+| `viewMap[key]`   | 関数 |
+| `viewMap[key]()` | JSX  |
+
+### ⑥ なぜ CurrentView() と書くのか
+
+```js
+CurrentView();
+```
+
+👉 関数を実行して JSX を生成するため
+
+### ⑦ 安全な表示
+
+```js
+CurrentView ? CurrentView() : <div>未実装</div>;
+```
+
+- 関数がある → 実行
+- 関数がない → 未実装
+
+👉 `undefined()` を防ぐ
+
+### ⑧ なぜ const CurrentView を先に書くのか
+
+```js
+const CurrentView = viewMap[activeView];
+```
+
+- 表示する画面を「先に決めている」
+- `return` の中をシンプルにするため
+
+👉 準備と表示を分けている
+
+### ⑨ 設計の本質（超重要）
+
+今回の学びで
+
+- JSX（完成品）で管理 → ❌
+- 関数（作り方）で管理 → ✅
+
+に変わった
+
+### ⑩ イメージまとめ
+
+- `viewMap` → メニュー表
+- `activeView` → 注文
+- `CurrentView` → 選ばれた料理
+- `CurrentView()` → 料理を作る
+
+### 今日の一言まとめ
+
+👉 「関数を作っている」のではなく
+👉 「関数を取り出して、あとで実行している」

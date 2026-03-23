@@ -3958,3 +3958,180 @@ const CurrentView = viewMap[activeView];
 
 👉 「関数を作っている」のではなく
 👉 「関数を取り出して、あとで実行している」
+
+## 2026-03-24 学習ログ（Router導入 / URLで画面管理）
+
+### ① viewMap の復習
+
+`viewMap` は「画面の辞書」。
+値は JSX そのものではなく、JSX を返す関数として持つ。
+
+```js
+const viewMap = {
+  details: () => <PatientDetails />,
+};
+```
+
+学び:
+
+```js
+const CurrentView = viewMap[activeView];
+```
+
+これは「関数を取り出している」。
+
+```js
+CurrentView();
+```
+
+これは「関数を実行して画面を生成している」。
+
+つまり:
+
+👉 画面 = 関数の戻り値
+
+### ② Router の導入
+
+やったこと:
+
+```bash
+npm install react-router-dom
+```
+
+Router の役割:
+
+👉 URL によって画面を切り替える
+
+今までとの違い:
+
+| 今まで        | Router    |
+| ------------- | --------- |
+| stateで管理   | URLで管理 |
+| setActiveView | navigate  |
+| viewMap       | Route     |
+
+### ③ Router の基本構造
+
+`main.jsx`
+
+```jsx
+<Router>
+  <Routes>
+    <Route path="/*" element={<App />} />
+  </Routes>
+</Router>
+```
+
+`App.jsx`
+
+```jsx
+<Routes>
+  <Route path="/" element={<PatientList />} />
+  <Route path="/test" element={<div>テスト</div>} />
+</Routes>
+```
+
+学び:
+
+👉 Router は 1 つだけ
+👉 今回は `main.jsx` に置く設計
+
+### ④ よく出たエラーと理解
+
+❌ `react-router-dom` がない
+
+👉 インストールしていない
+
+```bash
+npm install react-router-dom
+```
+
+❌ `useNavigate is not defined`
+
+👉 import 忘れ
+
+```js
+import { useNavigate } from "react-router-dom";
+```
+
+❌ Router が2個ある
+
+```txt
+You cannot render a <Router> inside another <Router>
+```
+
+👉 `main` と `App` の両方に書いていた
+
+学び:
+
+👉 Router は 1 つだけ
+
+### ⑤ useNavigate（画面遷移）
+
+```js
+const navigate = useNavigate();
+
+navigate("/test");
+```
+
+学び:
+
+👉 ボタンで画面遷移できる
+
+### ⑥ useParams（URLから値取得）
+
+```js
+const { id } = useParams();
+```
+
+例: `/patient/123`
+
+👉 `id = "123"`
+
+### ⑦ データ取得の考え方（超重要）
+
+❌ 間違い:
+
+```js
+PatientList.find(...)
+```
+
+👉 コンポーネントは配列ではない
+
+✅ 正解:
+
+```js
+const patient = patients.find((p) => String(p.id) === id);
+```
+
+学び:
+
+👉 データは App が持つ
+👉 子は props でもらう
+
+### ⑧ Router化の本質（今日の一番大事）
+
+今まで:
+
+```js
+setSelectedPatientId(id);
+setActiveView("details");
+```
+
+これから:
+
+```js
+navigate(`/patient/${id}`);
+```
+
+つまり:
+
+👉 状態（state）を URL に持たせる
+
+### 🔥 今日の理解まとめ（超重要）
+
+👉 React の画面は3段階で管理できる
+
+① 関数（viewMap）
+② state（activeView）
+③ URL（Router） ← 今ここ

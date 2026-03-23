@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { makePatientSchemaPartial, runPatientValidationCases } from "./schema";
 
 import { TextField } from "@mui/material";
+import { useParams } from "react-router-dom";
 
 export default function PatientDetails({
   patient,
@@ -33,6 +34,10 @@ export default function PatientDetails({
       progress: patient?.progress ?? "",
     },
   });
+
+
+  const { id } = useParams();
+  console.log(id);
 
   useEffect(() => {
     if (!patient) return;
@@ -69,6 +74,8 @@ export default function PatientDetails({
 
   return (
     <div className="container-sm">
+      <div> 詳細：{id}</div>
+
       {/* ヘッダー */}
       <div className="section-header mb-lg">
         <h2 className="section-title">患者情報</h2>

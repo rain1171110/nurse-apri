@@ -3,6 +3,8 @@ import PatientList from "./PatientList";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { fetchAppData, saveAppData } from "./api/patientApi";
+import { Routes, Route } from "react-router-dom";
+import PatientPage from "./PatientPage";
 
 function App() {
   const [globalErrors, setGlobalErrors] = useState({});
@@ -106,14 +108,14 @@ function App() {
 
   const updatePatient = async (updated) => {
     const nextPatients = appData.patients.map((p) =>
-      p.id === updated.id ? updated : p
+      p.id === updated.id ? updated : p,
     );
     await onSaveData({ patients: nextPatients, records: appData.records });
   };
 
   const updateRecord = async (updatedRecord) => {
     const nextRecords = appData.records.map((r) =>
-      r.id === updatedRecord.id ? updatedRecord : r
+      r.id === updatedRecord.id ? updatedRecord : r,
     );
     await onSaveData({ patients: appData.patients, records: nextRecords });
   };
@@ -135,23 +137,32 @@ function App() {
         <h1>看護記録システム</h1>
       </header>
       <main className="app-main">
-        <PatientList
-          onErrorsChange={setGlobalErrors}
-          onSaveData={onSaveData}
-          patients={appData.patients}
-          records={appData.records}
-          setPatients={setPatients}
-          updatePatient={updatePatient}
-          setRecords={setRecords}
-          selectedPatientId={selectedPatientId}
-          setSelectedPatientId={setSelectedPatientId}
-          isLoading={loading}
-          apiError={apiError}
-          addRecord={addRecord}
-          updateRecord={updateRecord}
-          deletePatient={deletePatient}
-          deleteRecord={deleteRecord}
-        />
+        <Routes>
+          <Route
+            path="/"
+            element={
+              <PatientList
+                onErrorsChange={setGlobalErrors}
+                onSaveData={onSaveData}
+                patients={appData.patients}
+                records={appData.records}
+                setPatients={setPatients}
+                updatePatient={updatePatient}
+                setRecords={setRecords}
+                selectedPatientId={selectedPatientId}
+                setSelectedPatientId={setSelectedPatientId}
+                isLoading={loading}
+                apiError={apiError}
+                addRecord={addRecord}
+                updateRecord={updateRecord}
+                deletePatient={deletePatient}
+                deleteRecord={deleteRecord}
+              />
+            }
+          />
+          <Route path="/patient/:id" element={<PatientPage />} />
+          <Route path="/test" element={<div>テスト画面</div>} />
+        </Routes>
 
         {import.meta.env.DEV && Object.keys(displayErrors).length > 0 && (
           <div className="dev-error-panel">

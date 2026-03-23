@@ -9,6 +9,7 @@ import { CircularProgress, Snackbar, Alert } from "@mui/material";
 
 import { useState, useMemo } from "react";
 import AddPatientForm from "./AddPatientForm";
+import { useNavigate,useParams } from "react-router-dom";
 
 export default function PatientList({
   onErrorsChange,
@@ -167,8 +168,17 @@ export default function PatientList({
 
   const CurrentView = viewMap[activeView];
 
+  const navigate = useNavigate();
+  
+
   return (
+   
     <div className="container">
+       <div>
+      <button onClick={() => navigate("/test")}>
+        テスト画面へ
+      </button>
+    </div>
       {isLoading && (
         <div className="loading-container">
           <CircularProgress size={24} />

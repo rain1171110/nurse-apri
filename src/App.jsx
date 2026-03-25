@@ -160,7 +160,16 @@ function App() {
               />
             }
           />
-          <Route path="/patient/:id" element={<PatientPage />} />
+          <Route
+            path="/patient/:id"
+            element={
+              <PatientPage
+                patients={appData.patients}
+                records={appData.records}
+                
+              />
+            }
+          />
           <Route path="/test" element={<div>テスト画面</div>} />
         </Routes>
 

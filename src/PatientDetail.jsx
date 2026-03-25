@@ -35,7 +35,6 @@ export default function PatientDetails({
     },
   });
 
-
   const { id } = useParams();
   console.log(id);
 
@@ -74,8 +73,6 @@ export default function PatientDetails({
 
   return (
     <div className="container-sm">
-      <div> 詳細：{id}</div>
-
       {/* ヘッダー */}
       <div className="section-header mb-lg">
         <h2 className="section-title">患者情報</h2>

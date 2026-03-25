@@ -9,7 +9,7 @@ import { CircularProgress, Snackbar, Alert } from "@mui/material";
 
 import { useState, useMemo } from "react";
 import AddPatientForm from "./AddPatientForm";
-import { useNavigate,useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 export default function PatientList({
   onErrorsChange,
@@ -169,16 +169,25 @@ export default function PatientList({
   const CurrentView = viewMap[activeView];
 
   const navigate = useNavigate();
-  
 
   return (
-   
     <div className="container">
-       <div>
-      <button onClick={() => navigate("/test")}>
-        テスト画面へ
-      </button>
-    </div>
+      <div>
+        <button
+          type="button"
+          className="btn-primary"
+          onClick={() => navigate("/test")}
+        >
+          テスト画面へ
+        </button>
+        <button
+          type="button"
+          className="btn-primary"
+          onClick={() => navigate("/patient/1")}
+        >
+          患者ページへ
+        </button>
+      </div>
       {isLoading && (
         <div className="loading-container">
           <CircularProgress size={24} />
@@ -218,7 +227,7 @@ export default function PatientList({
               <div
                 className="card"
                 key={patient.id}
-                onClick={() => handleSelect(patient)}
+                onClick={() => navigate(`/patient/${patient.id}`)}
                 style={{ cursor: "pointer" }}
               >
                 <div className="card-header">

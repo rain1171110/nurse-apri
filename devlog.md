@@ -4135,3 +4135,170 @@ navigate(`/patient/${id}`);
 ① 関数（viewMap）
 ② state（activeView）
 ③ URL（Router） ← 今ここ
+
+## 2026-03-25 学習ログ（Router〜詳細画面への遷移）
+
+### ① Router の本質理解
+
+```txt
+main.jsx → Router（入口）
+   ↓
+App.jsx → Routes（ルール）
+   ↓
+Route → どの画面を出すか
+```
+
+重要ポイント:
+
+- Router は 1 つだけ（main に置く）
+- App では Routes を書く
+- Routes の中は Route だけ
+
+つまり:
+
+👉 Router = URL と画面をつなぐ仕組み
+
+### ② 画面遷移（useNavigate）
+
+```js
+navigate("/patient/1");
+```
+
+流れ:
+
+```txt
+クリック
+↓
+navigate
+↓
+URL変更
+↓
+Route が反応
+↓
+画面切り替え
+```
+
+つまり:
+
+👉 navigate は URL を変更するだけ
+
+### ③ URLから値を取得（useParams）
+
+```js
+const { id } = useParams();
+```
+
+例: `/patient/5`
+
+👉 `id = "5"`
+
+### ④ データの取得ロジック
+
+```js
+const patient = patients.find((p) => String(p.id) === id);
+const patientRecords = records.filter((r) => String(r.patientId) === id);
+```
+
+使い分け:
+
+| 関数     | 用途         |
+| -------- | ------------ |
+| `find`   | 1件（患者）  |
+| `filter` | 複数（記録） |
+
+### ⑤ 今日一番重要な理解
+
+❌ 最初のミス:
+
+```js
+PatientList.find(...)
+```
+
+👉 コンポーネントとデータを混同している
+
+✅ 正解:
+
+```js
+patients.find(...)
+```
+
+本質:
+
+| 名前          | 正体           |
+| ------------- | -------------- |
+| `PatientList` | UI（部品）     |
+| `patients`    | データ（配列） |
+
+### ⑥ エラーから学んだこと
+
+エラー:
+
+```txt
+Cannot read properties of undefined (reading 'id')
+```
+
+👉 変数が `undefined`
+
+学び:
+
+- `map` の変数名ミスに注意する
+- スコープを意識する
+- `console.log` で確認する
+
+### ⑦ 「飛ばない」の正体
+
+実際に起きていたこと:
+
+👉 URL は正しく変わっていた
+
+本当の問題:
+
+👉 `PatientPage` でデータが取れていなかった
+
+学び:
+
+👉 Router はデータを渡さない
+
+```jsx
+<Route element={<PatientPage patients={...} records={...} />} />
+```
+
+👉 props で渡す必要がある
+
+### ⑧ PatientPage の完成形（今日）
+
+```jsx
+import { useParams } from "react-router-dom";
+import PatientCard from "./PatientCard";
+
+export default function PatientPage({ patients, records }) {
+  const { id } = useParams();
+
+  const patient = patients.find((p) => String(p.id) === id);
+  const patientRecords = records.filter((r) => String(r.patientId) === id);
+
+  if (!patient) return <div>患者が見つかりません</div>;
+
+  return (
+    <div>
+      <PatientCard patient={patient} records={patientRecords} />
+    </div>
+  );
+}
+```
+
+役割の分担:
+
+- `PatientPage` → URLから患者を探す入口
+- `PatientCard` → 渡された患者を表示する
+
+### 🔥 今日の最重要まとめ
+
+| 機能        | 役割                         |
+| ----------- | ---------------------------- |
+| `Router`    | URL で画面を切り替える仕組み |
+| `navigate`  | URL を変更する命令           |
+| `useParams` | URL から値を取り出す         |
+| props       | データを子に渡す手段         |
+
+👉 Router 自身はデータを渡さない。データは props で渡す。

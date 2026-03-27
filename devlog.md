@@ -4302,3 +4302,107 @@ export default function PatientPage({ patients, records }) {
 | props       | データを子に渡す手段         |
 
 👉 Router 自身はデータを渡さない。データは props で渡す。
+
+## 2026-03-27 学習ログ（ルーティングと props のズレを直す）
+
+### 1) 今日起きたこと
+
+患者一覧から遷移した先で、
+
+- メニュー（患者情報 / バイタル / 看護記録）が消える
+- `ReferenceError: PatientVitals is not defined`
+- `Cannot read properties of undefined (reading 'room')`
+
+が発生した。
+
+### 2) 原因の整理
+
+#### 原因A: import していないコンポーネントを使っていた
+
+```jsx
+// App.jsx
+<Route path="/patient/:id/vitals" element={<PatientVitals ... />} />
+```
+
+このように使っているのに、先頭で import がないと実行時エラーになる。
+
+```jsx
+import PatientVitals from "./PatientVitals";
+import NursingRecordList from "./NursingRecordList";
+```
+
+#### 原因B: 1人分が必要なのに、全体配列を渡していた
+
+`PatientVitals` / `NursingRecordList` は「1人分の患者データ」を前提にしている。
+
+しかし Route 側で次のように渡していた。
+
+```jsx
+<PatientVitals patients={appData.patients} records={appData.records} />
+```
+
+この状態で `patients.room` を読むと落ちる。
+
+```jsx
+{patients.room}号室 {patients.name} さん
+```
+
+配列に `room` はないため `undefined` になる。
+
+### 3) 学んだ直し方（手順）
+
+#### 手順1: URLから id を取る
+
+```jsx
+import { useParams } from "react-router-dom";
+
+const { id } = useParams();
+```
+
+#### 手順2: 全体から1人を探す
+
+```jsx
+const patient = patients.find((p) => String(p.id) === id);
+```
+
+#### 手順3: その患者の記録だけに絞る
+
+```jsx
+const patientRecords = records.filter((r) => String(r.patientId) === id);
+```
+
+#### 手順4: 画面では 1人データを使う
+
+```jsx
+<p>
+  {patient.room}号室 {patient.name} さん
+</p>
+```
+
+### 4) ルーティングの考え方（今日の核心）
+
+Route には「表示部品を直接置く」より、
+
+- URLから id を取得
+- 対象 patient を特定
+- 子コンポーネントへ渡す
+
+という流れを作るコンテナを置くと安定する。
+
+例（考え方）:
+
+```jsx
+<Route path="/patient/:id" element={<PatientPage ... />} />
+<Route path="/patient/:id/vitals" element={<PatientPage ... />} />
+<Route path="/patient/:id/records" element={<PatientPage ... />} />
+```
+
+`PatientPage` で id 解決と props 整理をしてから、
+`PatientCard` / `PatientVitals` / `NursingRecordList` を出し分ける。
+
+### 5) 今日のまとめ（つまり）
+
+- 画面エラーの多くは「データの形のズレ」で起きる
+- `patients`（配列）と `patient`（1件）を混ぜると落ちる
+- URL（id）→ 1人特定 → 必要なpropsで表示、の順で考えると迷いにくい
+- import不足は実行時 `is not defined` の定番原因

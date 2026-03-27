@@ -1,8 +1,13 @@
+import { useNavigate } from "react-router-dom";
 import DeleteButton from "./DeleteButton";
 
+export default function PatientCard({
+  patient,
+  onBack,
+  onDelete,
+}) {
+  const navigate = useNavigate();
 
-
-export default function PatientCard({ patient, onSelect, onBack, onDelete }) {
   return (
     <div className="card">
       <div className="card-header">
@@ -15,21 +20,21 @@ export default function PatientCard({ patient, onSelect, onBack, onDelete }) {
           <button
             type="button"
             className="btn-primary"
-            onClick={() => onSelect(patient, "details")}
+            onClick={() => navigate(`/patient/${patient.id}/detail`)}
           >
             患者情報
           </button>
           <button
             type="button"
             className="btn-secondary"
-            onClick={() => onSelect(patient, "vitals")}
+            onClick={() => navigate(`/patient/${patient.id}/vitals`)}
           >
             バイタルサイン一覧
           </button>
           <button
             type="button"
             className="btn-secondary"
-            onClick={() => onSelect(patient, "records")}
+            onClick={() => navigate(`/patient/${patient.id}/records`)}
           >
             看護記録
           </button>

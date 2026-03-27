@@ -1,16 +1,20 @@
 import { useState } from "react";
+import { useParams,useNavigate } from "react-router-dom";
 import { createEmptyRecord, formatDate } from "./Utils";
 import NursingRecordForm from "./NursingRecordForm";
 
 export default function NursingRecordList({
   records,
-  patient,
-  onSelect,
-  onBack,
-  onBackToMenu,
+  patients,
   addRecord,
   onErrorsChange,
 }) {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const patient = patients.find((p) => String(p.id) === id);
+  const patientRecords = records.filter((r) => String(r.patientId) === id);
+
+
   const [isAdding, setIsAdding] = useState(false);
   const [formData, setFormData] = useState(createEmptyRecord);
 
@@ -20,6 +24,7 @@ export default function NursingRecordList({
     setFormData(createEmptyRecord());
   };
 
+  if (!patient) return <div>患者が見つかりません</div>;
   return (
     <div className="container-md">
       <div className="section-header">
@@ -49,11 +54,11 @@ export default function NursingRecordList({
         <>
           <p className="text-secondary">看護記録一覧</p>
           <div className="item-list">
-            {records.map((r) => (
+            {patientRecords.map((r) => (
               <div
                 className="card"
                 key={r.id}
-                onClick={() => onSelect(patient, "recordItem", r.id)}
+                onClick={() => navigate(`/patients/${id}/records/${r.id}`)}
                 style={{ cursor: "pointer" }}
               >
                 <div className="card-header">
@@ -98,11 +103,11 @@ export default function NursingRecordList({
           <button
             type="button"
             className="btn-secondary"
-            onClick={onBackToMenu}
+            onClick={() => navigate("/menu")}
           >
             メニューに戻る
           </button>
-          <button type="button" className="btn-secondary" onClick={onBack}>
+          <button type="button" className="btn-secondary" onClick={() => navigate("/patients")}>
             患者一覧へ戻る
           </button>
         </div>

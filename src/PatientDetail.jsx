@@ -6,15 +6,18 @@ import { makePatientSchemaPartial, runPatientValidationCases } from "./schema";
 import { TextField } from "@mui/material";
 import { useParams } from "react-router-dom";
 
-export default function PatientDetails({
-  patient,
+export default function PatientDetail({
   onBackToMenu,
   isEditing,
   setIsEditing,
   updatePatient,
   onErrorsChange,
   usedRoomsForEdit = [],
+  patients,
 }) {
+  const { id } = useParams();
+  const patient = patients.find((p) => String(p.id) === id);
+
   const {
     control,
     handleSubmit,
@@ -34,9 +37,6 @@ export default function PatientDetails({
       progress: patient?.progress ?? "",
     },
   });
-
-  const { id } = useParams();
-  console.log(id);
 
   useEffect(() => {
     if (!patient) return;
@@ -70,6 +70,10 @@ export default function PatientDetails({
     const results = runPatientValidationCases();
     console.table(results);
   }, []);
+
+  if (!patient) {
+    return <div>患者が見つかりません</div>;
+  }
 
   return (
     <div className="container-sm">

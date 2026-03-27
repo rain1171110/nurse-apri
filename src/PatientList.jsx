@@ -1,7 +1,7 @@
 import NursingRecordList from "./NursingRecordList";
 import NursingRecordItem from "./NursingRecordItem";
 import PatientCard from "./PatientCard";
-import PatientDetails from "./PatientDetail";
+import PatientDetail from "./PatientDetail";
 import PatientVitals from "./PatientVitals";
 
 import { extractUsedRoomNumbers } from "./Utils";
@@ -97,7 +97,7 @@ export default function PatientList({
       !selectedPatient ? (
         <div>未選択</div>
       ) : (
-        <PatientDetails
+        <PatientDetail
           patient={selectedPatient}
           onBack={handleBack}
           onBackToMenu={handleBackToMenu}

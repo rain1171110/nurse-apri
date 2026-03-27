@@ -5,6 +5,9 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { fetchAppData, saveAppData } from "./api/patientApi";
 import { Routes, Route } from "react-router-dom";
 import PatientPage from "./PatientPage";
+import PatientDetail from "./PatientDetail";
+import PatientVitals from "./PatientVitals";
+import NursingRecordList from "./NursingRecordList";
 
 function App() {
   const [globalErrors, setGlobalErrors] = useState({});
@@ -166,7 +169,33 @@ function App() {
               <PatientPage
                 patients={appData.patients}
                 records={appData.records}
-                
+              />
+            }
+          />
+          <Route
+            path="/patient/:id/detail"
+            element={
+              <PatientDetail
+                patients={appData.patients}
+                records={appData.records}
+              />
+            }
+          />
+          <Route
+            path="/patient/:id/vitals"
+            element={
+              <PatientVitals
+                patients={appData.patients}
+                records={appData.records}
+              />
+            }
+          />
+          <Route
+            path="/patient/:id/records"
+            element={
+              <NursingRecordList
+                patients={appData.patients}
+                records={appData.records}
               />
             }
           />

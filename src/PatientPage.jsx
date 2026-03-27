@@ -10,10 +10,7 @@ export default function PatientPage({ patients, records }) {
   if (!patient) return <div>患者が見つかりません</div>;
   return (
     <div>
-      <PatientCard
-        patient={patient}
-        records={patientRecords}
-      />
+      <PatientCard patient={patient} records={patientRecords} />
     </div>
   );
 }

@@ -4406,3 +4406,168 @@ Route には「表示部品を直接置く」より、
 - `patients`（配列）と `patient`（1件）を混ぜると落ちる
 - URL（id）→ 1人特定 → 必要なpropsで表示、の順で考えると迷いにくい
 - import不足は実行時 `is not defined` の定番原因
+
+## 2026-04-03
+
+### 学習ログまとめ（React基礎 -> 実装まで）
+
+### 1. データ取得（useParams + find）
+
+```js
+const { id } = useParams();
+const patient = patients.find((p) => String(p.id) === id);
+```
+
+ポイント:
+
+- `useParams()` で取得した `id` は string
+- 比較前に `String(p.id)` で型をそろえる
+
+### 2. 配列から抽出（filter）
+
+```js
+const patientRecords = records.filter((r) => String(r.patientId) === id);
+```
+
+ポイント:
+
+- `filter` は条件に合う要素だけを残す
+- 「どの配列を対象にするか」が重要
+
+### 3. mapで画面表示
+
+```jsx
+patientRecords.map((r) => (
+  <div key={r.id}>
+    <p>{r.date}</p>
+    <p>{r.vitals?.temperature}</p>
+    <p>{r.vitals?.pulse}</p>
+  </div>
+));
+```
+
+ポイント:
+
+- `map` は配列をUIに変換する
+- `key` は必須
+- `?.` は値がないときのエラーを防ぐ
+
+### 4. オプショナルチェーン（?.）
+
+```js
+r.vitals?.temperature;
+```
+
+意味:
+
+- `vitals` があれば値を取得
+- なければ `undefined` を返してエラーを回避
+
+### 5. コンポーネント分割
+
+```jsx
+<RecordItem record={r} />
+
+export default function RecordItem({ record }) {
+  return <p>{record.date}</p>;
+}
+```
+
+ポイント:
+
+- コンポーネントは再利用できる部品
+- `props` でデータを渡す
+
+### 6. propsの理解
+
+```jsx
+<RecordItem record={r} />
+```
+
+ポイント:
+
+- `record` は props の名前
+- `r` は渡す実データ
+
+つまり:
+
+- 親 -> 子へデータを渡す
+
+### 7. stateを親に持つ理由
+
+ポイント:
+
+- state を親に集約するとデータ分裂を防げる
+- 親が state 管理、子は表示中心
+
+### 8. 削除処理（filter + state更新）
+
+```js
+const handleDelete = (id) => {
+  const nextRecords = records.filter((r) => r.id !== id);
+  setRecords(nextRecords);
+};
+```
+
+ポイント:
+
+- 削除は「対象以外を残す」
+- state は新しい配列で更新する
+
+### 9. 親 -> 子イベント
+
+```jsx
+<RecordItem onDelete={handleDelete} />
+<button onClick={() => onDelete(record.id)}>削除</button>
+```
+
+ポイント:
+
+- 親が処理を持つ
+- 子が実行のきっかけを作る
+
+### 10. filter条件の理解
+
+単体条件:
+
+```js
+r.id === 3; // 3だけ残す
+r.id !== 3; // 3を削除
+```
+
+複数条件:
+
+```js
+r.id === 2 || r.id === 4;
+```
+
+includes（実務でよく使う）:
+
+```js
+[2, 4].includes(r.id);
+```
+
+否定（2と4を削除）:
+
+```js
+![2, 4].includes(r.id);
+```
+
+### 今回の最重要まとめ（本質）
+
+Reactの設計:
+
+- state -> 親が持つ
+- props -> 子に渡す
+- イベント -> 子から親に伝える
+
+配列操作:
+
+- `filter` -> 条件に合うものを残す
+- `map` -> 表示に変換する
+- `includes` -> 複数条件を簡潔に書く
+
+### つまり
+
+今回の学びは「部品を分ける」「データの流れをそろえる」「配列操作でUIを作る」の3つ。
+この3つを守ると、Reactのコードは読みやすく、壊れにくくなる。

@@ -2,28 +2,36 @@ import { useState } from "react";
 import { formatBpText, formatValue } from "./Utils";
 import NursingRecordForm from "./NursingRecordForm";
 import DeleteButton from "./DeleteButton";
-
+import { useNavigate, useParams } from "react-router-dom";
 export default function NursingRecordItem({
-  patient,
-  onBackToRecords,
-  record,
-  isEditing,
-  setIsEditing,
-  onDeleteRecord,
+  patients,
+  records,
   onErrorsChange,
   updateRecord,
+  onDeleteRecord,
 }) {
-  const [formData] = useState({
+  const [isEditing, setIsEditing] = useState(false);
+
+  const { id, recordId } = useParams();
+  const navigate = useNavigate();
+
+  const patient = patients.find((p) => String(p.id) === id);
+  const record = records.find(
+    (r) => String(r.id) === recordId && String(r.patientId) === id,
+  );
+
+  if (!patient) return <div>患者が見つかりません</div>;
+  if (!record)
+    return <div className="panel panel-warning">記録が見つかりません</div>;
+
+  const initialValues = {
     date: record?.date || "",
     vitals: record?.vitals || {},
     content: record?.content || "",
     author: record?.author || "",
-  });
+  };
 
-  if (!record)
-    return <div className="panel panel-warning">記録が見つかりません</div>;
-
-  const { T, P, R, SBP, DBP, SPO2 } = record.vitals;
+  const { T, P, R, SBP, DBP, SPO2 } = record.vitals ?? {};
   const bpText = formatBpText(SBP, DBP);
   const bpDisplay = bpText === "--" ? "--" : `${bpText}mmHg`;
 
@@ -31,7 +39,12 @@ export default function NursingRecordItem({
     const updatedRecord = { ...record, ...data };
     await updateRecord(updatedRecord);
     setIsEditing(false);
-    onBackToRecords();
+    navigate(`/patient/${id}/records`);
+  };
+
+  const handleDelete = async () => {
+    await onDeleteRecord(record.id);
+    navigate(`/patient/${id}/records`);
   };
 
   return (
@@ -63,7 +76,7 @@ export default function NursingRecordItem({
             <h3 className="card-title">記録を編集</h3>
           </div>
           <NursingRecordForm
-            initialValues={formData}
+            initialValues={initialValues}
             onSubmit={handleSubmit}
             showDate
             onErrorsChange={onErrorsChange}
@@ -74,7 +87,7 @@ export default function NursingRecordItem({
               className="btn-secondary"
               onClick={() => {
                 setIsEditing(false);
-                onBackToRecords();
+                navigate(`/patient/${id}/records`);
               }}
             >
               キャンセル
@@ -95,11 +108,11 @@ export default function NursingRecordItem({
           <button
             type="button"
             className="btn-secondary"
-            onClick={onBackToRecords}
+            onClick={() => navigate(`/patient/${id}/records`)}
           >
             戻る
           </button>
-          <DeleteButton onClick={() => onDeleteRecord(record.id)} />
+          <DeleteButton handleDelete={handleDelete} />
         </div>
       )}
     </div>

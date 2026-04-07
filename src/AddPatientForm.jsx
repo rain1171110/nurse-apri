@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { TextField } from "@mui/material";
@@ -14,8 +14,12 @@ export default function AddPatientForm({
   showAddForm,
   setShowAddForm,
 }) {
+  const prevErrorSignatureRef = useRef("");
   const usedRooms = useMemo(() => extractUsedRoomNumbers(patients), [patients]);
-  const schema = useMemo(() =>  makePatientSchemaPartial(usedRooms), [usedRooms]);
+  const schema = useMemo(
+    () => makePatientSchemaPartial(usedRooms),
+    [usedRooms],
+  );
 
   const {
     control,
@@ -29,6 +33,9 @@ export default function AddPatientForm({
   });
 
   useEffect(() => {
+    const signature = JSON.stringify(errors);
+    if (signature === prevErrorSignatureRef.current) return;
+    prevErrorSignatureRef.current = signature;
     if (onErrorsChange) onErrorsChange(errors);
   }, [errors, onErrorsChange]);
 

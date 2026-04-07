@@ -1,19 +1,18 @@
 import { useState } from "react";
-import { useParams,useNavigate } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { createEmptyRecord, formatDate } from "./Utils";
 import NursingRecordForm from "./NursingRecordForm";
 
 export default function NursingRecordList({
   records,
   patients,
-  addRecord,
   onErrorsChange,
+  addRecord,
 }) {
   const { id } = useParams();
   const navigate = useNavigate();
   const patient = patients.find((p) => String(p.id) === id);
   const patientRecords = records.filter((r) => String(r.patientId) === id);
-
 
   const [isAdding, setIsAdding] = useState(false);
   const [formData, setFormData] = useState(createEmptyRecord);
@@ -37,10 +36,10 @@ export default function NursingRecordList({
               type="button"
               className="btn-primary"
               onClick={() => {
-                setFormData((prev) => ({
-                  ...prev,
-                  date: formatDate(new Date()),
-                }));
+                setFormData({
+                  ...createEmptyRecord(),
+                  date:formatDate(new Date()),
+                });
                 setIsAdding(true);
               }}
             >
@@ -58,7 +57,7 @@ export default function NursingRecordList({
               <div
                 className="card"
                 key={r.id}
-                onClick={() => navigate(`/patients/${id}/records/${r.id}`)}
+                onClick={() => navigate(`/patient/${id}/records/${r.id}`)}
                 style={{ cursor: "pointer" }}
               >
                 <div className="card-header">
@@ -103,11 +102,15 @@ export default function NursingRecordList({
           <button
             type="button"
             className="btn-secondary"
-            onClick={() => navigate("/menu")}
+            onClick={() => navigate(`/patient/${id}`)}
           >
             メニューに戻る
           </button>
-          <button type="button" className="btn-secondary" onClick={() => navigate("/patients")}>
+          <button
+            type="button"
+            className="btn-secondary"
+            onClick={() => navigate("/")}
+          >
             患者一覧へ戻る
           </button>
         </div>

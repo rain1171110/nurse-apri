@@ -13,7 +13,7 @@ import Autocomplete from "@mui/material/Autocomplete";
 import TextField from "@mui/material/TextField";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import dayjs from "dayjs";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { recordSchema } from "./schema";
@@ -24,6 +24,7 @@ export default function NursingRecordForm({
   showDate = false,
   onErrorsChange,
 }) {
+  const prevErrorSignatureRef = useRef("");
   const {
     control,
     handleSubmit,
@@ -39,9 +40,10 @@ export default function NursingRecordForm({
   }, [initialValues, reset]);
 
   useEffect(() => {
-    if (onErrorsChange) {
-      onErrorsChange(errors);
-    }
+    const signature = JSON.stringify(errors);
+    if (signature === prevErrorSignatureRef.current) return;
+    prevErrorSignatureRef.current = signature;
+    if (onErrorsChange) onErrorsChange(errors);
   }, [errors, onErrorsChange]);
 
   return (

@@ -8,6 +8,8 @@ import PatientPage from "./PatientPage";
 import PatientDetail from "./PatientDetail";
 import PatientVitals from "./PatientVitals";
 import NursingRecordList from "./NursingRecordList";
+import NursingRecordItem from "./NursingRecordItem";
+import { extractUsedRoomNumbers } from "./Utils";
 
 function App() {
   const [globalErrors, setGlobalErrors] = useState({});
@@ -169,36 +171,55 @@ function App() {
               <PatientPage
                 patients={appData.patients}
                 records={appData.records}
+                deletePatient={deletePatient}
               />
             }
-          />
-          <Route
-            path="/patient/:id/detail"
-            element={
-              <PatientDetail
-                patients={appData.patients}
-                records={appData.records}
-              />
-            }
-          />
-          <Route
-            path="/patient/:id/vitals"
-            element={
-              <PatientVitals
-                patients={appData.patients}
-                records={appData.records}
-              />
-            }
-          />
-          <Route
-            path="/patient/:id/records"
-            element={
-              <NursingRecordList
-                patients={appData.patients}
-                records={appData.records}
-              />
-            }
-          />
+          >
+            <Route
+              index
+              element={
+                <PatientDetail
+                  patients={appData.patients}
+                  updatePatient={updatePatient}
+                  onErrorsChange={setGlobalErrors}
+                />
+              }
+            />
+            <Route
+              path="vitals"
+              element={
+                <PatientVitals
+                  patients={appData.patients}
+                  records={appData.records}
+                />
+              }
+            />
+            <Route
+              path="records"
+              element={
+                <NursingRecordList
+                  patients={appData.patients}
+                  records={appData.records}
+                  updateRecord={updateRecord}
+                  updatePatient={updatePatient}
+                  deleteRecord={deleteRecord}
+                  onErrorsChange={setGlobalErrors}
+                />
+              }
+            />
+            <Route
+              path="records/:recordId"
+              element={
+                <NursingRecordItem
+                  patients={appData.patients}
+                  records={appData.records}
+                  onDeleteRecord={deleteRecord}
+                  onErrorsChange={setGlobalErrors}
+                  updateRecord={updateRecord}
+                />
+              }
+            />
+          </Route>
           <Route path="/test" element={<div>テスト画面</div>} />
         </Routes>
 

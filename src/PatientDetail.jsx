@@ -1,22 +1,42 @@
-import { useEffect } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { makePatientSchemaPartial, runPatientValidationCases } from "./schema";
 
 import { TextField } from "@mui/material";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
+import { extractUsedRoomNumbers } from "./Utils";
 
 export default function PatientDetail({
-  onBackToMenu,
-  isEditing,
-  setIsEditing,
   updatePatient,
   onErrorsChange,
-  usedRoomsForEdit = [],
-  patients,
+  patients = [],
 }) {
+  const [isEditing, setIsEditing] = useState(false);
+  const navigate = useNavigate();
   const { id } = useParams();
-  const patient = patients.find((p) => String(p.id) === id);
+
+  const patient = useMemo(
+    () => patients.find((p) => String(p.id) === id) ?? null,
+    [patients, id],
+  );
+
+  const usedRoomsForEdit = useMemo(
+    () => extractUsedRoomNumbers(patients, id),
+    [patients, id],
+  );
+
+  const defaultValues = useMemo(
+    () => ({
+      name: patient?.name ?? "",
+      room: patient?.room ?? "",
+      age: patient?.age ?? "",
+      disease: patient?.disease ?? "",
+      history: patient?.history ?? "",
+      progress: patient?.progress ?? "",
+    }),
+    [patient],
+  );
 
   const {
     control,
@@ -28,14 +48,7 @@ export default function PatientDetail({
     resolver: zodResolver(makePatientSchemaPartial(usedRoomsForEdit)),
     mode: "onSubmit",
     reValidateMode: "onSubmit",
-    defaultValues: {
-      name: patient?.name ?? "",
-      room: patient?.room ?? "",
-      age: patient?.age ?? "",
-      disease: patient?.disease ?? "",
-      history: patient?.history ?? "",
-      progress: patient?.progress ?? "",
-    },
+    defaultValues,
   });
 
   useEffect(() => {
@@ -51,25 +64,16 @@ export default function PatientDetail({
   }, [patient, reset]);
 
   useEffect(() => {
-    if (onErrorsChange) {
-      onErrorsChange(errors);
-    }
-  }, [errors, onErrorsChange]);
-
-  useEffect(() => {
-    if (!isEditing) {
-      clearErrors();
-      if (onErrorsChange) {
-        onErrorsChange({});
-      }
-    }
-  }, [isEditing, clearErrors, onErrorsChange]);
-
-  useEffect(() => {
     if (!import.meta.env.DEV) return;
     const results = runPatientValidationCases();
     console.table(results);
   }, []);
+
+  useEffect(()=> {
+    if(!import.meta.env.DEV) return;
+    const results = runPatientValidationCases();
+    console.tabele(results);
+  },[]);
 
   if (!patient) {
     return <div>患者が見つかりません</div>;
@@ -124,10 +128,10 @@ export default function PatientDetail({
           </div>
 
           <form
-            onSubmit={handleSubmit((data) => {
+            onSubmit={handleSubmit(async (data) => {
               const updated = { ...patient, ...data };
+              await updatePatient(updated);
               reset(updated);
-              updatePatient(updated);
               clearErrors();
               if (onErrorsChange) {
                 onErrorsChange({});
@@ -258,7 +262,10 @@ export default function PatientDetail({
       {/* アクションボタン */}
       {!isEditing && (
         <div className="form-actions">
-          <button onClick={() => onBackToMenu()} className="btn-secondary">
+          <button
+            onClick={() => navigate(`/patient/${id}`)}
+            className="btn-secondary"
+          >
             メニューに戻る
           </button>
           <button onClick={() => setIsEditing(true)} className="btn-primary">

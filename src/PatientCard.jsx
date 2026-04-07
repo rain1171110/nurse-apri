@@ -3,7 +3,6 @@ import DeleteButton from "./DeleteButton";
 
 export default function PatientCard({
   patient,
-  onBack,
   onDelete,
 }) {
   const navigate = useNavigate();
@@ -20,7 +19,7 @@ export default function PatientCard({
           <button
             type="button"
             className="btn-primary"
-            onClick={() => navigate(`/patient/${patient.id}/detail`)}
+            onClick={() => navigate(`/patient/${patient.id}`)}
           >
             患者情報
           </button>
@@ -44,7 +43,7 @@ export default function PatientCard({
         <button
           type="button"
           className="btn-secondary"
-          onClick={() => onBack()}
+          onClick={() => navigate("/")}
         >
           戻る
         </button>

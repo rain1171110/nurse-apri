@@ -4571,3 +4571,211 @@ Reactの設計:
 
 今回の学びは「部品を分ける」「データの流れをそろえる」「配列操作でUIを作る」の3つ。
 この3つを守ると、Reactのコードは読みやすく、壊れにくくなる。
+
+## 2026-04-07
+
+### 学習ログまとめ
+
+今日は主に React Router / props / state の責任範囲 / 編集画面の設計 を整理した日でした。
+
+#### 1. NursingRecordItem is not defined の意味
+
+エラー:
+
+ReferenceError: NursingRecordItem is not defined
+
+これは、App.jsx で <NursingRecordItem /> を使っているのに、import できていない・名前が定義されていないという意味。
+
+学び:
+- JSXで使うコンポーネントは必ず import が必要
+- エラー文の is not defined は「その名前が存在しない」と読む
+
+#### 2. Route の path は親子関係で考える
+
+親Routeが
+
+<Route path="/patient/:id" ...>
+
+なら、子Routeでさらに
+
+path="patient/:id/records/:recordId"
+
+と書くのは重複。
+
+正しくは
+path="records/:recordId"
+
+学び:
+- 子Routeでは親の path をもう一度書かない
+- useParams() の値は Route で書いた名前と一致させる
+
+#### 3. setIsEditing is not a function の原因
+
+PatientDetail.jsx や NursingRecordItem.jsx で
+
+setIsEditing(true)
+
+を呼んでいたが、その setIsEditing が props で渡されていなかった。
+
+学び:
+- 使う関数は props で受け取るか、自分の中で定義する必要がある
+- ○○ is not a function は「関数だと思って呼んだが違った」と読む
+
+#### 4. isEditing はどこで持つべきか
+
+今回一番大事だったところ。
+
+結論:
+- patients, records などの実データ -> App が持つ
+- isEditing, isAdding などの画面表示用 state -> その画面のコンポーネントが持つ
+
+例:
+
+const [isEditing, setIsEditing] = useState(false);
+
+を NursingRecordItem や PatientDetail の中で持つのはOK。
+
+学び:
+- isEditing はサーバー保存するデータではない
+- これは「今その画面で編集フォームを見せるか」という UI状態
+- なので データの分裂にはならない
+
+#### 5. データの分裂とは何か
+
+前に学んだ「データの分裂」は、
+
+例:
+const [patients, setPatients] = useState([...]);
+const [selectedPatient, setSelectedPatient] = useState(patientObject);
+
+のように、同じ意味のデータを複数の state で持つこと。
+
+学び:
+- patients と selectedPatient の両方に患者データを持つとズレる
+- だから基本は 元データは1か所
+- 今回の isEditing は元データではないので分裂ではない
+
+#### 6. extractUsedRoomNumbers is not defined
+
+エラー:
+
+ReferenceError: extractUsedRoomNumbers is not defined
+
+原因:
+App.jsx や PatientDetail.jsx で使っているのに import していなかった。
+
+学び:
+- util関数も使うなら import 必須
+- is not defined は「その名前がない」
+
+#### 7. Cannot read properties of undefined (reading 'filter')
+
+エラー:
+
+Cannot read properties of undefined (reading 'filter')
+
+原因:
+extractUsedRoomNumbers(patients.id) と書いていたため、patients は配列なのに .id を取ろうとして undefined になった。
+
+正しくは
+extractUsedRoomNumbers(patients, id)
+
+学び:
+- patients は配列
+- 配列に .id はない
+- util関数には「配列そのもの」を渡す
+
+#### 8. updatePatient is not a function
+
+エラー:
+
+updatePatient is not a function
+
+原因:
+PatientDetail.jsx では updatePatient(updated) を呼んでいるのに、親の App.jsx から updatePatient を props で渡していなかった。
+
+学び:
+- 子で使う関数は親から渡す必要がある
+- props 名がずれていても同じエラーになる
+
+#### 9. Maximum update depth exceeded
+
+エラー:
+
+Maximum update depth exceeded
+
+原因候補:
+useEffect の中で親の state を更新し続けて再描画ループになった。
+
+特に怪しかったのはこれ:
+
+useEffect(() => {
+  if (onErrorsChange) onErrorsChange(errors);
+}, [errors, onErrorsChange]);
+
+学び:
+- useEffect の中で親の setState を呼ぶとループしやすい
+- errors のようなオブジェクトは参照が変わりやすい
+- 同じ内容の errors を何度も親に送らない工夫が必要
+
+#### 10. useRef を使ったガードの意味
+
+提案されたコード:
+
+const prevErrorSignatureRef = useRef("");
+
+useEffect(() => {
+  const signature = JSON.stringify(errors);
+  if (signature === prevErrorSignatureRef.current) return;
+  prevErrorSignatureRef.current = signature;
+  if (onErrorsChange) onErrorsChange(errors);
+}, [errors, onErrorsChange]);
+
+何をしているか:
+- 前回の errors を文字列で覚えておく
+- 今回の errors と同じなら親へ送らない
+- 違う時だけ onErrorsChange(errors) を呼ぶ
+
+学び:
+- useRef は「前回の値を覚えておく箱」
+- 同じエラー内容なら処理を止められる
+- 無限ループ対策に使える
+
+#### 11. PatientDetail と NursingRecordItem の編集の違い
+
+PatientDetail:
+- 患者情報の表示
+- isEditing を true にすると、同じ画面内で患者情報フォームを表示
+
+NursingRecordItem:
+- 看護記録1件の表示
+- isEditing を true にすると、その記録の編集フォームを表示
+
+学び:
+- 「患者情報の編集」と「記録の編集」は別
+- 同じ「編集」でも責任のあるコンポーネントが違う
+
+### 今日の一番大事な理解
+
+1. App が持つもの
+- patients
+- records
+- add / update / delete
+- 保存処理
+
+2. 各画面が持つもの
+- isEditing
+- isAdding
+- フォームの開閉
+- 画面内だけのUI状態
+
+3. データの分裂とは
+- 同じ意味の実データを複数 state で持つこと
+- isEditing は実データではないので分裂ではない
+
+### 今日のコード理解キーワード
+
+- is not defined -> 名前が存在しない
+- is not a function -> 関数として呼んだが関数ではない
+- Cannot read properties of undefined -> undefined.xxx をしようとした
+- Maximum update depth exceeded -> state更新ループ

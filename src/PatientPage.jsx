@@ -1,7 +1,7 @@
-import { useParams } from "react-router-dom";
+import { Outlet, useParams } from "react-router-dom";
 import PatientCard from "./PatientCard";
 
-export default function PatientPage({ patients, records }) {
+export default function PatientPage({ patients, records,deletePatient }) {
   const { id } = useParams();
 
   const patient = patients.find((p) => String(p.id) === id);
@@ -10,7 +10,8 @@ export default function PatientPage({ patients, records }) {
   if (!patient) return <div>患者が見つかりません</div>;
   return (
     <div>
-      <PatientCard patient={patient} records={patientRecords} />
+      <PatientCard patient={patient} onDelete={deletePatient}/>
+      <Outlet context={{patient,patientRecords}}/>
     </div>
   );
 }

@@ -1339,7 +1339,6 @@ const selectedPatient =
 React の Single Source of Truth（データの真実は1箇所）を守る設計になる。
 
 ### 次の一歩
-
 `nurse-apri` の設計がさらに良くなる「React状態設計の黄金ルール」を学ぶと、
 `useState` をどこに置くべきかを素早く判断できるようになる。
 
@@ -4779,3 +4778,228 @@ NursingRecordItem:
 - is not a function -> 関数として呼んだが関数ではない
 - Cannot read properties of undefined -> undefined.xxx をしようとした
 - Maximum update depth exceeded -> state更新ループ
+## 2026-04-08
+
+### 学習ログ
+
+テーマ：prevErrorSignatureRef / JSON.stringify(errors) / 子→親のエラー通知の流れ
+
+#### 1. 今日やったこと
+
+今日は、フォームのエラー通知まわりのコードを中心に確認した。
+
+扱った主なコードはこれ。
+
+`js
+const prevErrorSignatureRef = useRef("");
+
+useEffect(() => {
+  const signature = JSON.stringify(errors);
+  if (signature === prevErrorSignatureRef.current) return;
+  prevErrorSignatureRef.current = signature;
+  if (onErrorsChange) onErrorsChange(errors);
+}, [errors, onErrorsChange]);
+`
+
+最初は
+
+- prevErrorSignatureRef の名前の意味
+- なぜ JSON.stringify(errors) を使うのか
+- if (signature === prevErrorSignatureRef.current) return; の意味
+- 親の globalErrors とのつながり
+
+があいまいだったが、少しずつ整理できた。
+
+#### 2. prevErrorSignatureRef の意味
+
+単語を分けるとこう。
+
+- prev = 前回の
+- Error = エラー
+- Signature = 識別用の印、特徴
+- Ref = 参照
+
+つまり全体では、
+
+「前回のエラー内容の識別文字列を覚えておく ref」
+
+という意味になる。
+
+今のコードでは、errors そのものではなく、
+JSON.stringify(errors) で作った文字列を前回値として保存している。
+
+#### 3. 子と親の関係
+
+今日の大事な理解ポイントはここ。
+
+子コンポーネント側:
+
+`js
+useEffect(() => {
+  if (onErrorsChange) onErrorsChange(errors);
+}, [errors, onErrorsChange]);
+`
+
+これは「子の errors が変わったら、親へ通知する処理」だった。
+
+親コンポーネント側:
+
+`js
+useEffect(() => {
+  if (Object.keys(globalErrors).length > 0) {
+    Promise.resolve().then(() => {
+      setDisplayErrors(globalErrors);
+    });
+
+    if (timerRef.current) clearTimeout(timerRef.current);
+
+    timerRef.current = setTimeout(() => {
+      setDisplayErrors({});
+    }, 10000);
+  }
+
+  return () => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+  };
+}, [globalErrors]);
+`
+
+これは「親が受け取った globalErrors を表示用に管理する処理」だった。
+
+つまり流れはこう。
+
+`
+子の errors が変わる
+↓
+子の useEffect が動く
+↓
+onErrorsChange(errors) を呼ぶ
+↓
+親の globalErrors が更新される
+↓
+親の useEffect([globalErrors]) が動く
+↓
+displayErrors に反映する
+`
+
+#### 4. なぜガードが必要だったのか
+
+元のままだと、子で同じ errors を何回も親に送ってしまう可能性がある。
+
+そうすると親では毎回:
+
+- globalErrors が更新されたことになる
+- 再レンダーが増える
+- 表示処理やタイマーが何度も動く
+
+という無駄が起きる。
+
+そのため、
+
+`js
+if (signature === prevErrorSignatureRef.current) return;
+`
+
+を入れて、前回と同じ内容の errors なら親に再通知しないようにした。
+
+#### 5. なぜ JSON.stringify(errors) を使うのか
+
+errors はオブジェクトなので、そのままだと中身ではなく参照で比較される。
+
+たとえば:
+
+`js
+const a = { message: "必須" };
+const b = { message: "必須" };
+
+console.log(a === b); // false
+`
+
+中身が同じでも、別々に作られたオブジェクトは false になる。
+
+だから errors もそのままでは比較しづらい。
+
+そこで:
+
+`js
+const signature = JSON.stringify(errors);
+`
+
+として、オブジェクトを比較しやすい文字列に変換している。
+
+JSON.stringify(errors) の目的は「errors を比較しやすい文字列にするため」。
+
+#### 6. JSON と data.json の違い
+
+| 用途 | 内容 |
+| --- | --- |
+| JSON.stringify(errors) | フロント側で使う。エラー比較用。一時的な文字列化。 |
+| server/data.json | サーバー側で使う。患者や記録の保存用。実際のアプリデータ。 |
+
+同じ「JSON」という言葉でも、比較用の文字列化と保存ファイルでは役割が違う。
+
+#### 7. useRef("") が空文字なのに大丈夫な理由
+
+`js
+const prevErrorSignatureRef = useRef("");
+`
+
+最初は prevErrorSignatureRef.current === "" だが、それは初期値であってずっと空文字のままではない。
+
+1回目の流れ（errors が空オブジェクトの場合）:
+
+`js
+const signature = JSON.stringify(errors); // "{}"
+
+if ("{}" === "") return; // false なので止まらない
+
+prevErrorSignatureRef.current = "{}"; // ここで更新される
+`
+
+2回目以降（同じ errors の場合）:
+
+`js
+if ("{}" === "{}") return; // true なので止まる → 親へ送らない
+`
+
+#### 8. なぜ errors が空だと "{}" になるのか
+
+`js
+JSON.stringify({}); // "{}"
+`
+
+- {} はオブジェクト
+- "{}" は文字列
+
+この2つは別物。JSON.stringify はオブジェクトを文字列に変換する。
+
+#### 9. 今日の一番大事な理解
+
+`js
+const signature = JSON.stringify(errors);
+if (signature === prevErrorSignatureRef.current) return;
+`
+
+これは「今回のエラー内容」と「前回保存しておいたエラー内容」が同じなら、親へ送らず終わるという意味。
+
+このコード全体は、**同じ errors を何回も親に通知しないためのガード**である。
+
+#### 10. 今日の理解ポイントを一言ずつ
+
+- prevErrorSignatureRef は、前回のエラー内容の文字列を覚えておく ref
+- 子の useEffect は親への通知
+- 親の useEffect は表示処理
+- errors はオブジェクトなので、そのままだと比較しにくい
+- だから JSON.stringify(errors) で文字列にする
+- useRef("") の空文字は初期値で、1回目の実行後に更新される
+- JSON は形式、data.json はその形式で保存されたファイル
+
+#### 11. 次回の復習スタート地点
+
+- if (signature === prevErrorSignatureRef.current) return; を自分の言葉で説明する
+- なぜ errors ではなく signature を保存しているのか整理する
+- なぜ ref で持って、state では持たないのか確認する
+
+#### 12. 超短くまとめると
+
+同じエラー内容を親に何度も送らないために、errors を JSON.stringify で文字列化し、前回の文字列と ref で比較している。

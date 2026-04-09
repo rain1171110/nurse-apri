@@ -1,19 +1,6 @@
 {
   "patients": [
     {
-      "name": "鈴木次郎",
-      "room": 101,
-      "id": "10d5422f-a7da-4851-b941-c3dc631bd5d0",
-      "age": 1,
-      "disease": "心不全",
-      "history": "RS、マイコプラズマ",
-      "progress": ""
-    },
-    {
-      "name": "okazaki hinano",
-      "id": "64e3908c-d7ed-4b8d-80f9-0f659a59bba9"
-    },
-    {
       "name": "okazaki hinano",
       "room": 111,
       "id": "1bf32ad0-b07c-47ad-b348-01c5570e229f"
@@ -25,19 +12,16 @@
     {
       "name": "OKAZAKI",
       "id": "850b6756-d882-427c-b1b0-41773787446d"
+    },
+    {
+      "name": "鈴木次郎",
+      "room": 1,
+      "id": "e15f9c06-f400-4800-8125-f82231d101bf"
+    },
+    {
+      "name": "鈴木次郎",
+      "id": "40cd15fc-0a18-497b-a184-fa481279972f"
     }
   ],
-  "records": [
-    {
-      "date": "2026-03-27",
-      "author": "岡崎洋子",
-      "content": "a",
-      "vitals": {
-        "T": 35,
-        "P": 50
-      },
-      "patientId": "10d5422f-a7da-4851-b941-c3dc631bd5d0",
-      "id": 1774576254714
-    }
-  ]
+  "records": []
 }

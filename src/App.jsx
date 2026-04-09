@@ -9,7 +9,6 @@ import PatientDetail from "./PatientDetail";
 import PatientVitals from "./PatientVitals";
 import NursingRecordList from "./NursingRecordList";
 import NursingRecordItem from "./NursingRecordItem";
-import { extractUsedRoomNumbers } from "./Utils";
 
 function App() {
   const [globalErrors, setGlobalErrors] = useState({});

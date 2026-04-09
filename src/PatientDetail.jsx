@@ -72,7 +72,7 @@ export default function PatientDetail({
   useEffect(()=> {
     if(!import.meta.env.DEV) return;
     const results = runPatientValidationCases();
-    console.tabele(results);
+    console.table(results);
   },[]);
 
   if (!patient) {

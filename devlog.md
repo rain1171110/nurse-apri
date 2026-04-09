@@ -5003,3 +5003,249 @@ if (signature === prevErrorSignatureRef.current) return;
 #### 12. 超短くまとめると
 
 同じエラー内容を親に何度も送らないために、errors を JSON.stringify で文字列化し、前回の文字列と ref で比較している。
+## 2026-04-09 ### 学習ログまとめ
+
+今日は主に、エラー比較の仕組み と React / Router の復習 を進めた。
+
+#### 1. if (signature === prevErrorSignatureRef.current) return; の理解
+
+この1行は、
+
+「今回の errors の中身が前回と同じなら、同じ通知をもう一度しないために止める」
+
+という意味。
+
+ポイント:
+- signature は JSON.stringify(errors) で作った比較用の文字列
+- prevErrorSignatureRef.current は前回のエラー内容を覚えている
+- 同じなら return で処理終了
+- 役割は 同じエラー通知の繰り返し防止
+
+#### 2. なぜ errors ではなく signature を保存するのか
+
+errors はオブジェクトなので、そのまま === で比べても
+「中身が同じか」ではなく「同じオブジェクトか」を見てしまう。
+
+そのため、
+
+const signature = JSON.stringify(errors);
+
+で文字列にして、中身ベースで比較しやすくしている。
+
+整理:
+- errors -> オブジェクト
+- signature -> 比較しやすい文字列
+- 前者は比較しにくい
+- 後者は比較しやすい
+
+#### 3. ref で持って、state で持たない理由
+
+prevErrorSignatureRef.current は、
+
+- 画面に表示しない
+- 前回値を覚えるだけ
+- 変わっても再描画は不要
+
+なので state ではなく ref を使う。
+
+理由:
+- state にすると更新時に再描画が起きる
+- 今回は UI に見せる値ではない
+- ただ比較用に覚えておきたいだけ
+
+つまり、
+
+- 表示用の値 -> state
+- 比較用・メモ用の値 -> ref
+
+という使い分けを確認した。
+
+#### 4. errors が空のとき "{}" になる理由
+
+errors が空のときは空オブジェクト。
+
+{}
+
+これを
+
+JSON.stringify(errors)
+
+すると
+
+"{}"
+
+になる。
+
+流れ:
+- errors が空
+- signature = "{}"
+- 前回も "{}" なら return
+
+つまり、
+
+空エラー状態が続いているだけなら、同じ通知を何度もしない
+
+という仕組み。
+
+#### 5. useEffect の流れ
+
+useEffect(() => {
+  const signature = JSON.stringify(errors);
+  if (signature === prevErrorSignatureRef.current) return;
+  prevErrorSignatureRef.current = signature;
+  if (onErrorsChange) onErrorsChange(errors);
+}, [errors, onErrorsChange]);
+
+この処理の順番は、
+
+- 今の errors を文字列にする
+- 前回と同じか比較する
+- 違うなら ref に保存する
+- 親へ errors を渡す
+
+大事な理解:
+
+比較 -> 保存 -> 親に通知
+
+であって、いきなり親へ渡しているわけではない。
+
+#### 6. なぜ先に保存してから親へ通知するのか
+
+prevErrorSignatureRef.current = signature;
+if (onErrorsChange) onErrorsChange(errors);
+
+この順番にすることで、親の setState による再描画が起きても、次回は
+
+「もう同じ内容は保存済み」
+
+と判定しやすくなる。
+
+今日の理解:
+- 先に親へ通知すると、同じ内容でも無駄な更新につながりやすい
+- 親の state 更新 -> 再描画 -> effect 再実行 の流れがあり得る
+- だから 先に ref に記録しておく のがよい
+
+#### 7. if (onErrorsChange) onErrorsChange(errors); の理解
+
+これは
+
+「onErrorsChange が渡されているときだけ実行する」
+
+という意味。
+
+ポイント:
+- if の条件は onErrorsChange
+- 関数が渡されていれば truthy
+- 渡されていなければ undefined で falsy
+- そのため安全に呼べる
+
+#### 8. truthy / falsy の理解
+
+falsy の代表:
+- false
+- 0
+- ""
+- null
+- undefined
+- NaN
+
+truthy の代表:
+- "hello"
+- 1
+- []
+- {}
+- 関数
+
+今回のコードでは、
+
+- onErrorsChange が関数なら truthy
+- undefined なら falsy
+
+だから
+
+if (onErrorsChange)
+
+で「その関数ある？」を確認できる。
+
+#### 9. if と ?. の使い分け
+
+ただ「あれば呼ぶだけ」:
+onErrorsChange?.(errors);
+
+前後に処理がある:
+if (onErrorsChange) {
+  prevErrorSignatureRef.current = signature;
+  onErrorsChange(errors);
+}
+
+今日の整理:
+- 1行で安全に呼ぶだけ -> ?.
+- 複数の処理をまとめたい -> if
+
+#### 10. Router の復習に戻った
+
+Router では、
+
+今どの画面かは activeView ではなく URL が表す
+
+ことを確認した。
+
+例:
+- / -> 患者一覧
+- /patient/:id -> 患者ページ
+- /patient/:id/vitals -> バイタル一覧
+- /patient/:id/records -> 看護記録一覧
+
+大事な考え方:
+- BrowserRouter は main.jsx に1回だけ置く
+- App.jsx では <Routes> と <Route> を書く
+- :id は変わる値が入る場所
+- useParams() で id を取り出す
+- patients.find(...) で患者を探す
+
+つまり、
+
+選択中の患者を state に持つより、URL の id から探す
+
+という考え方を再確認した。
+
+#### 11. 今日解決したエラー
+
+エラー内容はこれだった。
+
+TypeError: console.tabele is not a function
+
+原因:
+
+console.table と書くべきところを
+console.tabele とスペルミスしていた。
+
+結果:
+- PatientDetail.jsx 内で例外が発生
+- React が An error occurred in the <PatientDetail> component. と追加で警告を出していた
+
+学び:
+- まず見るべきは 最初の1行
+- どのファイルの何行目か
+- 何が not a function なのか
+
+今回は
+PatientDetail.jsx:75 と console.tabele is not a function
+が本体だった。
+
+### 今日の大事な理解を一言でまとめると
+
+エラー比較:
+- errors はそのままだと比較しにくい
+- JSON.stringify(errors) で比較用文字列にする
+- 前回と同じなら通知しない
+- 前回値は ref で持つ
+
+関数呼び出し:
+- if (onErrorsChange) は「その関数ある？」の確認
+- ?. は「あれば呼ぶ」の短い書き方
+
+Router:
+- どの画面かは state ではなく URL
+- どの患者かは URL の id
+- useParams() で受け取って find() する

@@ -5249,3 +5249,237 @@ Router:
 - どの画面かは state ではなく URL
 - どの患者かは URL の id
 - useParams() で受け取って find() する
+## 2026-04-11
+
+### 学習ログまとめ
+
+今日は React Router の続きを進めて、URL と画面表示のつながりをかなり整理できました。
+
+#### 今日のテーマ
+
+React Router で、
+
+- URL で患者を区別する
+- そのURLに合う画面を表示する
+- URL から患者IDを取り出して、患者1人と記録一覧を作る
+
+ことを理解しました。
+
+#### 1. React Router の役割分担
+
+- main.jsx に BrowserRouter を置く
+- App.jsx に Routes と Route を書く
+- 各ページで useParams() や useNavigate() を使う
+
+整理すると、
+
+| Hook / コンポーネント | 役割 |
+| --- | --- |
+| BrowserRouter | アプリ全体で Router を使えるようにする |
+| Route | URL ごとに表示する画面を決める |
+| useParams() | URL の id を取り出す |
+| useNavigate() | コードから画面遷移する |
+
+#### 2. URL と画面の対応
+
+例:
+
+- / -> 患者一覧
+- /patient/:id -> 患者ページ
+- /patient/:id/vitals -> バイタル一覧
+- /patient/:id/records -> 看護記録一覧
+
+つまり
+
+- :id -> どの患者か
+- vitals / records -> どの画面か
+
+という意味。
+
+#### 3. useParams() で id を取る
+
+`js
+const { id } = useParams();
+`
+
+これは URL の :id を取り出す書き方。
+
+たとえば /patient/5/vitals なら、id は "5"。
+
+大事なポイント:
+
+useParams() で取れる値は文字列。
+
+#### 4. find() と filter() の違い
+
+`js
+const patient = patients.find((p) => String(p.id) === id);
+const patientRecords = records.filter((r) => String(r.patientId) === id);
+`
+
+| 関数 | 意味 |
+| --- | --- |
+| find() | 条件に合うものを1つ取り出す |
+| filter() | 条件に合うものを全部取り出す |
+
+- patient -> 今の患者1人
+- patientRecords -> その患者に関係ある記録一覧
+
+#### 5. r.id と r.patientId の違い
+
+- r.id -> 記録そのもののID
+- r.patientId -> その記録がどの患者のものかを表すID
+
+記録一覧を患者ごとに絞るときは、
+
+`js
+String(r.patientId) === id
+`
+
+と書く。
+
+#### 6. props の受け渡し
+
+`jsx
+<PatientCard patient={patient} records={patientRecords} />
+`
+
+- 左 -> 子で受け取る名前
+- 右 -> 親が持っている変数
+
+#### 7. 配列の扱い
+
+- patient は患者1人なので patient.name のように使う
+- patientRecords は配列
+
+`jsx
+<p>記録数: {patientRecords.length}</p>
+`
+
+一覧表示:
+
+`jsx
+patientRecords.map((r) => ...)
+`
+
+#### 8. map() の意味
+
+`jsx
+{patientRecords.map((r) => (
+  <tr key={r.id}>
+    <td>{r.date}</td>
+  </tr>
+))}
+`
+
+- patientRecords の中身を1件ずつ取り出す
+- r は1件分の記録
+- その1件を <tr> 1行に変換する
+
+#### 9. key={r.id} の意味
+
+`jsx
+<tr key={r.id}>
+`
+
+React に各行を区別させるために必要。
+
+#### 10. ?. の意味
+
+`js
+r.vitals?.T
+`
+
+- vitals があれば T を読む
+- vitals がなければエラーになりにくくする
+
+#### 11. 分割代入
+
+`js
+const { T, P, R, SBP, DBP, SPO2 } = r.vitals ?? {};
+`
+
+r.vitals の中の値を取り出して、短く使いやすくする書き方。
+
+#### 12. 血圧表示の整形
+
+`js
+const bpText = formatBpText(SBP, DBP);
+const bpDisplay = bpText === "--" ? "--" : ${bpText}mmHg;
+`
+
+- formatBpText(SBP, DBP) -> 血圧を見やすく整える
+- 三項演算子 ? : -> 条件によって表示を切り替える
+
+#### 13. navigate() の役割
+
+`js
+const navigate = useNavigate();
+navigate(/patient//vitals);
+`
+
+コードの中で URL を変えて画面遷移するためのもの。
+
+流れ:
+
+`
+navigate() で URL が変わる
+↓
+Route がその URL に合う画面を表示する
+`
+
+#### 今日できたこと
+
+PatientVitals の形をかなり読めるようになりました。
+
+`jsx
+export default function PatientVitals({ patients, records = [] }) {
+  const { id } = useParams();
+
+  const patient = patients.find((p) => String(p.id) === id);
+  const patientRecords = records.filter((r) => String(r.patientId) === id);
+
+  if (!patient) return <div>患者が見つかりません</div>;
+
+  return (
+    <div>
+      <p>{patient.room}号室 {patient.name} さん</p>
+      <p>記録数: {patientRecords.length}</p>
+      <table>
+        <tbody>
+          {patientRecords.map((r) => (
+            <tr key={r.id}>
+              <td>{r.date}</td>
+              <td>{r.vitals?.T}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+`
+
+### 今日の大事な一言まとめ
+
+- id は URL から取る
+- patient は1人
+- patientRecords は配列
+- 画面遷移は navigate()
+- URLに合う画面表示は Route
+
+### 次回の再開ポイント
+
+useNavigate() を使ったボタン遷移の整理と、PatientPage / PatientVitals / NursingRecordList を実際のコードとしてつなぐ。
+
+特にこの確認から始める予定。
+
+`jsx
+const navigate = useNavigate();
+
+<button onClick={() => navigate(/patient//records)}>
+  看護記録
+</button>
+`
+
+このボタンを押すと、その患者の看護記録一覧ページに移動する、という流れの続きから。

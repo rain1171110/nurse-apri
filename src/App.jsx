@@ -9,6 +9,7 @@ import PatientDetail from "./PatientDetail";
 import PatientVitals from "./PatientVitals";
 import NursingRecordList from "./NursingRecordList";
 import NursingRecordItem from "./NursingRecordItem";
+import PatientMenu from "./PatientMenu";
 
 function App() {
   const [globalErrors, setGlobalErrors] = useState({});
@@ -18,7 +19,6 @@ function App() {
   const [appData, setAppData] = useState({ patients: [], records: [] });
   const [loading, setLoading] = useState(true);
   const [apiError, setApiError] = useState("");
-  const [selectedPatientId, setSelectedPatientId] = useState(null);
 
   useEffect(() => {
     // エラーが新しく出た時
@@ -79,12 +79,10 @@ function App() {
     }
   };
 
-  const addRecord = async (record) => {
-    if (selectedPatientId === null) return;
-
+  const addRecord = async (record, patientId) => {
     const recordToAdd = {
       ...record,
-      patientId: selectedPatientId,
+      patientId,
       id: Date.now(),
     };
     const nextRecords = [...appData.records, recordToAdd];
@@ -128,7 +126,6 @@ function App() {
     const nextPatients = appData.patients.filter((p) => p.id !== id);
     const nextRecords = appData.records.filter((r) => r.patientId !== id);
     await onSaveData({ patients: nextPatients, records: nextRecords });
-    setSelectedPatientId(null);
   };
   const deleteRecord = async (id) => {
     const nextRecords = appData.records.filter((r) => r.id !== id);
@@ -150,32 +147,24 @@ function App() {
                 onSaveData={onSaveData}
                 patients={appData.patients}
                 records={appData.records}
-                setPatients={setPatients}
-                updatePatient={updatePatient}
-                setRecords={setRecords}
-                selectedPatientId={selectedPatientId}
-                setSelectedPatientId={setSelectedPatientId}
                 isLoading={loading}
                 apiError={apiError}
-                addRecord={addRecord}
-                updateRecord={updateRecord}
-                deletePatient={deletePatient}
-                deleteRecord={deleteRecord}
               />
             }
           />
-          <Route
-            path="/patient/:id"
-            element={
-              <PatientPage
-                patients={appData.patients}
-                records={appData.records}
-                deletePatient={deletePatient}
-              />
-            }
-          >
+          <Route path="/patient/:id" element={<PatientPage />}>
             <Route
               index
+              element={
+                <PatientMenu
+                  patients={appData.patients}
+                  records={appData.records}
+                  deletePatient={deletePatient}
+                />
+              }
+            />
+            <Route
+              path="detail"
               element={
                 <PatientDetail
                   patients={appData.patients}
@@ -203,6 +192,7 @@ function App() {
                   updatePatient={updatePatient}
                   deleteRecord={deleteRecord}
                   onErrorsChange={setGlobalErrors}
+                  addRecord={addRecord}
                 />
               }
             />

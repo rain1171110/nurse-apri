@@ -58,6 +58,7 @@ export default function NursingRecordItem({
           </div>
           <div className="card">
             <div className="card-body">
+              <p>日付:{record.date}</p>
               <p>
                 体温:{formatValue(T, "℃")} 脈拍:{formatValue(P, "回/分")} 呼吸:
                 {formatValue(R, "回/分")} 血圧:{bpDisplay} SPO2:
@@ -112,7 +113,7 @@ export default function NursingRecordItem({
           >
             戻る
           </button>
-          <DeleteButton handleDelete={handleDelete} />
+          <DeleteButton handleDelete={handleDelete}  />
         </div>
       )}
     </div>

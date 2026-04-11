@@ -15,10 +15,10 @@ export default function NursingRecordList({
   const patientRecords = records.filter((r) => String(r.patientId) === id);
 
   const [isAdding, setIsAdding] = useState(false);
-  const [formData, setFormData] = useState(createEmptyRecord);
+  const [formData, setFormData] = useState(createEmptyRecord());
 
-  const handleSubmit = (data) => {
-    addRecord(data);
+  const handleSubmit = async (data) => {
+    await addRecord(data, id);
     setIsAdding(false);
     setFormData(createEmptyRecord());
   };
@@ -38,7 +38,7 @@ export default function NursingRecordList({
               onClick={() => {
                 setFormData({
                   ...createEmptyRecord(),
-                  date:formatDate(new Date()),
+                  date: formatDate(new Date()),
                 });
                 setIsAdding(true);
               }}

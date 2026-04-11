@@ -3,7 +3,10 @@
     {
       "name": "okazaki hinano",
       "room": 111,
-      "id": "1bf32ad0-b07c-47ad-b348-01c5570e229f"
+      "id": "1bf32ad0-b07c-47ad-b348-01c5570e229f",
+      "disease": "",
+      "history": "",
+      "progress": ""
     },
     {
       "name": "OKAZAKI HINANO",
@@ -23,5 +26,14 @@
       "id": "40cd15fc-0a18-497b-a184-fa481279972f"
     }
   ],
-  "records": []
+  "records": [
+    {
+      "date": "2026-04-12",
+      "author": "岡崎洋子",
+      "content": "",
+      "vitals": {},
+      "patientId": "1bf32ad0-b07c-47ad-b348-01c5570e229f",
+      "id": 1775938273508
+    }
+  ]
 }

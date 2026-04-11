@@ -16,7 +16,7 @@ export default function PatientCard({ patient, onDelete }) {
           <button
             type="button"
             className="btn-primary"
-            onClick={() => navigate(`/patient/${patient.id}`)}
+            onClick={() => navigate(`/patient/${patient.id}/detail`)}
           >
             患者情報
           </button>
@@ -40,7 +40,7 @@ export default function PatientCard({ patient, onDelete }) {
         <button
           type="button"
           className="btn-secondary"
-          onClick={() => navigate("/")}
+          onClick={() => navigate(`/patient/${patient.id}`)}
         >
           戻る
         </button>

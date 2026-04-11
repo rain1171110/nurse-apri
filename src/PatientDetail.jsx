@@ -63,12 +63,6 @@ export default function PatientDetail({
     });
   }, [patient, reset]);
 
-  useEffect(() => {
-    if (!import.meta.env.DEV) return;
-    const results = runPatientValidationCases();
-    console.table(results);
-  }, []);
-
   useEffect(()=> {
     if(!import.meta.env.DEV) return;
     const results = runPatientValidationCases();

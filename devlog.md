@@ -5483,3 +5483,277 @@ const navigate = useNavigate();
 `
 
 このボタンを押すと、その患者の看護記録一覧ページに移動する、という流れの続きから。
+## 2026-04-12
+
+### 学習ログ
+
+#### 1. Router 化で患者を決める方法が変わった
+
+前は selectedPatientId で「今どの患者を見ているか」を管理していた。
+でも今は Router を使っているので、患者は URL の id で決まるようになった。
+
+例:
+
+`js
+const { id } = useParams();
+`
+
+つまり、
+
+- 前 -> state で患者を覚える
+- 今 -> URL で患者を決める
+
+になった。
+
+#### 2. addRecord は selectedPatientId ではなく patientId を使う形に変更した
+
+前は selectedPatientId が null だと追加できなかった。
+今は NursingRecordList から id を渡しているので、addRecord は引数の patientId を使えばよい形になった。
+
+完成形:
+
+`js
+const addRecord = async (record, patientId) => {
+  const recordToAdd = {
+    ...record,
+    patientId,
+    id: Date.now(),
+  };
+
+  const nextRecords = [...appData.records, recordToAdd];
+  await onSaveData({
+    patients: appData.patients,
+    records: nextRecords,
+  });
+};
+`
+
+学んだこと:
+
+- 一覧表示では patientId を読む
+- 新規追加では patientId を渡す
+
+#### 3. NursingRecordList を Router 前提に整理した
+
+NursingRecordList で useParams() を使い、今の患者の記録だけを表示する形にした。
+
+`js
+const { id } = useParams();
+const patient = patients.find((p) => String(p.id) === id);
+const patientRecords = records.filter((r) => String(r.patientId) === id);
+`
+
+さらに追加処理も、
+
+`js
+const handleSubmit = async (data) => {
+  await addRecord(data, id);
+  setIsAdding(false);
+  setFormData(createEmptyRecord());
+};
+`
+
+にして、保存が終わってからフォームを閉じる形にした。
+
+#### 4. NursingRecordItem を recordId で開く形にした
+
+詳細画面では props で record を直接もらうのではなく、URL の recordId から自分で探す形にした。
+
+`js
+const { id, recordId } = useParams();
+
+const patient = patients.find((p) => String(p.id) === id);
+const record = records.find(
+  (r) => String(r.id) === recordId && String(r.patientId) === id
+);
+`
+
+学んだこと:
+
+- find -> 1件探す
+- filter -> 条件に合うもの全部を集める
+
+#### 5. selectedPatientId は今の設計では不要になった
+
+PatientList.jsx を見直した結果、もう selectedPatientId を使っていなかった。
+そのため App.jsx からも消せた。
+
+消したもの:
+
+- const [selectedPatientId, setSelectedPatientId] = useState(null);
+- PatientList に渡していた selectedPatientId 系 props
+- deletePatient の中の setSelectedPatientId(null)
+
+学んだこと:
+
+患者を覚える役割が state から URL に移った。
+
+#### 6. PatientList の props を整理した
+
+PatientList は今使っている props だけ受け取る形に整理した。
+
+`js
+export default function PatientList({
+  onErrorsChange,
+  onSaveData,
+  patients,
+  records,
+  isLoading,
+  apiError,
+})
+`
+
+App.jsx 側の / route も、それに合わせて整理した。
+
+#### 7. 患者ページの構成を見直した
+
+最初は PatientPage の中に PatientCard を常に置いていたので、
+
+- /patient/:id/detail
+- /patient/:id/vitals
+- /patient/:id/records
+
+でもメニュー画面が残っていた。
+
+そこで構成を変更した。
+
+PatientPage.jsx:
+
+`jsx
+import { Outlet } from "react-router-dom";
+
+export default function PatientPage() {
+  return <Outlet />;
+}
+`
+
+PatientMenu.jsx:
+
+`jsx
+import { useParams } from "react-router-dom";
+import PatientCard from "./PatientCard";
+
+export default function PatientMenu({ patients, records, deletePatient }) {
+  const { id } = useParams();
+
+  const patient = patients.find((p) => String(p.id) === id);
+  const patientRecords = records.filter((r) => String(r.patientId) === id);
+
+  if (!patient) return <div>患者が見つかりません</div>;
+
+  return (
+    <PatientCard
+      patient={patient}
+      records={patientRecords}
+      onDelete={deletePatient}
+    />
+  );
+}
+`
+
+これで
+
+- /patient/:id -> メニュー画面
+- /patient/:id/detail -> 患者情報画面だけ
+- /patient/:id/vitals -> バイタル画面だけ
+- /patient/:id/records -> 看護記録画面だけ
+
+という形に近づいた。
+
+#### 8. App.jsx の nested route を整理した
+
+PatientMenu を index route に置き、PatientDetail を detail route にした。
+
+考え方:
+
+- index -> 患者メニュー
+- detail -> 患者情報
+- vitals -> バイタル
+- records -> 記録一覧
+- records/:recordId -> 記録詳細
+
+これで「患者情報をクリックした時だけ患者情報画面を出す」ための土台ができた。
+
+#### 9. PatientCard のボタン遷移を整理した
+
+PatientCard.jsx で各ボタンを Router に合わせた。
+
+`js
+onClick={() => navigate(/patient//detail)}
+onClick={() => navigate(/patient//vitals)}
+onClick={() => navigate(/patient//records)}
+`
+
+ここで大事だったのは、
+
+navigate("/patient/:id")
+
+はダメ、ということ。
+
+理由:
+
+:id は Route 定義で使う「箱」。
+navigate() では実際の値が必要。
+
+正しくは:
+
+`js
+navigate(/patient/)
+`
+
+学んだこと:
+
+/ patient / :id は設計図、/patient/5 は実際の住所。
+
+#### 10. DeleteButton の props 名も確認した
+
+DeleteButton.jsx は今こうなっていた。
+
+`jsx
+export default function DeleteButton({ onClick }) {
+  return (
+    <button type="button" className="btn-danger" onClick={onClick}>
+      削除
+    </button>
+  );
+}
+`
+
+なので PatientCard.jsx 側の
+
+`jsx
+<DeleteButton onClick={() => onDelete(patient.id)} />
+`
+
+で合っていることを確認した。
+
+### 今日の大事な理解
+
+今日いちばん大事だったのはこれ。
+
+1. Router 化すると、患者を決める中心は URL になる
+   - 前 -> selectedPatientId
+   - 今 -> useParams() の id
+
+2. メニュー画面と詳細画面は別 route に分ける
+   - /patient/:id -> メニュー
+   - /patient/:id/detail -> 患者情報
+
+3. :id は Route 定義の箱であって、実際の移動先ではない
+   - Route: path="/patient/:id"
+   - 移動: navigate(/patient/)
+
+### 次回やること
+
+次回はここから再開。
+
+- PatientCard の 戻る ボタンをどうするか確認
+- 実際に動かして、
+  - 患者カードを押す -> メニュー画面
+  - 患者情報を押す -> 患者情報画面だけ表示
+  になっているか確認
+- 必要なら PatientDetail / PatientVitals / NursingRecordList の戻り先を微調整
+
+つまり今日は、
+
+患者選択を state から URL ベースに切り替え、患者メニュー画面と患者情報画面を route で分ける形まで進めた日でした。

@@ -92,22 +92,6 @@ function App() {
     });
   };
 
-  const setPatients = (updater) => {
-    setAppData((prev) => {
-      const nextPatients =
-        typeof updater === "function" ? updater(prev.patients) : updater;
-      return { ...prev, patients: nextPatients };
-    });
-  };
-
-  const setRecords = (updater) => {
-    setAppData((prev) => {
-      const nextRecords =
-        typeof updater === "function" ? updater(prev.records) : updater;
-      return { ...prev, records: nextRecords };
-    });
-  };
-
   const updatePatient = async (updated) => {
     const nextPatients = appData.patients.map((p) =>
       p.id === updated.id ? updated : p,
@@ -158,7 +142,6 @@ function App() {
               element={
                 <PatientMenu
                   patients={appData.patients}
-                  records={appData.records}
                   deletePatient={deletePatient}
                 />
               }

@@ -5757,3 +5757,148 @@ export default function DeleteButton({ onClick }) {
 つまり今日は、
 
 患者選択を state から URL ベースに切り替え、患者メニュー画面と患者情報画面を route で分ける形まで進めた日でした。
+## 2026-04-13
+
+### 学習ログ
+
+#### 1. PatientPage の役割
+
+PatientPage は
+
+`jsx
+return <Outlet />;
+`
+
+だけを書いた、親ルートの箱 だと確認できた。
+自分で患者を探す部品ではなく、子ルートを表示する場所 になっている。
+
+#### 2. PatientMenu の役割
+
+PatientMenu は
+
+- useParams() で id を読む
+- patients.find(...) で患者を1人探す
+- PatientCard に渡す
+
+という、患者メニュー画面の入口 の役割だと整理できた。
+
+つまり /patient/:id のときに、実際に患者を探しているのは PatientMenu。
+
+#### 3. PatientCard の役割
+
+PatientCard は、患者を探す部品ではなく、
+渡された patient を表示する見た目の部品 だと理解できた。
+
+- 患者情報へ進む
+- バイタルへ進む
+- 看護記録へ進む
+- 一覧に戻る
+- 削除する
+
+というボタン表示を担当している。
+
+つまり
+
+- PatientMenu が探す
+- PatientCard が表示する
+
+という役割分担。
+
+#### 4. props でデータを渡す流れ
+
+PatientCard の patient は、自分で作っているのではなく、
+PatientMenu から props で渡されている と理解できた。
+
+`jsx
+<PatientCard patient={patient} onDelete={deletePatient} />
+`
+
+この形で、見つけた患者データを子に渡している。
+
+#### 5. 削除処理の流れ
+
+削除の本体は PatientCard ではなく、App の deletePatient だと整理できた。
+
+流れはこう。
+
+`
+App が deletePatient を持つ
+↓
+PatientMenu に渡す
+↓
+PatientCard には onDelete という名前で渡す
+↓
+DeleteButton を押したら onDelete(patient.id) が動く
+`
+
+つまり、削除処理の本体は親にあって、子はお願いしているだけ。
+
+#### 6. onClick={() => ...} の意味
+
+`jsx
+onClick={() => onDelete(patient.id)}
+`
+
+の () => は、今すぐ実行せず、クリックした時だけ実行するため と理解できた。
+
+もし
+
+`jsx
+onClick={onDelete(patient.id)}
+`
+
+と書くと、クリック前にその場で実行されてしまう。
+
+#### 7. メニュー画面から戻れなかった理由
+
+前は
+
+`js
+navigate(/patient/)
+`
+
+になっていたので、メニュー画面にいる時に押しても同じ場所に戻るだけだった。
+
+そこを
+
+`js
+navigate("/")
+`
+
+にしたことで、一覧に戻れる ようになった。
+
+#### 8. setPatients と setRecords の今の状態
+
+App.jsx にある
+
+`js
+const setPatients = ...
+const setRecords = ...
+`
+
+は、今のコードでは未使用 と確認できた（→ 削除済み）。
+今の更新の中心は onSaveData({ patients, records }) になっている。
+
+### 今日の理解のポイント
+
+今日いちばん大事だったのは、
+
+- 親ルートの箱
+- 患者を探す部品
+- 表示する部品
+- 削除の本体を持つ部品
+
+を分けて考えられるようになったこと。
+
+| 部品 | 役割 |
+| --- | --- |
+| PatientPage | 親ルートの箱（Outlet を返すだけ） |
+| PatientMenu | useParams で id を読み、患者を探す |
+| PatientCard | 渡された patient を表示する |
+| App | deletePatient など処理の本体を持つ |
+
+今日は、React Router の役割分担と props の流れ、削除処理のつながり を整理できた日だった。
+
+### 明日の再開ポイント
+
+PatientDetail / PatientVitals / NursingRecordList でも同じように「誰が id を読み、誰が表示しているか」をそろえて見ると、理解がさらに深まる。

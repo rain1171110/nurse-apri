@@ -38,12 +38,13 @@ export default function PatientCard({ patient, onDelete }) {
       </div>
       <div className="card-footer">
         <button
-          type="button"
           className="btn-secondary"
-          onClick={() => navigate(`/patient/${patient.id}`)}
+          type="button"
+          onClick={() => navigate("/")}
         >
-          戻る
+          一覧に戻る
         </button>
+
         <DeleteButton onClick={() => onDelete(patient.id)} />
       </div>
     </div>

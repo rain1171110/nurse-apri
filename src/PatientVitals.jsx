@@ -1,14 +1,10 @@
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate,useOutletContext } from "react-router-dom";
 import { formatValue, formatBpText } from "./Utils";
 
-export default function PatientVitals({
-  patients,
-  records = [],
-}) {
-  const { id } = useParams();
+export default function PatientVitals() {
   const navigate = useNavigate();
-  const patient = patients.find((p) => String(p.id) === id);
-  const vitalsRecords = records.filter((r) => String(r.patientId) === id);
+  const { patient,patientRecords } = useOutletContext();
+
 
   if (!patient) return <div>患者が見つかりません</div>;
   return (
@@ -33,7 +29,7 @@ export default function PatientVitals({
               </tr>
             </thead>
             <tbody>
-              {vitalsRecords.map((r) => {
+              {patientRecords.map((r) => {
                 const { T, P, R, SBP, DBP, SPO2 } = r.vitals ?? {};
                 const date = r.date;
                 const bpText = formatBpText(SBP, DBP);
@@ -58,14 +54,14 @@ export default function PatientVitals({
         <button
           type="button"
           className="btn-secondary"
-          onClick={() => navigate(`/patient/${id}`)}
+          onClick={() => navigate(`/patient/${patient.id}`)}
         >
           メニューに戻る
         </button>
         <button
           type="button"
           className="btn-secondary"
-          onClick={() => navigate(`/patient/${id}/records`)}
+          onClick={() => navigate(`/patient/${patient.id}/records`)}
         >
           看護記録一覧
         </button>

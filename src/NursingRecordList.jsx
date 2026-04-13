@@ -1,24 +1,17 @@
 import { useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useNavigate, useOutletContext } from "react-router-dom";
 import { createEmptyRecord, formatDate } from "./Utils";
 import NursingRecordForm from "./NursingRecordForm";
 
-export default function NursingRecordList({
-  records,
-  patients,
-  onErrorsChange,
-  addRecord,
-}) {
-  const { id } = useParams();
+export default function NursingRecordList({ onErrorsChange, addRecord }) {
   const navigate = useNavigate();
-  const patient = patients.find((p) => String(p.id) === id);
-  const patientRecords = records.filter((r) => String(r.patientId) === id);
+  const { patient, patientRecords } = useOutletContext();
 
   const [isAdding, setIsAdding] = useState(false);
   const [formData, setFormData] = useState(createEmptyRecord());
 
   const handleSubmit = async (data) => {
-    await addRecord(data, id);
+    await addRecord(data.patient.id);
     setIsAdding(false);
     setFormData(createEmptyRecord());
   };
@@ -57,7 +50,9 @@ export default function NursingRecordList({
               <div
                 className="card"
                 key={r.id}
-                onClick={() => navigate(`/patient/${id}/records/${r.id}`)}
+                onClick={() =>
+                  navigate(`/patient/${patient.id}/records/${r.id}`)
+                }
                 style={{ cursor: "pointer" }}
               >
                 <div className="card-header">
@@ -102,7 +97,7 @@ export default function NursingRecordList({
           <button
             type="button"
             className="btn-secondary"
-            onClick={() => navigate(`/patient/${id}`)}
+            onClick={() => navigate(`/patient/${patient.id}`)}
           >
             メニューに戻る
           </button>

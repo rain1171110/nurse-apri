@@ -5902,3 +5902,192 @@ const setRecords = ...
 ### 明日の再開ポイント
 
 PatientDetail / PatientVitals / NursingRecordList でも同じように「誰が id を読み、誰が表示しているか」をそろえて見ると、理解がさらに深まる。
+## 2026-04-14
+
+### 学習ログ
+
+#### テーマ
+
+React Routerで、誰が id を読み、誰がデータを準備し、誰が表示するのか を整理した。
+あわせて、看護記録追加時の patient.id と patientId の関係 を理解した。
+
+#### 1. 今日理解したこと
+
+##### ① PatientPage の役割
+
+PatientPage は、患者ページ全体のデータ準備係。
+URL から id を読み、
+
+- patient を探す
+- patientRecords を集める
+- Outlet context で子に渡す
+
+という役割を持つ。
+
+つまり、どの患者のページか決めるのは PatientPage の仕事 だと理解した。
+
+##### ② PatientDetail / PatientVitals / NursingRecordList の役割
+
+子コンポーネントは、親が渡したデータを受け取って、それぞれの画面の表示や操作を担当する 形に整理できた。
+
+- PatientDetail -> 患者情報の表示・編集
+- PatientVitals -> バイタル一覧の表示
+- NursingRecordList -> 看護記録一覧の表示・追加操作
+
+つまり、親がデータをそろえ、子が表示や画面操作をする という設計が見えてきた。
+
+##### ③ useOutletContext() の意味
+
+useOutletContext() を使うと、PatientPage が渡した
+
+- patient
+- patientRecords
+
+を子で受け取れる。
+
+これによって、子コンポーネント側で毎回
+
+`js
+const { id } = useParams();
+const patient = patients.find(...);
+const patientRecords = records.filter(...);
+`
+
+を書かなくてよくなる。
+
+つまり、共通のデータ準備を親に集めることで、子の役割が見やすくなる と理解した。
+
+##### ④ PatientVitals がかなり整理できた
+
+PatientVitals は最終的に、
+
+- useParams() を使わない
+- patient と patientRecords を useOutletContext() で受け取る
+- 表示と画面遷移だけを担当する
+
+形に近づいた。
+
+また、戻るボタンなどは id ではなく patient.id を使って書けると理解した。
+
+つまり、PatientVitals はかなりきれいな表示専用コンポーネントに近づいた。
+
+##### ⑤ NursingRecordList の役割
+
+NursingRecordList も、
+
+- patient
+- patientRecords
+
+を親から受け取り、
+
+- 一覧を表示する
+- 記録追加フォームを開く
+- addRecord を呼ぶ
+
+という役割に整理できた。
+
+ここで持っている
+
+- isAdding
+- formData
+
+は、患者データそのものではなく画面の中だけで使うUI用の state だと理解した。
+
+つまり、これはデータの分裂ではなく、画面の状態管理 だと整理できた。
+
+#### 2. 今日いちばん大事だった理解
+
+##### patientId と patient.id の違い
+
+ここが今日の大きな学びだった。
+
+`js
+const addRecord = async (record, patientId) => {
+`
+
+この patientId は、関数の引数名（箱の名前）。
+
+一方で、
+
+`js
+addRecord(data, patient.id)
+`
+
+の patient.id は、今見ている患者の実際のID。
+
+つまり、
+
+- patientId -> 箱の名前
+- patient.id -> その箱に入れる本物の値
+
+という関係だと理解した。
+
+##### なぜ patient.id を渡すのか
+
+新しい看護記録には、
+
+「この記録は誰のものか」
+
+を入れる必要があるから。
+
+たとえば、フォーム入力だけの data にはまだ患者情報がない。
+そこで
+
+`js
+addRecord(data, patient.id)
+`
+
+とすることで、関数の中で
+
+`js
+{
+  ...record,
+  patientId,
+  id: Date.now(),
+}
+`
+
+という形の新しい記録が作れる。
+
+つまり、patient.id を渡すのは、記録に「誰の記録か」を付けるため だと理解できた。
+
+#### 3. コードの整理で分かったこと
+
+##### PatientDetail で注意する点
+
+PatientDetail では useParams() を消したあとに、
+
+`js
+navigate(/patient/)
+`
+
+のままだとエラーになる。
+この場合は
+
+`js
+navigate(/patient/)
+`
+
+に直す必要がある。
+
+また、部屋番号の重複チェックでは、編集している本人を除外するために
+
+`js
+extractUsedRoomNumbers(patients, patient?.id)
+`
+
+とする必要があると分かった。
+
+つまり、親から patient を受け取る設計にしたら、id も patient.id から使う方向にそろえる のが大事だと分かった。
+
+#### 4. 今日の理解をひとことで言うと
+
+PatientPage がデータ準備係、子コンポーネントが表示・操作係 という形がかなり見えてきた。
+
+さらに、patient.id を addRecord に渡すことで、新しい記録に patientId を付けて患者と記録をつなげる ことも理解できた。
+
+#### 5. 次回やること
+
+- PatientDetail / PatientVitals / NursingRecordList を今の設計で最終確認する
+- PatientPage 側の Outlet context の流れをもう一度復習する
+- addRecord と updatePatient の流れを、App側の責任として整理する

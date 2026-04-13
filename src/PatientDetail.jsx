@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { makePatientSchemaPartial, runPatientValidationCases } from "./schema";
 
 import { TextField } from "@mui/material";
-import { useParams, useNavigate } from "react-router-dom";
+import { useNavigate, useOutletContext } from "react-router-dom";
 import { extractUsedRoomNumbers } from "./Utils";
 
 export default function PatientDetail({
@@ -14,16 +14,11 @@ export default function PatientDetail({
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const navigate = useNavigate();
-  const { id } = useParams();
-
-  const patient = useMemo(
-    () => patients.find((p) => String(p.id) === id) ?? null,
-    [patients, id],
-  );
+  const { patient } = useOutletContext();
 
   const usedRoomsForEdit = useMemo(
-    () => extractUsedRoomNumbers(patients, id),
-    [patients, id],
+    () => extractUsedRoomNumbers(patients, patient?.id),
+    [patients, patient?.id],
   );
 
   const defaultValues = useMemo(
@@ -63,11 +58,11 @@ export default function PatientDetail({
     });
   }, [patient, reset]);
 
-  useEffect(()=> {
-    if(!import.meta.env.DEV) return;
+  useEffect(() => {
+    if (!import.meta.env.DEV) return;
     const results = runPatientValidationCases();
     console.table(results);
-  },[]);
+  }, []);
 
   if (!patient) {
     return <div>患者が見つかりません</div>;
@@ -257,7 +252,7 @@ export default function PatientDetail({
       {!isEditing && (
         <div className="form-actions">
           <button
-            onClick={() => navigate(`/patient/${id}`)}
+            onClick={() => navigate(`/patient/${patient.id}`)}
             className="btn-secondary"
           >
             メニューに戻る

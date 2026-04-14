@@ -5,21 +5,14 @@ import { makePatientSchemaPartial, runPatientValidationCases } from "./schema";
 
 import { TextField } from "@mui/material";
 import { useNavigate, useOutletContext } from "react-router-dom";
-import { extractUsedRoomNumbers } from "./Utils";
 
 export default function PatientDetail({
-  updatePatient,
   onErrorsChange,
-  patients = [],
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const navigate = useNavigate();
-  const { patient } = useOutletContext();
+  const { patient,updatePatient,usedRoomsForEdit } = useOutletContext();
 
-  const usedRoomsForEdit = useMemo(
-    () => extractUsedRoomNumbers(patients, patient?.id),
-    [patients, patient?.id],
-  );
 
   const defaultValues = useMemo(
     () => ({
@@ -123,7 +116,7 @@ export default function PatientDetail({
               reset(updated);
               clearErrors();
               if (onErrorsChange) {
-                onErrorsChange({});
+                onErrorsChange?.({});
               }
               setIsEditing(false);
             })}

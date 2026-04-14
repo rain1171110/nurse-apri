@@ -3,15 +3,15 @@ import { useNavigate, useOutletContext } from "react-router-dom";
 import { createEmptyRecord, formatDate } from "./Utils";
 import NursingRecordForm from "./NursingRecordForm";
 
-export default function NursingRecordList({ onErrorsChange, addRecord }) {
+export default function NursingRecordList({ onErrorsChange }) {
   const navigate = useNavigate();
-  const { patient, patientRecords } = useOutletContext();
+  const { patient, patientRecords, addRecord } = useOutletContext();
 
   const [isAdding, setIsAdding] = useState(false);
   const [formData, setFormData] = useState(createEmptyRecord());
 
   const handleSubmit = async (data) => {
-    await addRecord(data.patient.id);
+    await addRecord(data,patient.id);
     setIsAdding(false);
     setFormData(createEmptyRecord());
   };

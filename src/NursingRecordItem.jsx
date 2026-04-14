@@ -2,23 +2,16 @@ import { useState } from "react";
 import { formatBpText, formatValue } from "./Utils";
 import NursingRecordForm from "./NursingRecordForm";
 import DeleteButton from "./DeleteButton";
-import { useNavigate, useParams } from "react-router-dom";
-export default function NursingRecordItem({
-  patients,
-  records,
-  onErrorsChange,
-  updateRecord,
-  onDeleteRecord,
-}) {
+import { useParams, useNavigate, useOutletContext } from "react-router-dom";
+export default function NursingRecordItem({ onErrorsChange }) {
   const [isEditing, setIsEditing] = useState(false);
 
-  const { id, recordId } = useParams();
   const navigate = useNavigate();
+  const { patient, patientRecords, updateRecord, deleteRecord } =
+    useOutletContext();
+  const { recordId } = useParams();
 
-  const patient = patients.find((p) => String(p.id) === id);
-  const record = records.find(
-    (r) => String(r.id) === recordId && String(r.patientId) === id,
-  );
+  const record = patientRecords.find((r) => String(r.id) === recordId);
 
   if (!patient) return <div>患者が見つかりません</div>;
   if (!record)
@@ -39,12 +32,12 @@ export default function NursingRecordItem({
     const updatedRecord = { ...record, ...data };
     await updateRecord(updatedRecord);
     setIsEditing(false);
-    navigate(`/patient/${id}/records`);
+    navigate(`/patient/${patient.id}/records`);
   };
 
   const handleDelete = async () => {
-    await onDeleteRecord(record.id);
-    navigate(`/patient/${id}/records`);
+    await deleteRecord(record.id);
+    navigate(`/patient/${patient.id}/records`);
   };
 
   return (
@@ -88,7 +81,7 @@ export default function NursingRecordItem({
               className="btn-secondary"
               onClick={() => {
                 setIsEditing(false);
-                navigate(`/patient/${id}/records`);
+                navigate(`/patient/${patient.id}/records`);
               }}
             >
               キャンセル
@@ -109,11 +102,11 @@ export default function NursingRecordItem({
           <button
             type="button"
             className="btn-secondary"
-            onClick={() => navigate(`/patient/${id}/records`)}
+            onClick={() => navigate(`/patient/${patient.id}/records`)}
           >
             戻る
           </button>
-          <DeleteButton handleDelete={handleDelete}  />
+          <DeleteButton onClick={handleDelete} />
         </div>
       )}
     </div>

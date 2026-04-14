@@ -83,7 +83,7 @@ function App() {
     const recordToAdd = {
       ...record,
       patientId,
-      id: Date.now(),
+      id: crypto.randomUUID(),
     };
     const nextRecords = [...appData.records, recordToAdd];
     await onSaveData({
@@ -136,60 +136,42 @@ function App() {
               />
             }
           />
-          <Route path="/patient/:id" element={<PatientPage />}>
+          <Route
+            path="/patient/:id"
+            element={
+              <PatientPage
+                patients={appData.patients}
+                records={appData.records}
+                updatePatient={updatePatient}
+                addRecord={addRecord}
+                updateRecord={updateRecord}
+                deleteRecord={deleteRecord}
+              />
+            }
+          >
             <Route
               index
               element={
                 <PatientMenu
                   patients={appData.patients}
                   deletePatient={deletePatient}
-                />
-              }
-            />
-            <Route
-              path="detail"
-              element={
-                <PatientDetail
-                  patients={appData.patients}
                   updatePatient={updatePatient}
-                  onErrorsChange={setGlobalErrors}
-                />
-              }
-            />
-            <Route
-              path="vitals"
-              element={
-                <PatientVitals
-                  patients={appData.patients}
-                  records={appData.records}
-                />
-              }
-            />
-            <Route
-              path="records"
-              element={
-                <NursingRecordList
-                  patients={appData.patients}
-                  records={appData.records}
-                  updateRecord={updateRecord}
-                  updatePatient={updatePatient}
-                  deleteRecord={deleteRecord}
-                  onErrorsChange={setGlobalErrors}
                   addRecord={addRecord}
                 />
               }
             />
             <Route
+              path="detail"
+              element={<PatientDetail onErrorsChange={setGlobalErrors} />}
+            />
+            <Route path="vitals" element={<PatientVitals />} />
+            <Route
+              path="records"
+              element={<NursingRecordList onErrorsChange={setGlobalErrors} />}
+            />
+            <Route
               path="records/:recordId"
-              element={
-                <NursingRecordItem
-                  patients={appData.patients}
-                  records={appData.records}
-                  onDeleteRecord={deleteRecord}
-                  onErrorsChange={setGlobalErrors}
-                  updateRecord={updateRecord}
-                />
-              }
+              element={<NursingRecordItem onErrorsChange={setGlobalErrors} />}
             />
           </Route>
           <Route path="/test" element={<div>テスト画面</div>} />

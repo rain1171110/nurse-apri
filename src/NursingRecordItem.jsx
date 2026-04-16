@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { formatBpText, formatValue } from "./Utils";
 import NursingRecordForm from "./NursingRecordForm";
 import DeleteButton from "./DeleteButton";
@@ -17,12 +17,14 @@ export default function NursingRecordItem({ onErrorsChange }) {
   if (!record)
     return <div className="panel panel-warning">記録が見つかりません</div>;
 
-  const initialValues = {
-    date: record?.date || "",
-    vitals: record?.vitals || {},
-    content: record?.content || "",
-    author: record?.author || "",
-  };
+  const initialValues = useMemo(() => {
+    return {
+      date: record?.date || "",
+      vitals: record?.vitals || {},
+      content: record?.content || "",
+      author: record?.author || "",
+    };
+  }, [record]);
 
   const { T, P, R, SBP, DBP, SPO2 } = record.vitals ?? {};
   const bpText = formatBpText(SBP, DBP);

@@ -8,6 +8,7 @@ export default function PatientPage({
   addRecord,
   updateRecord,
   deleteRecord,
+  deletePatient
 }) {
   const { id } = useParams();
   const patient = patients.find((p) => String(p.id) === id);
@@ -27,6 +28,7 @@ export default function PatientPage({
         addRecord,
         updateRecord,
         deleteRecord,
+        deletePatient,
         usedRoomsForEdit,
       }}
     />

@@ -6320,3 +6320,253 @@ const record = patientRecords.find((r) => String(r.id) === recordId);
 - 患者ページまわりの完成コードを最終確認する
 
 **つまり、今日は患者ページまわりの役割分担とデータの流れをかなり整理できた日だった。**
+
+## 2026-04-16
+
+### 1. 今日やったこと
+
+- PatientPage を親にして、Outlet context で子ルートへ値を渡す設計を確認した
+- updateRecord / deleteRecord を Outlet context に含めてよいか整理した
+- PatientMenu を残すかどうか整理した
+- PatientMenu で useOutletContext() を使ったときのエラー原因を確認した
+- PatientMenu から患者削除したあとに患者一覧へ戻る処理を整理した
+- PatientCard に渡す props 名のズレによるエラーを修正した
+
+---
+
+### 2. 今日の理解ポイント
+
+#### ① Outlet context は「親の Outlet の子ルート」で使う
+
+useOutletContext() はどこでも使えるわけではない。
+
+使えるのは、
+
+- 親コンポーネントで <Outlet context={...} /> を書いていて
+- その Outlet の子ルートとして描画されたコンポーネント
+
+だけ。
+
+今回なら、
+
+- 親: PatientPage
+- 子: PatientMenu, PatientDetail, PatientVitals, NursingRecordList, NursingRecordItem
+
+という関係が必要。
+
+---
+
+#### ② エラーの原因
+
+出ていたエラー:
+
+`js
+Cannot destructure property 'patient' of 'useOutletContext(...)' as it is null.
+`
+
+原因は、PatientMenu が PatientPage の子ルートではなく、外に置かれていたこと。
+
+ダメだった形
+
+`jsx
+<Route index element={<PatientMenu ... />} />
+<Route path="/patient/:id" element={<PatientPage ... />} />
+`
+
+これだと PatientMenu は PatientPage の <Outlet /> の子ではないので、
+useOutletContext() が null になる。
+
+正しい形
+
+`jsx
+<Route path="/patient/:id" element={<PatientPage ... />}>
+  <Route index element={<PatientMenu />} />
+  <Route path="detail" element={<PatientDetail />} />
+  <Route path="vitals" element={<PatientVitals />} />
+  <Route path="records" element={<NursingRecordList />} />
+  <Route path="records/:recordId" element={<NursingRecordItem />} />
+</Route>
+`
+
+---
+
+#### ③ PatientMenu はあってよい
+
+「患者情報」「バイタル」「看護記録」などを選ぶ最初の画面として、
+PatientMenu を置く設計は自然。
+
+整理すると役割はこうなる。
+
+- PatientPage:
+  URL の id を見て患者データを探す
+  Outlet context で子に値を渡す親
+- PatientMenu:
+  /patient/:id で最初に見せるメニュー画面
+- PatientDetail / PatientVitals / NursingRecordList / NursingRecordItem:
+  各詳細画面
+
+---
+
+#### ④ Outlet context に入れるもの
+
+PatientPage でまとめて渡すものは、患者ページ配下で使うもの。
+
+今回の形では次を入れる想定で整理した。
+
+`js
+{
+  patient,
+  patientRecords,
+  updatePatient,
+  addRecord,
+  updateRecord,
+  deleteRecord,
+  deletePatient,
+  usedRoomsForEdit,
+}
+`
+
+特に今日確認したこと:
+
+- updateRecord / deleteRecord を Outlet context に入れてよい
+- PatientMenu で削除も使うので deletePatient も入れる必要がある
+
+---
+
+#### ⑤ PatientMenu の実装
+
+最終的に PatientMenu は useOutletContext() で受け取る形にした。
+
+`jsx
+import { useOutletContext, useNavigate } from "react-router-dom";
+import PatientCard from "./PatientCard";
+
+export default function PatientMenu() {
+  const navigate = useNavigate();
+  const { patient, deletePatient } = useOutletContext();
+
+  if (!patient) return <div>患者が見つかりません</div>;
+
+  const handleDelete = async (id) => {
+    await deletePatient(id);
+    navigate("/");
+  };
+
+  return (
+    <div>
+      <PatientCard patient={patient} onDelete={handleDelete} />
+    </div>
+  );
+}
+`
+
+---
+
+#### ⑥ props 名のズレで出たエラー
+
+出ていたエラー:
+
+`js
+PatientCard.jsx:48 Uncaught TypeError: onDelete is not a function
+`
+
+原因は、PatientCard 側は onDelete を受け取る前提なのに、
+PatientMenu 側で onClick={handleDelete} を渡していたこと。
+
+ダメだった形
+
+`jsx
+<PatientCard patient={patient} onClick={handleDelete} />
+`
+
+正しい形
+
+`jsx
+<PatientCard patient={patient} onDelete={handleDelete} />
+`
+
+つまり、
+
+- 渡す側の props 名
+- 受け取る側の props 名
+
+は一致させる必要があると理解した。
+
+---
+
+#### ⑦ 削除後の遷移先
+
+最初は削除後に
+
+`js
+navigate(/patient/)
+`
+
+としていたが、これは削除済みの患者ページへ戻ろうとしてしまうので不自然。
+
+削除後は患者がもう存在しないため、患者一覧へ戻す。
+
+`js
+navigate("/")
+`
+
+---
+
+### 3. 今日の重要な学び
+
+- useOutletContext() は「親の Outlet の子」でしか使えない
+- ルートの入れ子構造がとても重要
+- PatientMenu は必要なら残してよい
+- ただし PatientMenu も Outlet context で統一する
+- props の名前がズレると is not a function エラーになる
+- 削除後は存在しないページではなく一覧へ戻す
+
+---
+
+### 4. 今の設計の整理
+
+親:
+
+- App.jsx
+- PatientPage.jsx
+
+患者ページ配下:
+
+- PatientMenu.jsx
+- PatientDetail.jsx
+- PatientVitals.jsx
+- NursingRecordList.jsx
+- NursingRecordItem.jsx
+
+データの流れ:
+
+- App.jsx がデータと更新関数を持つ
+- PatientPage.jsx が patient と patientRecords を作る
+- PatientPage.jsx が Outlet context で子に渡す
+- 子画面は useOutletContext() で受け取る
+
+---
+
+### 5. 次回やること
+
+- App.jsx の patient まわりの route を最終完成形で整える
+- PatientPage.jsx の Outlet context を最終確認する
+- PatientMenu / PatientDetail / PatientVitals / NursingRecordList / NursingRecordItem の受け取り方を統一確認する
+- 必要なら PatientCard の役割をもう一度整理する
+
+---
+
+### 6. 一言まとめ
+
+今日は
+
+「PatientMenu を PatientPage の子ルートに置き、Outlet context で統一して使う」
+
+ことが一番大きな学びだった。
+
+また、
+
+- useOutletContext() は親子関係が正しくないと使えない
+- props 名のズレがエラー原因になる
+
+ことも整理できた。

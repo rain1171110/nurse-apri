@@ -127,7 +127,6 @@ function App() {
             path="/"
             element={
               <PatientList
-                onErrorsChange={setGlobalErrors}
                 onSaveData={onSaveData}
                 patients={appData.patients}
                 records={appData.records}
@@ -146,20 +145,11 @@ function App() {
                 addRecord={addRecord}
                 updateRecord={updateRecord}
                 deleteRecord={deleteRecord}
+                deletePatient={deletePatient}
               />
             }
           >
-            <Route
-              index
-              element={
-                <PatientMenu
-                  patients={appData.patients}
-                  deletePatient={deletePatient}
-                  updatePatient={updatePatient}
-                  addRecord={addRecord}
-                />
-              }
-            />
+            <Route index element={<PatientMenu />} />
             <Route
               path="detail"
               element={<PatientDetail onErrorsChange={setGlobalErrors} />}

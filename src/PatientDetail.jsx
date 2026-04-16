@@ -6,13 +6,10 @@ import { makePatientSchemaPartial, runPatientValidationCases } from "./schema";
 import { TextField } from "@mui/material";
 import { useNavigate, useOutletContext } from "react-router-dom";
 
-export default function PatientDetail({
-  onErrorsChange,
-}) {
+export default function PatientDetail({ onErrorsChange }) {
   const [isEditing, setIsEditing] = useState(false);
   const navigate = useNavigate();
-  const { patient,updatePatient,usedRoomsForEdit } = useOutletContext();
-
+  const { patient, updatePatient, usedRoomsForEdit } = useOutletContext();
 
   const defaultValues = useMemo(
     () => ({

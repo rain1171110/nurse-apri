@@ -5,7 +5,6 @@ import AddPatientForm from "./AddPatientForm";
 import { useNavigate } from "react-router-dom";
 
 export default function PatientList({
-  onErrorsChange,
   onSaveData,
   patients,
   records,
@@ -82,7 +81,6 @@ export default function PatientList({
             patients={patients}
             records={records}
             onSaveData={onSaveData}
-            onErrorsChange={onErrorsChange}
             showAddForm={showAddForm}
             setShowAddForm={setShowAddForm}
           />

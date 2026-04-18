@@ -6442,21 +6442,21 @@ import { useOutletContext, useNavigate } from "react-router-dom";
 import PatientCard from "./PatientCard";
 
 export default function PatientMenu() {
-  const navigate = useNavigate();
-  const { patient, deletePatient } = useOutletContext();
+const navigate = useNavigate();
+const { patient, deletePatient } = useOutletContext();
 
-  if (!patient) return <div>患者が見つかりません</div>;
+if (!patient) return <div>患者が見つかりません</div>;
 
-  const handleDelete = async (id) => {
-    await deletePatient(id);
-    navigate("/");
-  };
+const handleDelete = async (id) => {
+await deletePatient(id);
+navigate("/");
+};
 
-  return (
-    <div>
-      <PatientCard patient={patient} onDelete={handleDelete} />
-    </div>
-  );
+return (
+<div>
+<PatientCard patient={patient} onDelete={handleDelete} />
+</div>
+);
 }
 `
 
@@ -6570,3 +6570,292 @@ navigate("/")
 - props 名のズレがエラー原因になる
 
 ことも整理できた。
+
+## 2026-04-18 学習ログ（PatientPage・schema・Hook の順番を整理）
+
+### 1. 今日やったこと
+
+- `PatientPage` の役割を整理した
+- `PatientMenu / PatientVitals / NursingRecordList / NursingRecordItem / PatientDetail` の受け取り方を確認した
+- `useOutletContext()` でデータを受け取る形を統一していることを確認した
+- `usedRoomsForEdit` をなぜ `PatientPage` で作るのか整理した
+- `schema.js` をなぜ分けているのか整理した
+- `runPatientValidationCases()` と `safeParse()` の意味を確認した
+- 患者情報画面でコンソールが2回出る理由を確認した
+
+### 2. 設計の理解
+
+#### PatientPage の役割
+
+`PatientPage` は、今開いている患者ページ専用のデータを作って、子コンポーネントに渡す中継所。
+
+```jsx
+const { id } = useParams();
+const patient = patients.find((p) => String(p.id) === id);
+const patientRecords = records.filter((r) => String(r.patientId) === id);
+```
+
+ここで、
+
+- 今の患者 (`patient`)
+- その患者の記録一覧 (`patientRecords`)
+
+を作っている。
+
+さらに Outlet context で子に渡している。
+
+```jsx
+<Outlet
+  context={{
+    patient,
+    patientRecords,
+    updatePatient,
+    addRecord,
+    updateRecord,
+    deleteRecord,
+    deletePatient,
+    usedRoomsForEdit,
+  }}
+/>
+```
+
+#### 受け取り方の統一
+
+患者ページ配下の子コンポーネントは、基本的に `useOutletContext()` で受け取る。
+
+- `PatientMenu`
+- `PatientDetail`
+- `PatientVitals`
+- `NursingRecordList`
+- `NursingRecordItem`
+
+`recordId` のように URL で決まる値だけ `useParams()` を使う。
+
+### 3. Hook の順番の理解
+
+React の Hook は、名前ではなく順番で覚えられていると考える。
+
+#### 問題になる形
+
+```jsx
+const record = patientRecords.find((r) => String(r.id) === recordId);
+
+if (!record) return <div>記録が見つかりません</div>;
+
+const initialValues = useMemo(() => {
+  return {
+    date: record?.date || "",
+    vitals: record?.vitals || {},
+    content: record?.content || "",
+    author: record?.author || "",
+  };
+}, [record]);
+```
+
+この形だと、
+
+- `record` がない時 -> `useMemo` まで行かない
+- `record` がある時 -> `useMemo` まで行く
+
+となり、呼ばれる Hook の数・順番が変わる可能性がある。
+
+#### 直し方
+
+Hook は `return` より前に置く。
+
+```jsx
+const record = patientRecords.find((r) => String(r.id) === recordId);
+
+const initialValues = useMemo(() => {
+  return {
+    date: record?.date || "",
+    vitals: record?.vitals || {},
+    content: record?.content || "",
+    author: record?.author || "",
+  };
+}, [record]);
+
+if (!patient) return <div>患者が見つかりません</div>;
+if (!record) return <div>記録が見つかりません</div>;
+```
+
+#### 今日の理解
+
+- Hook は毎回同じ順番で呼ばれる必要がある
+- `if (...) return` の後ろに Hook を置くと危ないことがある
+
+### 4. usedRoomsForEdit を PatientPage に置く理由
+
+```js
+const usedRoomsForEdit = extractUsedRoomNumbers(patients, patient.id);
+```
+
+これは、今選択している患者本人を除いた使用中の部屋番号一覧を作っている。
+
+例:
+
+- 田中 101号室
+- 佐藤 102号室
+- 鈴木 103号室
+
+佐藤さんを編集している時は、結果は `[101, 103]` になるイメージ。
+
+#### なぜ App ではなく PatientPage なのか
+
+`App` は全体管理の場所で、まだ「今どの患者を見ているか」の責任を深く持たせないほうが自然。
+
+`PatientPage` はすでに
+
+```js
+const { id } = useParams();
+const patient = patients.find(...);
+```
+
+で今の患者を特定しているので、その流れで
+
+- 今の患者を除外した部屋一覧
+- その患者専用の値
+
+を作るのが自然。
+
+#### 今日の理解
+
+- `usedRoomsForEdit` は全体用ではなく「今の患者専用の値」
+- だから `PatientPage` に置くほうが役割に合っている
+
+### 5. schema.js を分ける理由
+
+結論: `schema.js` にしないといけないという Zod の決まりはない。`jsx` に書くこともできる。
+
+でも分けている理由は、見た目 (UI) と入力ルールを分けるため。
+
+#### 今の役割分担
+
+- `PatientDetail.jsx` -> 画面表示、フォーム操作
+- `schema.js` -> バリデーションルール、確認用ロジック
+
+schema 側にあるもの:
+
+- `optionalNumber`
+- `makePatientSchemaPartial`
+- `createPatientValidationCases`
+- `runPatientValidationCases`
+- `recordSchema`
+
+これらは全部、見た目ではなくルールや確認用のロジック。
+
+#### 今日の理解
+
+- schema は UI ではなく入力チェックのルール
+- `.js` に分けるのは整理しやすく、再利用やテストもしやすい
+
+### 6. runPatientValidationCases() の意味
+
+`runPatientValidationCases()` は、schema が正しく動くかを確認するための採点処理。
+
+イメージ:
+
+- `makePatientSchemaPartial` = 採点ルール
+- `createPatientValidationCases` = 問題集
+- `runPatientValidationCases` = 採点する先生
+
+やっていること:
+
+```js
+const schema = makePatientSchemaPartial(testCase.usedRooms);
+const result = schema.safeParse(testCase.input);
+```
+
+- テストケースごとに schema を作る
+- 入力をチェックする
+- `valid / invalid` を確認する
+
+### 7. safeParse() の理解
+
+`safeParse()` は、入力が schema に合っているかを安全に採点するもの。
+
+成功時:
+
+```js
+{ success: true, data: ... }
+```
+
+失敗時:
+
+```js
+{ success: false, error: ... }
+```
+
+`duplicate-room` の例:
+
+- `usedRooms = [101, 102]`
+- 入力 `room = "101"`
+
+まず `optionalNumber()` の `transform` で `"101"` が `101` に変換される。
+
+その後 `superRefine()` で
+
+```js
+if (usedRooms.includes(data.room)) {
+  ctx.addIssue({
+    path: ["room"],
+    message: "この部屋番号は既に使用されています",
+  });
+}
+```
+
+が走る。
+
+結果として:
+
+- `room` にエラーがつく
+- `success: false` になる
+
+#### 今日の理解
+
+- `safeParse()` は「変換 + チェック + 結果を返す」
+- 例外で止めるというより、成功/失敗を返して確認しやすい
+
+### 8. 患者情報クリック時にコンソールが2回出る理由
+
+患者情報画面に入った時、`PatientDetail.jsx` の次の処理が動いている。
+
+```jsx
+useEffect(() => {
+  if (!import.meta.env.DEV) return;
+  const results = runPatientValidationCases();
+  console.table(results);
+}, []);
+```
+
+#### 直接の原因
+
+- `console.table(results)` が表示している
+
+#### 2回見える理由
+
+開発環境 + `StrictMode` の影響で、`useEffect` が確認のために2回実行されることがあるため。
+
+#### 今日の理解
+
+- 2回表示されるのは Zod の仕様ではない
+- schema が勝手に2回表示しているわけでもない
+- `useEffect` の中で `console.table()` していて、それが開発中に2回見えている
+
+### 9. 今日の大事な理解まとめ
+
+- `PatientPage` は今の患者専用データを作る中継所
+- 子コンポーネントは `useOutletContext()` で受け取る
+- Hook は毎回同じ順番で呼ばれる必要がある
+- `usedRoomsForEdit` は「今の患者本人を除いた使用部屋一覧」
+- schema は UI ではなく入力ルール
+- `runPatientValidationCases()` は schema の確認用
+- `safeParse()` は安全に採点して成功/失敗を返す
+- コンソール2回表示は `useEffect + StrictMode` の影響
+
+### 10. 次回やること
+
+- `optionalNumber()` の `.transform()` が2回ある理由を理解する
+- `recordSchema` の見方も患者 schema と同じ考え方で整理する
+- 必要なら `NursingRecordItem` の Hook の置き場所を最終確認する
+- schema と form のつながりをもう一段深く整理する

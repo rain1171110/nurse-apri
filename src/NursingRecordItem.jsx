@@ -13,10 +13,6 @@ export default function NursingRecordItem({ onErrorsChange }) {
 
   const record = patientRecords.find((r) => String(r.id) === recordId);
 
-  if (!patient) return <div>患者が見つかりません</div>;
-  if (!record)
-    return <div className="panel panel-warning">記録が見つかりません</div>;
-
   const initialValues = useMemo(() => {
     return {
       date: record?.date || "",
@@ -25,6 +21,10 @@ export default function NursingRecordItem({ onErrorsChange }) {
       author: record?.author || "",
     };
   }, [record]);
+
+  if (!patient) return <div>患者が見つかりません</div>;
+  if (!record)
+    return <div className="panel panel-warning">記録が見つかりません</div>;
 
   const { T, P, R, SBP, DBP, SPO2 } = record.vitals ?? {};
   const bpText = formatBpText(SBP, DBP);

@@ -79,10 +79,13 @@ export default function PatientList({
 
           <AddPatientForm
             patients={patients}
-            records={records}
-            onSaveData={onSaveData}
             showAddForm={showAddForm}
             setShowAddForm={setShowAddForm}
+            onSubmit={async (data) => {
+              const patientToAdd = { ...data, id: crypto.randomUUID() };
+              const nextPatients = [...patients, patientToAdd];
+              await onSaveData({ patients: nextPatients, records });
+            }}
           />
         </section>
       )}

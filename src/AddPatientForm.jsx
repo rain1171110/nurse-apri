@@ -8,8 +8,7 @@ import { extractUsedRoomNumbers } from "./Utils";
 
 export default function AddPatientForm({
   patients,
-  records,
-  onSaveData,
+  onSubmit,
   onErrorsChange,
   showAddForm,
   setShowAddForm,
@@ -48,12 +47,9 @@ export default function AddPatientForm({
       </div>
       <form
         onSubmit={handleSubmit(async (data) => {
-          const patientToAdd = { ...data, id: crypto.randomUUID() };
-          const nextPatients = [...patients, patientToAdd];
-          const nextRecords = [...records];
-          await onSaveData({ patients: nextPatients, records: nextRecords });
-          setShowAddForm(false);
+          await onSubmit(data);
           reset();
+          setShowAddForm(false);
         })}
       >
         <div className="card-body">

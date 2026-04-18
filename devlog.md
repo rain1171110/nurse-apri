@@ -6453,6 +6453,7 @@ navigate("/");
 };
 
 return (
+
 <div>
 <PatientCard patient={patient} onDelete={handleDelete} />
 </div>
@@ -6859,3 +6860,187 @@ useEffect(() => {
 - `recordSchema` の見方も患者 schema と同じ考え方で整理する
 - 必要なら `NursingRecordItem` の Hook の置き場所を最終確認する
 - schema と form のつながりをもう一段深く整理する
+
+## 2026-04-19 学習ログ（schema と form、AddPatientForm の役割分担を整理）
+
+### 1. 今日やったこと
+
+今日は主に、schema と form のつながりを整理したあと、AddPatientForm の設計を見直した。
+
+- `optionalNumber()` の `.transform()` が2回ある理由を確認した
+- `recordSchema` を patient schema と同じ見方で読めるよう整理した
+- `schema` と `form` のつながりを整理した
+- `NursingRecordItem` の Hook の置き場所について確認した
+- `AddPatientForm` を `NursingRecordForm` に近い形へ整理した
+- 「なぜ PatientList で追加処理を組み立てるのか」を整理した
+
+---
+
+### 2. 理解したこと
+
+#### ① `optionalNumber()` の `.transform()` が2回ある理由
+
+`transform` が2回あるのは、役割が違うから。
+
+- 1回目
+  入力値をいったん同じ形にそろえる
+  例: `undefined` → `""`, `12` → `"12"`, `" 12 "` → `"12"`
+
+- 2回目
+  そろえた値を最終的な型に変える
+  例: `""` → `undefined`, `"12"` → `12`
+
+つまり、
+**「まず形をそろえて、そのあと本当の型に変える」**
+という2段階になっている。
+
+---
+
+#### ② `recordSchema` の見方
+
+`recordSchema` も patient schema と同じで、
+**「看護記録1件のルール表」** として見る。
+
+- `z.object({ ... })`
+  → 記録1件全体の形
+- `date`
+  → 日付のルール
+- `vitals`
+  → バイタルという箱の中のルール
+- `content`
+  → 記録内容のルール
+- `author`
+  → 記録者のルール
+
+つまり、
+**patient schema も recordSchema も「データ1件の設計図」という見方は同じ。**
+
+---
+
+#### ③ schema と form のつながり
+
+form と schema の役割は分かれている。
+
+- `form`
+  → 入力を集める
+- `schema`
+  → 入力ルールをチェックする
+- `resolver`
+  → form と schema をつなぐ
+- `errors`
+  → schema のチェック結果
+
+たとえば `useForm({ resolver: zodResolver(recordSchema) })` は、
+**「このフォームの入力は recordSchema でチェックしてください」**
+という意味になる。
+
+つまり、
+**form は受付、schema はルール表、errors はチェック結果。**
+
+---
+
+#### ④ `NursingRecordItem` の Hook の置き場所
+
+`isEditing` のような state は、
+**記録データ本体ではなく UI の一時状態** なので子コンポーネントに置いてよい。
+
+- `records` などの本体データ
+  → 親で持つ
+- `isEditing` のような表示用状態
+  → 子で持てる
+
+つまり、
+**「本体データ」と「画面の状態」は分けて考える。**
+
+---
+
+### 3. `AddPatientForm` で整理したこと
+
+#### 変更前
+
+`AddPatientForm` の中で保存処理まで直接書いていた。
+
+```jsx
+<form
+  onSubmit={handleSubmit(async (data) => {
+    const patientToAdd = { ...data, id: crypto.randomUUID() };
+    const nextPatients = [...patients, patientToAdd];
+    await onSaveData({ patients: nextPatients, records });
+    setShowAddForm(false);
+    reset();
+  })}
+>
+```
+
+この形は動くけれど、
+フォーム自身が保存処理まで知っている状態だった。
+
+#### 変更後
+
+`AddPatientForm` は、成功したら親の `onSubmit(data)` を呼ぶだけに整理した。
+
+```jsx
+<form
+  onSubmit={handleSubmit(async (data) => {
+    await onSubmit(data);
+    reset();
+    setShowAddForm(false);
+  })}
+>
+```
+
+この形にすると役割が分かれる。
+
+- `AddPatientForm`
+  → 入力を受ける、検証する、成功後に reset して閉じる
+- 親（PatientList）
+  → 保存用のデータを組み立てて onSaveData を呼ぶ
+
+つまり、
+**保存は親、フォームの後片付けは子**
+という分担になった。
+
+### 4. なぜ PatientList でやるのか
+
+ここが今日いちばん大事だった。
+
+最初は
+「なぜ App ではなく PatientList で追加処理をやるのか」
+が曖昧だった。
+
+整理するとこうなる。
+
+- App
+  → アプリ全体の土台。patients、records、onSaveData を持つ
+- PatientList
+  → 患者一覧画面。追加フォームを開く/閉じる責任を持つ
+- AddPatientForm
+  → 入力するだけ
+
+PatientList は患者一覧画面なので、
+「追加フォームから受け取った data を患者一覧にどう足すか」
+を考えるのが自然。
+
+一方で、実際に保存する本体は App 側の onSaveData。
+
+つまり、
+PatientList は保存そのものをしているのではなく、保存するための材料を作って App に渡している。
+
+### 5. 今日の理解を一言でまとめる
+
+- schema はデータのルール表
+- form は入力を集める
+- resolver はその橋渡し
+- errors は schema の結果
+- AddPatientForm は入力と後片付けを担当する
+- PatientList は患者追加の文脈でデータを組み立てる
+- App は全体データを本当に保存する
+
+つまり、
+**「入力する場所」「画面として組み立てる場所」「本当に保存する場所」を分けて考えるのが大事。**
+
+### 6. 次回やること
+
+- addPatient を PatientList に置く形と App に上げる形の違いを比べる
+- NursingRecordForm と AddPatientForm の共通点・違いを整理する
+- schema → form → submit → App更新 の流れを1本で説明できるようにする

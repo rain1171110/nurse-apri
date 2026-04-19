@@ -30,7 +30,7 @@ export default function NursingRecordItem({ onErrorsChange }) {
   const bpText = formatBpText(SBP, DBP);
   const bpDisplay = bpText === "--" ? "--" : `${bpText}mmHg`;
 
-  const handleSubmit = async (data) => {
+  const handleRecordSubmit = async (data) => {
     const updatedRecord = { ...record, ...data };
     await updateRecord(updatedRecord);
     setIsEditing(false);
@@ -73,7 +73,7 @@ export default function NursingRecordItem({ onErrorsChange }) {
           </div>
           <NursingRecordForm
             initialValues={initialValues}
-            onSubmit={handleSubmit}
+            onSubmit={handleRecordSubmit}
             showDate
             onErrorsChange={onErrorsChange}
           />

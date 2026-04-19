@@ -20,6 +20,12 @@ export default function AddPatientForm({
     [usedRooms],
   );
 
+  const handleAddPatientSubmit = async (data) => {
+    await onSubmit(data);
+    reset();
+    setShowAddForm(false);
+  };
+
   const {
     control,
     handleSubmit,
@@ -45,13 +51,7 @@ export default function AddPatientForm({
       <div className="card-header">
         <h3 className="card-title">患者を追加</h3>
       </div>
-      <form
-        onSubmit={handleSubmit(async (data) => {
-          await onSubmit(data);
-          reset();
-          setShowAddForm(false);
-        })}
-      >
+      <form onSubmit={handleSubmit(handleAddPatientSubmit)}>
         <div className="card-body">
           <div className="form-group">
             <Controller

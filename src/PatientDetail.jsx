@@ -23,6 +23,15 @@ export default function PatientDetail({ onErrorsChange }) {
     [patient],
   );
 
+  const handlePatientSubmit = async (data) => {
+    const updated = { ...patient, ...data };
+    await updatePatient(updated);
+    reset(updated);
+    clearErrors();
+    onErrorsChange?.({});
+    setIsEditing(false);
+  };
+
   const {
     control,
     handleSubmit,
@@ -107,16 +116,7 @@ export default function PatientDetail({ onErrorsChange }) {
           </div>
 
           <form
-            onSubmit={handleSubmit(async (data) => {
-              const updated = { ...patient, ...data };
-              await updatePatient(updated);
-              reset(updated);
-              clearErrors();
-              if (onErrorsChange) {
-                onErrorsChange?.({});
-              }
-              setIsEditing(false);
-            })}
+            onSubmit={handleSubmit(handlePatientSubmit)}
           >
             <div className="card-body">
               <div className="form-group">

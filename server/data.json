@@ -3,13 +3,31 @@
     {
       "name": "鈴木次郎",
       "room": 111,
-      "id": "d2bbb121-29c9-4de2-94e6-d19f0e957d2e"
+      "id": "d2bbb121-29c9-4de2-94e6-d19f0e957d2e",
+      "age": 1,
+      "disease": "",
+      "history": "",
+      "progress": ""
     },
     {
       "name": "鈴木次郎",
       "room": 101,
       "id": "afe50b6d-de4b-4d2b-a3d7-6c819aa01e27"
+    },
+    {
+      "name": "鈴木次郎",
+      "room": 108,
+      "id": "4932c601-3fa9-4189-9e7c-4e0bf4870513"
     }
   ],
-  "records": []
+  "records": [
+    {
+      "date": "2026-04-20",
+      "author": "岡崎洋子",
+      "content": "",
+      "vitals": {},
+      "patientId": "d2bbb121-29c9-4de2-94e6-d19f0e957d2e",
+      "id": "d1514cbd-a080-4e13-8d46-d4d7821d0841"
+    }
+  ]
 }

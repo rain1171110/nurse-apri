@@ -7322,3 +7322,128 @@ const handleAddPatientSubmit = async (data) => {
 つまり、
 フォーム送信では「入口」と「送信後の仕事」を分けて考えることが大事
 と理解した。
+
+## 2026-04-21 学習ログ（addPatient の置き場所・Form比較・データの流れ整理）
+
+### 1. 今日やったこと
+
+今日は主に3つ整理した。
+
+- addPatient を `PatientList` に置く形と `App` に上げる形の違い
+- `NursingRecordForm` と `AddPatientForm` の共通点・違い
+- `schema → form → submit → App更新` の流れを1本で説明できるように整理
+
+---
+
+### 2. addPatient を PatientList に置く形と App に上げる形の違い
+
+#### PatientList に置く形
+
+- `patients` の state を `PatientList` が持つ
+- `addPatient` も `PatientList` の中に置く
+- 小さいアプリではわかりやすい
+- ただし、別画面でも患者データを使いたくなると管理しにくい
+
+#### App に上げる形
+
+- `App` が `patients` と `records` をまとめて持つ
+- `addPatient` も `App` に置く
+- アプリ全体で同じデータを共有できる
+- `patients` と `records` の整合が取りやすい
+- データの分裂を防ぎやすい
+
+#### 今日の理解
+
+今の看護記録アプリは一覧画面だけではなく、詳細・バイタル・看護記録など複数画面で患者データを使うので、`App` でまとめて管理する方が合っていると理解した。
+
+---
+
+### 3. AddPatientForm と NursingRecordForm の共通点・違い
+
+#### 共通点
+
+- どちらも入力を受け取る `Form`
+- `react-hook-form` を使っている
+- `zod` の `schema` でバリデーションする
+- `handleSubmit` を通して、OKなら親にデータを渡す
+
+#### AddPatientForm
+
+- 新しい患者を追加するためのフォーム
+- 作るデータは `patient`
+- submit 後は `patients` を増やす
+
+#### NursingRecordForm
+
+- 看護記録を追加・編集するためのフォーム
+- 作るデータは `record`
+- submit 後は `records` を増やす、または更新する
+- `record` は `patientId` と結びつく必要がある
+
+#### 今日の理解
+
+2つの Form は役割の流れは似ているが、最終的に作るデータの種類と、更新する配列が違うと整理できた。
+
+---
+
+### 4. schema → form → submit → App更新 の流れ
+
+今日ここを1本で説明できるように整理した。
+
+#### ① schema
+
+- 入力ルールを決める
+- 例：氏名は必須、部屋番号は数字、など
+
+#### ② form
+
+- ユーザーが入力する場所
+- `useForm` で入力値を管理する
+- `zodResolver(schema)` で schema とつなぐ
+
+#### ③ submit
+
+- `handleSubmit` が最初に schema チェックをする
+- 問題なければ `onSubmit(data)` が動く
+- `data` は入力済みの完成データ
+
+#### ④ App更新
+
+- Form は親にデータを渡す
+- 実際に `patients` や `records` を更新するのは親、最終的には `App`
+- 必要なら `id` をつける
+- `onSaveData` で保存する
+- `App` の state が更新されることで全画面に反映される
+
+---
+
+### 5. 今日の一番大事な理解
+
+- Form の役割は「入力を集めて、正しい形のデータを親に渡すこと」
+- App の役割は「アプリ全体の state を更新すること」
+
+つまり、
+
+- `schema` = ルール
+- `form` = 入力場所
+- `submit` = 親へ渡す
+- `App更新` = アプリ全体のデータ管理
+
+という流れで考えると整理しやすいとわかった。
+
+---
+
+### 6. 自分の言葉でまとめる
+
+`AddPatientForm` も `NursingRecordForm` も、まず schema で入力チェックをして、form で値を集めて、submit で親に渡すところまでは同じ。  
+違うのは、患者データを作るのか、看護記録データを作るのかという点。  
+そして最終的に state を更新する責任は Form ではなく `App` 側にある。  
+今のアプリは複数画面で同じデータを使うので、`addPatient` を `App` に上げる設計の方が自然。
+
+---
+
+### 7. 次回やること
+
+- `AddPatientForm` と `NursingRecordForm` をコード上で対応させて見比べる
+- `onSubmit` がどこからどこへ渡っているかを props の流れで整理する
+- `App` が最終的な更新担当になっている構造をコードで確認する

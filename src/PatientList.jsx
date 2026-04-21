@@ -15,17 +15,14 @@ export default function PatientList({
 
   const navigate = useNavigate();
 
+  const addPatientSubmit = async (data) => {
+    const patientToAdd = { ...data, id: crypto.randomUUID() };
+    const nextPatients = [...patients, patientToAdd];
+    await onSaveData({ patients: nextPatients, records });
+  };
+
   return (
     <div className="container">
-      <div>
-        <button
-          type="button"
-          className="btn-primary"
-          onClick={() => navigate("/test")}
-        >
-          テスト画面へ
-        </button>
-      </div>
       {isLoading && (
         <div className="loading-container">
           <CircularProgress size={24} />
@@ -81,11 +78,7 @@ export default function PatientList({
             patients={patients}
             showAddForm={showAddForm}
             setShowAddForm={setShowAddForm}
-            onSubmit={async (data) => {
-              const patientToAdd = { ...data, id: crypto.randomUUID() };
-              const nextPatients = [...patients, patientToAdd];
-              await onSaveData({ patients: nextPatients, records });
-            }}
+            onSubmit={addPatientSubmit}
           />
         </section>
       )}

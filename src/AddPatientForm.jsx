@@ -91,6 +91,7 @@ export default function AddPatientForm({
             className="btn-secondary"
             onClick={() => {
               reset();
+              // onErrorsChange?.({});
               setShowAddForm(false);
             }}
           >

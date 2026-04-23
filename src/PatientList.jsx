@@ -10,6 +10,7 @@ export default function PatientList({
   records,
   isLoading,
   apiError,
+  onErrorsChange,
 }) {
   const [showAddForm, setShowAddForm] = useState(false);
 
@@ -79,6 +80,7 @@ export default function PatientList({
             showAddForm={showAddForm}
             setShowAddForm={setShowAddForm}
             onSubmit={addPatientSubmit}
+            onErrorsChange={onErrorsChange}
           />
         </section>
       )}

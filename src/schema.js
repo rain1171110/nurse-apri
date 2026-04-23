@@ -145,5 +145,5 @@ export const recordSchema = z.object({
     SBP: optionalNumber(0, 250, "収縮期は0以上", "収縮期は250以下"),
     DBP: optionalNumber(0, 150, "拡張期は0以上", "拡張期は150以下"),
     SPO2: optionalNumber(0, 100, "SPO2は0以上", "SPO2は100以下"),
-  }),
+  })
 });

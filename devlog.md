@@ -7447,3 +7447,190 @@ const handleAddPatientSubmit = async (data) => {
 - `AddPatientForm` と `NursingRecordForm` をコード上で対応させて見比べる
 - `onSubmit` がどこからどこへ渡っているかを props の流れで整理する
 - `App` が最終的な更新担当になっている構造をコードで確認する
+
+## 2026-04-23 学習ログ（AddPatientForm / NursingRecordForm / onSubmit の流れを整理）
+
+### 1. 今日やったこと
+
+- AddPatientForm のコードを読んで、フォームの役割を整理した
+- PatientList のコードを読んで、AddPatientForm から渡された onSubmit の正体を確認した
+- App のコードを読んで、最終的な更新担当が App であることを確認した
+- NursingRecordForm のコードを読んで、AddPatientForm と同じ設計パターンで作られていることを整理した
+- Validation Errors が残り続ける原因を確認し、onErrorsChange の役割を理解した
+
+### 2. 理解したこと
+
+#### ① AddPatientForm は最終更新をしていない
+
+AddPatientForm は、
+
+- 入力を受け取る
+- schema でバリデーションする
+- onSubmit(data) を親に渡す
+
+という役割だけを持っている。
+自分で patients や appData を直接更新しているわけではない。
+
+つまり、AddPatientForm は入力の入口。
+
+#### ② AddPatientForm の onSubmit の正体は PatientList の関数
+
+PatientList では、
+
+- addPatientSubmit を定義する
+- その関数を onSubmit={addPatientSubmit} として AddPatientForm に渡す
+
+という流れになっていた。
+
+そのため、AddPatientForm の中の
+
+await onSubmit(data);
+
+は、実際には
+
+await addPatientSubmit(data);
+
+と同じ意味になる。
+
+つまり、props の onSubmit は親から渡された関数の別名。
+
+#### ③ PatientList も最終更新はしていない
+
+PatientList の addPatientSubmit では、
+
+- 入力データに id をつける
+- nextPatients を作る
+- onSaveData({ patients: nextPatients, records }) を呼ぶ
+
+ところまで行っている。
+
+でも PatientList 自身が setAppData しているわけではない。
+
+つまり、PatientList は追加データの組み立て役。
+
+#### ④ 最終更新担当は App
+
+App の onSaveData で、
+
+- saveAppData(payload) で API に保存する
+- 戻り値をチェックする
+- setAppData(saved) を実行する
+
+という流れになっていた。
+
+ここで実際に state を更新しているので、
+最終更新担当は App だと理解した。
+
+### 3. フォームの流れを一本で整理
+
+患者追加の流れはこうなる。
+
+AddPatientForm
+-> onSubmit(data)
+-> PatientList の addPatientSubmit(data)
+-> onSaveData(...)
+-> App の onSaveData(payload)
+-> saveAppData(payload)
+-> setAppData(saved)
+
+つまり、
+
+フォームは入力を集める
+親がデータを組み立てる
+App が最後に更新する
+
+という流れ。
+
+### 4. AddPatientForm と NursingRecordForm の共通点
+
+両方とも次の型で作られていると分かった。
+
+- useForm を使う
+- zodResolver(schema) を使う
+- errors を持つ
+- Controller で入力欄をつなぐ
+- handleSubmit(...) を通す
+- 親から受け取った onSubmit を呼ぶ
+- 自分では最終更新しない
+
+つまり、
+入力項目は違うけど、フォームの設計パターンは同じ。
+
+### 5. AddPatientForm と NursingRecordForm の違い
+
+#### AddPatientForm
+
+- 氏名、部屋番号を入力する
+- patients を見て重複部屋番号をチェックする
+- 保存後に reset() してフォームを閉じる
+
+#### NursingRecordForm
+
+- 日付、記録者、バイタル、記録内容を入力する
+- recordSchema で検証する
+- initialValues を受け取り、必要に応じて reset(initialValues) する
+
+つまり、
+骨組みは同じで、中身だけ違う。
+
+### 6. Validation Errors が残る理由
+
+Validation Errors の表示は、フォームそのものではなく、App 側の globalErrors / displayErrors によるもの。
+
+そのため、
+
+- フォーム内のエラー表示が消えても
+- 親のエラー状態が更新されなければ
+
+下のパネルに古いエラーが残ることがある。
+
+### 7. onErrorsChange の理解
+
+onErrorsChange は、フォームのエラー状態を親へ伝えるための props。
+
+AddPatientForm 側では、
+
+- errors が変わったら
+- onErrorsChange(errors) を呼んで
+- 親に最新のエラー状態を渡している
+
+もし onErrorsChange を渡し忘れると、
+親に最新の状態が伝わらず、古いエラー表示が残りやすい。
+
+### 8. onErrorsChange?.({}) の意味
+
+これは、
+
+- onErrorsChange があれば
+- 空のオブジェクト {} を渡す
+
+という意味。
+
+{} はここでは「今はエラーなし」を表す。
+
+つまり onErrorsChange?.({}) は、
+親にエラー状態を空へ戻してもらうための通知。
+
+### 9. 今日のいちばん大事な学び
+
+フォームは更新しているように見えても、
+実際には入力を受け取って親へ渡しているだけで、
+本当に state を更新しているのは App だった。
+
+つまり、
+
+- AddPatientForm = 入力の入口
+- PatientList = 追加データの組み立て役
+- App = 最終更新担当
+
+という役割分担を理解できた。
+
+### 10. 次回やること
+
+- NursingRecordForm の onSubmit がどこで受け取られているか追う
+- addRecord / updateRecord が App につながる流れを整理する
+- 患者追加 と 記録追加 の流れを並べて比較する
+
+つまり今日の学びは、
+「フォームは入口、親が中継、App が最終更新」
+という設計をコードで確認できたこと。

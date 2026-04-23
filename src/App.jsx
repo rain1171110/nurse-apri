@@ -132,6 +132,7 @@ function App() {
                 records={appData.records}
                 isLoading={loading}
                 apiError={apiError}
+                onErrorsChange={setGlobalErrors}
               />
             }
           />

@@ -7634,3 +7634,134 @@ AddPatientForm 側では、
 つまり今日の学びは、
 「フォームは入口、親が中継、App が最終更新」
 という設計をコードで確認できたこと。
+
+## 2026-04-24 学習ログ（useRef・optional chaining・エラー伝播の理解）
+
+### 1. validation errors が残り続ける問題
+
+- 原因：前回の errors と同じ内容でも毎回親に送っていた
+- 対策：
+
+```js
+const prevErrorSignatureRef = useRef("");
+
+useEffect(() => {
+  const signature = JSON.stringify(errors);
+  if (signature === prevErrorSignatureRef.current) return;
+  prevErrorSignatureRef.current = signature;
+  if (onErrorsChange) onErrorsChange(errors);
+}, [errors, onErrorsChange]);
+```
+
+#### 理解ポイント
+
+- errors は毎回新しいオブジェクトになる
+- そのまま比較できないため `JSON.stringify` で文字列化
+- 前回値を `useRef` に保存して比較
+- 同じなら処理しない（無駄な更新防止）
+
+---
+
+### 2. useRef の理解
+
+- useRef は「再レンダーしない箱」
+- 値を保存できるが UI には影響しない
+- 今回は「前回の errors を覚えるため」に使用
+
+#### stateとの違い
+
+- state：更新すると再レンダーされる
+- ref：更新しても再レンダーされない
+
+---
+
+### 3. 代入と比較の違い
+
+- `=` → 右を左に入れる（代入）
+- `===` → 同じかどうか確認（比較）
+
+例：
+
+```js
+a = b; // 代入
+a === b; // 比較
+```
+
+---
+
+### 4. Optional chaining（?.）の理解
+
+#### 基本
+
+```js
+selectedPatient?.name;
+```
+
+- あれば読む
+- なければ止まる（undefined）
+
+#### 関数の場合
+
+```js
+onErrorsChange?.({});
+```
+
+- あれば実行
+- なければ何もしない
+
+#### 通常の書き方
+
+```js
+if (onErrorsChange) {
+  onErrorsChange({});
+}
+```
+
+---
+
+### 5. onErrorsChange?.({}) の意味
+
+- 空のオブジェクト `{}` は「エラーなし」を意味する
+- 保存・キャンセル・画面遷移時に使用
+
+#### 役割
+
+- 親に「エラーはもうない」と通知
+- 古いエラー表示をリセットする安全策
+
+---
+
+### 6. props と optional chaining の関係
+
+- props は必ず渡されるとは限らない
+- 渡されない場合は `undefined`
+
+```jsx
+<AddPatientForm />
+```
+
+→ onErrorsChange は undefined
+
+#### そのまま実行するとエラー
+
+```js
+onErrorsChange({}); // ❌
+```
+
+#### 安全に書く
+
+```js
+onErrorsChange?.({}); // ✅
+```
+
+---
+
+### 今日のまとめ
+
+- errors は毎回新しい → 文字列化して比較する
+- useRef は前回値を保存する箱
+- 同じエラーは親に送らない設計が重要
+- `?.` は「存在チェック＋安全実行」
+- `{}` は「エラーなし」の合図
+
+👉 エラー管理と親子通信の理解がかなり深まった

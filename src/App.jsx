@@ -20,6 +20,7 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [apiError, setApiError] = useState("");
 
+  // 開発時にエラー内容が分かるように
   useEffect(() => {
     // エラーが新しく出た時
     if (Object.keys(globalErrors).length > 0) {

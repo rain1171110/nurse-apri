@@ -30,8 +30,8 @@ export default function NursingRecordItem({ onErrorsChange }) {
   const bpText = formatBpText(SBP, DBP);
   const bpDisplay = bpText === "--" ? "--" : `${bpText}mmHg`;
 
-  const handleRecordSubmit = async (data) => {
-    const updatedRecord = { ...record, ...data };
+  const handleRecordSubmit = async (formValues) => {
+    const updatedRecord = { ...record, ...formValues };
     await updateRecord(updatedRecord);
     setIsEditing(false);
     navigate(`/patient/${patient.id}/records`);

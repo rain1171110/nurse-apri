@@ -7765,3 +7765,364 @@ onErrorsChange?.({}); // ✅
 - `{}` は「エラーなし」の合図
 
 👉 エラー管理と親子通信の理解がかなり深まった
+
+## 2026-04-25 学習ログ（propsで関数を渡す理由・記録編集・API通信の流れ）
+
+### 今日やったこと
+
+今日は、看護記録アプリの **記録追加・記録編集・保存処理の流れ** を整理した。
+
+主に以下を確認した。
+
+- `NursingRecordForm` の `onSubmit` がどこで受け取られているか
+- `addRecord / updateRecord` が App につながる流れ
+- 患者追加と記録追加の流れの比較
+- なぜ props に関数を渡すのか
+- `updatedRecord` と `map` による記録更新
+- `onSaveData` から API 通信につながる流れ
+- `fetchAppData / saveAppData` が API 通信コードであること
+- Express 公式ドキュメントでは `app.get()` / `app.put()` が Routing に関係すること
+
+---
+
+### 1. なぜ props に関数を渡すのか
+
+`NursingRecordForm` は入力フォームの部品であり、保存処理そのものは知らない。
+
+```jsx
+<NursingRecordForm
+  initialValues={formData}
+  onSubmit={handleAddRecordSubmit}
+  showDate
+  onErrorsChange={onErrorsChange}
+/>
+```
+
+ここでは、親である NursingRecordList が handleAddRecordSubmit を渡している。
+
+つまり、
+
+- Formは入力を渡すだけ
+- 親が処理を決める
+- Appが本物のデータを更新する
+
+という役割分担になっている。
+
+### 2. 記録追加の流れ
+
+記録追加では、NursingRecordList が NursingRecordForm の親になる。
+
+```js
+const handleAddRecordSubmit = async (data) => {
+  await addRecord(data, patient.id);
+  setIsAdding(false);
+  setFormData(createEmptyRecord());
+};
+```
+
+流れは以下。
+
+NursingRecordForm
+↓ onSubmit(data)
+NursingRecordList
+↓ addRecord(data, patient.id)
+App
+↓ records更新
+onSaveData
+↓
+server/data.jsonに保存
+
+`patient.id` を渡す理由は、どの患者の記録として追加するかを決めるため。
+
+### 3. 追加と編集で Form の親は変わる
+
+同じ NursingRecordForm でも、使われる場所によって親が変わる。
+
+記録追加のとき
+NursingRecordList
+└ NursingRecordForm
+
+記録編集のとき
+NursingRecordItem
+└ NursingRecordForm
+
+NursingRecordForm は共通の入力部品。
+
+追加するか、編集するかは親が決める。
+
+### 4. initialValues の理解
+
+追加時は空のデータを渡す。
+
+`createEmptyRecord()`
+
+編集時は既存の記録データを渡す。
+
+`record`
+
+つまり、
+
+- 追加 → 空のデータ
+- 編集 → 既存のデータ
+
+また、React Hook Form の defaultValues は最初だけ使われることがある。
+
+そのため、別の記録に移動したときに前のフォーム内容が残る場合は、`reset(initialValues)` が必要になる。
+
+```js
+useEffect(() => {
+  reset(initialValues);
+}, [initialValues, reset]);
+```
+
+### 5. isEditing はデータ分裂ではない
+
+`isEditing` は、データ本体ではなく画面の状態。
+
+`isEditing`
+= 今この記録を編集画面にするかどうかのスイッチ
+
+本物のデータは App の `records` にある。
+
+そのため、`isEditing` を NursingRecordItem で持ってもデータ分裂にはならない。
+
+### 6. 記録編集の流れ
+
+記録編集では、フォームから来た入力値を `formValues` として受け取る。
+
+```js
+const handleRecordSubmit = async (formValues) => {
+  const updatedRecord = { ...record, ...formValues };
+  await updateRecord(updatedRecord);
+  setIsEditing(false);
+};
+```
+
+`formValues` はフォームで入力された新しい値。
+
+`formValues`
+= ユーザーがフォームで入力した最新データ
+
+`{ ...record, ...formValues }` は、元の記録にフォームの入力内容を上書きする処理。
+
+- `record` → `id` や `patientId` を残す
+- `formValues` → `date`, `vitals`, `content`, `author` などを上書きする
+
+### 7. ...record と ...formValues の意味
+
+```js
+const updatedRecord = { ...record, ...formValues };
+```
+
+これは、
+
+- 元の `record` をコピーする
+- 同じ項目があれば `formValues` で上書きする
+
+という意味。
+
+フォームには `id` や `patientId` を入力しないことが多い。
+
+そのため、`...record` を先に入れて、`id` や `patientId` を残す。
+
+### 8. updateRecord で map を使う理由
+
+App 側の `updateRecord` は、更新後の記録を受け取って records を作り直す。
+
+```js
+const updateRecord = async (updatedRecord) => {
+  const nextRecords = appData.records.map((r) =>
+    r.id === updatedRecord.id ? updatedRecord : r,
+  );
+
+  await onSaveData({
+    patients: appData.patients,
+    records: nextRecords,
+  });
+};
+```
+
+`map` は新しい配列を作る。
+
+その中で、
+
+`r.id === updatedRecord.id ? updatedRecord : r`
+
+としている。
+
+意味は、
+
+- 同じidの記録 → `updatedRecord` に差し替える
+- 違うidの記録 → `r` のまま残す
+
+つまり、
+
+編集 = mapで新しい配列を作り、同じidの1件だけ差し替える
+
+### 9. filter と map の違い
+
+削除では `filter` を使う。
+
+```js
+records.filter((r) => r.id !== id);
+```
+
+編集では `map` を使う。
+
+```js
+records.map((r) => (r.id === updatedRecord.id ? updatedRecord : r));
+```
+
+違いは以下。
+
+- filter → 消す・残す
+- map → 同じ数のまま中身を変える
+
+### 10. onSaveData の役割
+
+`onSaveData` は保存係。
+
+```js
+const onSaveData = async (nextData) => {
+  const saved = await saveAppData(nextData);
+  setAppData(saved);
+};
+```
+
+役割は、
+
+- 変更後の `patients / records` をサーバーに保存する
+- 保存が成功したら App の `appData` を更新する
+
+というもの。
+
+流れは以下。
+
+updateRecord
+↓
+nextRecordsを作る
+↓
+onSaveData({ patients, records: nextRecords })
+↓
+saveAppData
+↓
+PUT /api/data
+↓
+server/data.jsonに保存
+↓
+setAppData(saved)
+↓
+画面更新
+
+### 11. API通信の理解
+
+以下のコードは、フロントエンド側のAPI通信コード。
+
+```js
+const API_BASE = import.meta.env.VITE_API_BASE ?? "http://localhost:3001/api";
+
+export const fetchAppData = async () => {
+  const response = await fetch(`${API_BASE}/data`);
+  if (!response.ok) {
+    throw new Error(`API error:${response.status}`);
+  }
+  return response.json();
+};
+
+export const saveAppData = async (payload) => {
+  const response = await fetch(`${API_BASE}/data`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    throw new Error(`API error:${response.status}`);
+  }
+  return response.json();
+};
+```
+
+`fetchAppData` は読む処理。
+
+GET /api/data
+
+`saveAppData` は保存する処理。
+
+PUT /api/data
+
+### 12. Node.js / Express との関係
+
+React の `fetch` は、Node.js + Express で起動しているバックエンドサーバーにアクセスしている。
+
+React / ブラウザ
+↓ fetch
+http://localhost:3001/api/data
+↓
+Node.js + Express
+↓
+server/data.json を読む・書く
+
+ターミナルで Node.js を使って Express サーバーを起動している。
+
+React はそのサーバーに対して、
+
+- データください
+- 保存してください
+
+とお願いしている。
+
+### 13. Express公式ドキュメントで見る場所
+
+Express の公式ドキュメントでは、主に以下を見る。
+
+- Express Routing
+  → `app.get("/api/data", ...)` の考え方
+- Express API Reference
+  → `app.put()` などのHTTPメソッド
+- MDN Fetch API / RequestInit
+  → `fetch(url, { method, headers, body })` の考え方
+
+React 側の `fetch()` と Express 側の `app.get()` / `app.put()` がつながっている。
+
+### 今日のまとめ
+
+今日の大きな理解は以下。
+
+Form
+↓
+親のsubmit関数
+↓
+addRecord / updateRecord
+↓
+onSaveData
+↓
+saveAppData
+↓
+Express API
+↓
+server/data.json
+↓
+setAppData
+↓
+画面更新
+
+Form は入力を渡すだけ。
+
+親コンポーネントが「追加するのか」「編集するのか」を決める。
+
+App が本物の `patients / records` を管理する。
+
+API通信で Express に保存を依頼する。
+
+### 明日やること
+
+明日は、API通信と Express のつながりを復習する。
+
+特に以下を確認する。
+
+- `fetchAppData` はなぜ GET になるのか
+- `saveAppData` はなぜ PUT になるのか
+- `API_BASE` と `/api/data` のつながり
+- React の `fetch()` と Express の `app.get() / app.put()` の対応
+- Express公式ドキュメントの Routing を見ながら確認する

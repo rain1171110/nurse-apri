@@ -10,8 +10,8 @@ export default function NursingRecordList({ onErrorsChange }) {
   const [isAdding, setIsAdding] = useState(false);
   const [formData, setFormData] = useState(createEmptyRecord());
 
-  const handleSubmit = async (data) => {
-    await addRecord(data,patient.id);
+  const handleAddRecordSubmit = async (data) => {
+    await addRecord(data, patient.id);
     setIsAdding(false);
     setFormData(createEmptyRecord());
   };
@@ -73,7 +73,7 @@ export default function NursingRecordList({ onErrorsChange }) {
           </div>
           <NursingRecordForm
             initialValues={formData}
-            onSubmit={handleSubmit}
+            onSubmit={handleAddRecordSubmit}
             showDate
             onErrorsChange={onErrorsChange}
           />

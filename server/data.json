@@ -35,7 +35,10 @@
       "date": "2026-04-20",
       "author": "岡崎洋子",
       "content": "",
-      "vitals": {},
+      "vitals": {
+        "T": 35,
+        "P": 50
+      },
       "patientId": "d2bbb121-29c9-4de2-94e6-d19f0e957d2e",
       "id": "d1514cbd-a080-4e13-8d46-d4d7821d0841"
     },
@@ -43,9 +46,21 @@
       "date": "2026-04-21",
       "author": "岡崎洋子",
       "content": "",
-      "vitals": {},
+      "vitals": {
+        "T": 35,
+        "SBP": 70,
+        "DBP": 20
+      },
       "patientId": "d2bbb121-29c9-4de2-94e6-d19f0e957d2e",
       "id": "c3390a65-2c79-410a-8902-8604ee5a1d8f"
+    },
+    {
+      "date": "2026-04-25",
+      "author": "岡崎洋子",
+      "content": "",
+      "vitals": {},
+      "patientId": "d2bbb121-29c9-4de2-94e6-d19f0e957d2e",
+      "id": "2b4e174a-baa3-4eda-9f01-2bcbb9ee44be"
     }
   ]
 }

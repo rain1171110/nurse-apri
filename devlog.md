@@ -8126,3 +8126,330 @@ API通信で Express に保存を依頼する。
 - `API_BASE` と `/api/data` のつながり
 - React の `fetch()` と Express の `app.get() / app.put()` の対応
 - Express公式ドキュメントの Routing を見ながら確認する
+
+## 2026-04-26 学習ログ（APIのつながり・Expressの基本準備）
+
+### 今日やったこと
+
+今日は、React側のAPIコードとExpress側のサーバーコードが、どこでつながっているのかを整理した。
+
+特に以下を復習した。
+
+- Reactの `fetch` は Express の `app.get()` / `app.put()` につながる
+- `URL` と `method` の組み合わせで、Express側の入り口が決まる
+- `GET` はデータを読む
+- `PUT` はデータを保存・更新する
+- `body: JSON.stringify(payload)` で送ったデータは、Express側の `req.body` で受け取る
+- `app.use(express.json())` があることで、送られてきたJSONを `req.body` として読める
+
+---
+
+### React側のAPIコード
+
+```js
+const API_BASE = import.meta.env.VITE_API_BASE ?? "http://localhost:3001/api";
+
+export const fetchAppData = async () => {
+  const response = await fetch(`${API_BASE}/data`);
+  if (!response.ok) {
+    throw new Error(`API error:${response.status}`);
+  }
+  return response.json();
+};
+
+export const saveAppData = async (payload) => {
+  const response = await fetch(`${API_BASE}/data`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    throw new Error(`API error:${response.status}`);
+  }
+  return response.json();
+};
+```
+
+### React側とExpress側の対応
+
+#### データを読む場合
+
+`fetch(`${API_BASE}/data`)`
+
+これは method を書いていないので、GETになる。
+
+Express側ではここにつながる。
+
+`app.get("/api/data", ...)`
+
+つまり、
+
+React
+fetchAppData()
+↓
+GET /api/data
+↓
+Express
+app.get("/api/data")
+↓
+data.jsonを読む
+
+#### データを保存する場合
+
+```js
+fetch(`${API_BASE}/data`, {
+  method: "PUT",
+  body: JSON.stringify(payload),
+});
+```
+
+これは PUT /api/data なので、Express側ではここにつながる。
+
+`app.put("/api/data", ...)`
+
+つまり、
+
+React
+saveAppData(payload)
+↓
+PUT /api/data
+↓
+Express
+app.put("/api/data")
+↓
+req.bodyを受け取る
+↓
+data.jsonに保存する
+
+### 今日の重要ポイント
+
+APIを見るときは、まずこの2つを見る。
+
+1. URL
+2. method
+
+例：
+
+`fetch("http://localhost:3001/api/data")`
+
+これは、
+
+- URL: `/api/data`
+- method: `GET`
+
+なので、
+
+`app.get("/api/data", ...)`
+
+につながる。
+
+`fetch("http://localhost:3001/api/data", { method: "PUT" })`
+
+これは、
+
+- URL: `/api/data`
+- method: `PUT`
+
+なので、
+
+`app.put("/api/data", ...)`
+
+につながる。
+
+### body と req.body の関係
+
+React側で送るデータ：
+
+`body: JSON.stringify(payload)`
+
+Express側で受け取るデータ：
+
+`req.body`
+
+つまり、
+
+Reactの body
+↓
+Expressの req.body
+
+という関係。
+
+今日の理解としては、
+
+bodyで送る
+req.bodyで受け取る
+
+でOK。
+
+### import と require の違い
+
+Expressの読み込み方には2種類ある。
+
+今使っている書き方：
+
+`import express from "express";`
+
+これは ES Modules の書き方。
+
+昔からあるNode.jsの書き方：
+
+`const express = require("express");`
+
+これは CommonJS の書き方。
+
+どちらでもExpressを読み込めるが、同じファイル内では基本的に混ぜない。
+
+今の `server/index.js` では、他のコードも import を使っている。
+
+```js
+import cors from "cors";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+```
+
+そのため、今は以下で統一する。
+
+`import express from "express";`
+
+### import { fileURLToPath } from "url"; の意味
+
+`import { fileURLToPath } from "url";`
+
+これは、
+
+- `url` というNode.js標準モジュールから
+- `fileURLToPath` という機能だけを取り出す
+
+という意味。
+
+たとえると、
+
+道具箱「url」から
+`fileURLToPath` という道具だけを取り出す
+
+というイメージ。
+
+以下のようには書かない。
+
+`import { fileURLToPath } from "url:fileURLToPath";`
+
+`url:fileURLToPath` というモジュールを読み込もうとしてしまうため、違う。
+
+### ① 道具を読み込む
+
+Express側のコードの最初では、必要な道具を読み込んでいる。
+
+```js
+import express from "express";
+import cors from "cors";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+```
+
+それぞれの役割。
+
+- express → サーバーを作る道具
+- cors → Reactからアクセスできるようにする道具
+- fs → ファイルを読む・書く道具
+- path → ファイルの場所を作る道具
+- url → 今のファイルの場所を調べる道具
+
+今は全部を深く理解しなくてよい。
+
+まずは、
+
+Expressで `data.json` を読むための道具を用意している
+
+と理解する。
+
+### ② Expressアプリを作る
+
+```js
+const app = express();
+const PORT = 3001;
+```
+
+これは、
+
+- Expressサーバーを作る
+- 3001番ポートで動かす
+
+という意味。
+
+`app` は、Expressサーバー本体。
+
+この `app` に対して、あとで以下のような受付を作っていく。
+
+```js
+app.get("/api/data", ...);
+app.put("/api/data", ...);
+```
+
+つまり、`app` は、
+
+- GETの受付
+- PUTの受付
+- サーバー起動
+
+などを持つ中心になる。
+
+`PORT = 3001` は、Expressサーバーを動かす番号。
+
+だからReact側のURLも、
+
+`http://localhost:3001`
+
+になっている。
+
+### 今日の自分の理解
+
+APIのコードは長く見えるが、役割で見ると少し整理できた。
+
+React側は、
+
+Expressにお願いする側。
+
+Express側は、
+
+お願いを受けて、`data.json` を読んだり書いたりする側。
+
+`data.json` は、
+
+実際のデータ置き場。
+
+まずは、
+
+fetchのURLとmethodを見る
+↓
+Express側の app.get/app.put につながる
+
+という考え方を理解できた。
+
+### 次回やること
+
+次回はここから進める。
+
+③ data.json の場所を作る
+
+見るコード：
+
+```js
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const dataPath = path.join(__dirname, "data.json");
+```
+
+次回は、この3行がなぜ必要なのかを整理する。
+
+特に、
+
+`server/data.json` の場所をどうやって作っているのか
+
+を理解する。
+
+今日はここまででOKです。
+
+つまり、今日は **ReactのfetchがExpressのapp.get/app.putにつながること** と、**Expressアプリを作るところまで** 整理できました。

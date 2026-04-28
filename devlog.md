@@ -8453,3 +8453,345 @@ const dataPath = path.join(__dirname, "data.json");
 今日はここまででOKです。
 
 つまり、今日は **ReactのfetchがExpressのapp.get/app.putにつながること** と、**Expressアプリを作るところまで** 整理できました。
+
+## 2026-04-28 学習ログ（Node.jsでdata.jsonを読み書きする準備）
+
+### 今日やったこと
+
+今日は、Expressサーバー側で `server/data.json` を読み書きするためのコードを整理した。
+特に以下の流れを学んだ。
+
+```js
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const dataPath = path.join(__dirname, "data.json");
+```
+
+これは `data.json` の中身を読むコードではなく、`data.json` までのルートを作るコードだと理解した。
+
+### 1. import.meta.url と fileURLToPath
+
+```js
+const __filename = fileURLToPath(import.meta.url);
+```
+
+これは、今動いている `server/index.js` の場所を取得する処理。
+
+`import.meta.url` は、最初はURL形式になっている。
+
+例：
+
+`file:///C:/Users/%E5%B2%A1%E5%B4%8E%E9%99%BD%E5%B9%B3/OneDrive/%E3%83%87%E3%82%B9%E3%82%AF%E3%83%88%E3%83%83%E3%83%97/nurse-apri/server/index.js`
+
+これを `fileURLToPath()` で、Windowsで読める普通のパスに変換する。
+
+例：
+
+`C:\Users\岡崎陽平\OneDrive\デスクトップ\nurse-apri\server\index.js`
+
+つまり、
+
+`fileURLToPath(import.meta.url)`
+→ 今動いている `index.js` の場所を、普通のファイルパスに変換する。
+
+と理解した。
+
+### 2. **filename と **dirname
+
+```js
+const __filename = fileURLToPath(import.meta.url);
+```
+
+`__filename` は、今動いている `index.js` までのルート。
+
+例：
+
+`C:\Users\岡崎陽平\OneDrive\デスクトップ\nurse-apri\server\index.js`
+
+```js
+const __dirname = path.dirname(__filename);
+```
+
+`__dirname` は、`index.js` が入っているフォルダまでのルート。
+
+例：
+
+`C:\Users\岡崎陽平\OneDrive\デスクトップ\nurse-apri\server`
+
+ここで注意したこと：
+
+`__dirname` はファイル名を作るものではなく、ファイルパスからフォルダ部分だけを取り出すもの。
+
+### 3. dataPath
+
+```js
+const dataPath = path.join(__dirname, "data.json");
+```
+
+これは、`server` フォルダの場所と `"data.json"` をつなげて、`data.json` までのルートを作る処理。
+
+例：
+
+`C:\Users\岡崎陽平\OneDrive\デスクトップ\nurse-apri\server\data.json`
+
+つまり、
+
+`dataPath = data.json までの住所メモ`
+
+と理解した。
+
+この3行は、ファイルやフォルダを新しく作っているわけではない。
+
+- ファイル作成ではない
+- `data.json` の中身を読む処理でもない
+- Node.jsが `data.json` を探しに行けるように、場所を作っているだけ
+
+### 4. なぜ dataPath を作るのか
+
+`readFileSync("data.json")` のように書くと、Node.js は `server/index.js` と同じ場所ではなく、ターミナルでコマンドを実行した場所を基準に `data.json` を探す。
+
+例えば、
+
+`node server/index.js`
+
+を `nurse-apri` フォルダで実行すると、単に `"data.json"` と書いた場合は、
+
+`nurse-apri/data.json`
+
+を探しに行く可能性がある。
+
+でも本当に読みたいのは、
+
+`nurse-apri/server/data.json`
+
+なので、`dataPath` を作って、場所がズレないようにする。
+
+つまり、
+
+`dataPath` は `data.json` を迷子にしないためのルート作り。
+
+と理解した。
+
+### 5. fs について
+
+```js
+import fs from "fs";
+```
+
+または、
+
+```js
+import fs from "node:fs";
+```
+
+`fs` は Node.js に最初から入っているファイル操作の道具箱。
+
+`fs = File System`
+
+ファイルを読んだり、書いたりするために使う。
+
+```js
+fs.readFileSync(...);
+fs.writeFileSync(...);
+```
+
+のように、`fs.` を付けることで、`fs` 道具箱の中の関数を使える。
+
+また、次のように関数だけ取り出す書き方もある。
+
+```js
+import { readFileSync } from "node:fs";
+```
+
+この場合は、
+
+```js
+readFileSync(dataPath, "utf-8");
+```
+
+と直接書ける。
+
+### 6. {} 付き import と、道具箱ごとの import
+
+```js
+import path from "node:path";
+```
+
+これは、`path` という道具箱ごと持ってくる書き方。
+
+使うときは、
+
+```js
+path.dirname(...);
+path.join(...);
+```
+
+のように `path.` を付ける。
+
+一方で、
+
+```js
+import { fileURLToPath } from "node:url";
+```
+
+これは、`node:url` の中から `fileURLToPath` だけ取り出す書き方。
+
+使うときは、
+
+```js
+fileURLToPath(import.meta.url);
+```
+
+と直接書ける。
+
+つまり、
+
+- `import path from "node:path"` → 道具箱ごと持ってくる
+- `import { fileURLToPath } from "node:url"` → 道具箱の中から1つだけ取り出す
+
+と理解した。
+
+### 7. readData
+
+```js
+const readData = () => {
+  const raw = fs.readFileSync(dataPath, "utf-8");
+  return JSON.parse(raw);
+};
+```
+
+これは、`data.json` を読むための関数。
+
+流れは以下。
+
+`dataPath` の場所にある `data.json` を読む
+↓
+文字列として `raw` に入れる
+↓
+`JSON.parse(raw)` で JavaScript のデータに変換する
+↓
+`return` で返す
+
+`readFileSync(dataPath, "utf-8")` の `"utf-8"` は、ファイルを文字として読むために付ける。
+
+`utf-8` を付けないと、文字列ではなく `Buffer` という形で読み込まれる。
+
+### 8. JSON.parse
+
+`readFileSync` で読んだ直後の `raw` は、まだ文字列。
+
+例：
+
+`'{ "patients": [], "records": [] }'`
+
+これを JavaScript のオブジェクトに変換するのが、
+
+`JSON.parse(raw)`
+
+変換後はこうなる。
+
+```js
+{ patients: [], records: [] }
+```
+
+つまり、
+
+`JSON.parse = JSON文字列をJavaScriptデータに変換する`
+
+と理解した。
+
+### 9. writeData
+
+```js
+const writeData = (data) => {
+  fs.writeFileSync(dataPath, JSON.stringify(data, null, 2));
+};
+```
+
+これは、JavaScript のデータを `data.json` に保存するための関数。
+
+流れは以下。
+
+`writeData` という変数に関数を入れる
+↓
+`data` を引数として受け取る
+↓
+`JSON.stringify(data, null, 2)` で JSON文字列に変換する
+↓
+`fs.writeFileSync` で `data.json` に書き込む
+
+注意点として、文字列に変換しているのは `data.json` ではなく、引数で受け取った `data`。
+
+つまり、
+
+`data` を JSON文字列に変換して、`data.json` に保存する。
+
+と理解した。
+
+### 10. JSON.stringify
+
+`JSON.stringify(data, null, 2)`
+
+これは、JavaScript のデータを JSONファイルに保存できる文字列に変換する処理。
+
+`null, 2` を付けることで、`data.json` が見やすく整形される。
+
+例：
+
+```json
+{
+  "patients": [],
+  "records": []
+}
+```
+
+### 今日のまとめ
+
+今日の一番大事な理解はこれ。
+
+- `dataPath` → `data.json` までのルート
+- `readData` → `data.json` から取り出す
+- `writeData` → `data.json` に保存する
+
+コードで見ると、
+
+```js
+const readData = () => {
+  const raw = fs.readFileSync(dataPath, "utf-8");
+  return JSON.parse(raw);
+};
+
+const writeData = (data) => {
+  fs.writeFileSync(dataPath, JSON.stringify(data, null, 2));
+};
+```
+
+それぞれの役割は、
+
+- `readData`：`data.json` → JavaScriptで使えるデータ
+- `writeData`：JavaScriptのデータ → `data.json`
+
+つまり、
+
+`readData` は読む係、`writeData` は保存係。
+
+と理解した。
+
+### 次回やること
+
+次回はこの続きから進める。
+
+```js
+app.get("/api/data", (req, res) => {
+  const data = readData();
+  res.json(data);
+});
+```
+
+ここで、
+
+- `readData()` をいつ呼び出すのか
+- `res.json(data)` で何を返しているのか
+- React側の `fetchAppData()` とどうつながるのか
+
+を整理する。

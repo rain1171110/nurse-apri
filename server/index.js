@@ -1,8 +1,8 @@
 import express from "express";
 import cors from "cors";
-import fs from "fs";
-import path from "path";
-import { fileURLToPath } from "url";
+import {readFileSync,writeFileSync} from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 const app = express();
 const PORT = 3001;
@@ -15,12 +15,12 @@ app.use(cors());
 app.use(express.json());
 
 const readData = () => {
-  const raw = fs.readFileSync(dataPath, "utf-8");
+  const raw = readFileSync(dataPath, "utf-8");
   return JSON.parse(raw);
 };
 
 const writeData = (data) => {
-  fs.writeFileSync(dataPath, JSON.stringify(data, null, 2), "utf-8");
+  writeFileSync(dataPath, JSON.stringify(data, null, 2), "utf-8");
 };
 
 app.get("/api/data", (req, res) => {

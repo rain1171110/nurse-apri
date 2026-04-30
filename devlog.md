@@ -1,5 +1,356 @@
 # Dev Log
 
+## 2026-05-01 学習ログ（フォーム入力から保存・画面更新までの流れ）
+
+### 今日やったこと
+
+今日は、フォーム入力から保存、そして画面更新までの流れを1本で説明できるように整理した。
+
+大きな流れは以下。
+
+```txt
+フォーム入力
+↓
+submit
+↓
+新しいデータを作る
+↓
+新しい配列を作る
+↓
+onSaveData に渡す
+↓
+App 側で保存する
+↓
+appData が更新される
+↓
+props 経由で各コンポーネントに最新データが渡る
+↓
+画面が更新される
+```
+
+---
+
+### 患者追加の流れ
+
+患者追加では、フォームから受け取った `data` に `id` を追加して、保存用の患者データを作る。
+
+```js
+const addPatientSubmit = async (data) => {
+  const patientToAdd = { ...data, id: crypto.randomUUID() };
+  const nextPatients = [...patients, patientToAdd];
+
+  await onSaveData({ patients: nextPatients, records });
+};
+```
+
+理解したこと:
+
+- `data` はフォームから送られてきた入力内容
+- `patientToAdd` は `data` に `id` を追加した保存用データ
+- `nextPatients` は今の `patients` に新しい患者を追加した新しい配列
+- `records` は変更しないのでそのまま渡す
+- 最後に `onSaveData` に渡して保存処理を依頼する
+
+重要なのは、元の `patients` を直接変更するのではなく、新しい配列 `nextPatients` を作ること。
+
+---
+
+### 患者削除の流れ
+
+患者削除では、`filter()` を使って削除したい患者以外を残した新しい配列を作る。
+
+```js
+const nextPatients = patients.filter((p) => p.id !== id);
+const nextRecords = records.filter((r) => r.patientId !== id);
+
+await onSaveData({
+  patients: nextPatients,
+  records: nextRecords,
+});
+```
+
+理解したこと:
+
+- `patients.filter((p) => p.id !== id)` で、削除したい患者以外を残す
+- `records.filter((r) => r.patientId !== id)` で、その患者に紐づく記録も削除する
+- 患者だけ消して記録が残ると、患者がいないのに記録だけある状態になる
+- そのため、患者削除では `patients` と `records` の両方を更新する
+
+---
+
+### URL の id から患者と記録を探す流れ
+
+`PatientPage` では、URL の `id` を使って、今表示している患者とその記録を探している。
+
+```js
+const patient = patients.find((p) => String(p.id) === id);
+
+const patientRecords = records.filter((r) => String(r.patientId) === id) ?? [];
+```
+
+理解したこと:
+
+- `find()` は条件に合うデータを1つ探す
+- `filter()` は条件に合うデータを複数集めて新しい配列にする
+- `useParams()` で取得する `id` は文字列
+- そのため `String(p.id) === id` のように、比較する型を文字列にそろえている
+- URL に患者 ID があるため、state で患者を選択していなくても対象患者を探せる
+
+---
+
+### 記録追加の流れ
+
+記録追加では、フォームから受け取った `record` に、記録自身の `id` と、どの患者の記録かを示す `patientId` を追加する。
+
+```js
+const recordToAdd = {
+  ...record,
+  patientId,
+  id: crypto.randomUUID(),
+};
+```
+
+理解したこと:
+
+- `record` はフォームから送られてきた記録内容
+- `patientId` はどの患者に紐づく記録かを示す ID
+- `id` は記録自身を区別するための ID
+- `recordToAdd` は保存用に完成した記録データ
+
+患者追加との違い:
+
+- 患者追加: `data` に `id` を追加する
+- 記録追加: `record` に `patientId` と `id` を追加する
+
+---
+
+### 追加・削除・更新の違い
+
+追加・削除・更新では、それぞれ新しい配列の作り方が違う。
+
+```js
+// 追加
+const nextRecords = [...records, recordToAdd];
+
+// 削除
+const nextRecords = records.filter((r) => r.id !== id);
+
+// 更新
+const nextRecords = records.map((r) =>
+  r.id === updatedRecord.id ? updatedRecord : r,
+);
+```
+
+理解したこと:
+
+- 追加: 新しいデータを足す
+- 削除: いらないデータを除外する
+- 更新: 同じ `id` のデータだけ入れ替える
+
+---
+
+### find / filter / map の違い
+
+今日かなり整理できたポイント。
+
+- `find` → 1個だけ探す
+- `filter` → 条件に合うものだけ残して、新しい配列を作る
+- `map` → 全部見て、必要なものだけ入れ替えた新しい配列を作る
+
+共通点:
+
+- `find`
+- `filter`
+- `map`
+
+どれも配列の中身を1つずつ見る。
+
+違い:
+
+- `find()` は1個だけ返す
+- `filter()` は条件に合うものだけの新しい配列を返す
+- `map()` は全部をもとに新しい配列を返す
+
+特に更新では、`map()` を使って、同じ `id` のものだけ更新後データに入れ替える。
+
+---
+
+### onSaveData を渡す場所の違い
+
+`PatientList` には `onSaveData` を直接渡している。
+
+```jsx
+<PatientList
+  onSaveData={onSaveData}
+  patients={appData.patients}
+  records={appData.records}
+/>
+```
+
+理由:
+
+`PatientList` の中で `addPatientSubmit` を作っていて、その中で `onSaveData` を直接呼んでいるから。
+
+```js
+const addPatientSubmit = async (data) => {
+  const patientToAdd = { ...data, id: crypto.randomUUID() };
+  const nextPatients = [...patients, patientToAdd];
+  await onSaveData({ patients: nextPatients, records });
+};
+```
+
+理解したこと:
+
+- `PatientList` は `onSaveData` を直接使う
+- だから `onSaveData` を props で渡す必要がある
+- 渡さないと `onSaveData is not a function` のようなエラーになる
+
+---
+
+### PatientPage 側で onSaveData を直接渡していない理由
+
+`PatientPage` には `onSaveData` を直接渡していない。
+
+代わりに、以下のような関数を渡している。
+
+```jsx
+<PatientPage
+  patients={appData.patients}
+  records={appData.records}
+  updatePatient={updatePatient}
+  addRecord={addRecord}
+  updateRecord={updateRecord}
+  deleteRecord={deleteRecord}
+  deletePatient={deletePatient}
+/>
+```
+
+理解したこと:
+
+- `updatePatient`
+- `addRecord`
+- `updateRecord`
+- `deleteRecord`
+- `deletePatient`
+
+これらの関数の中で、最終的に `onSaveData` が呼ばれている。
+
+つまり、子コンポーネントは `onSaveData` を直接使わなくても、`addRecord` や `updateRecord` などを呼べば保存処理まで実行される。
+
+- `PatientList` → `onSaveData` を直接使う
+- `PatientPage` 配下 → `onSaveData` 入りの関数を使う
+
+props は「そのコンポーネントが実際に使うもの」を渡す。
+
+---
+
+### props と Outlet context の違い
+
+今日は props と Outlet context の違いも整理した。
+
+- props
+  親コンポーネントから直接の子コンポーネントに渡す方法
+- Outlet context
+  親 Route のコンポーネントから子 Route のコンポーネントに渡す方法
+
+今回の流れ:
+
+```txt
+App
+↓ props
+PatientPage
+↓ Outlet context
+PatientMenu / PatientDetail / NursingRecordList / NursingRecordItem
+```
+
+`PatientPage` 側では、以下のように `Outlet` の `context` に入れて、子 Route へ渡す。
+
+```jsx
+<Outlet
+  context={{
+    patient,
+    patientRecords,
+    addRecord,
+    updateRecord,
+    deleteRecord,
+    deletePatient,
+  }}
+/>
+```
+
+子 Route 側では、以下のように受け取る。
+
+```js
+const { patient, addRecord } = useOutletContext();
+```
+
+理解したこと:
+
+- App から `PatientPage` へは props で渡す
+- `PatientPage` から子 Route へは Outlet context で渡す
+- 子 Route では `useOutletContext()` を使って受け取る
+- Outlet context は、親 Route から子 Route へデータや関数を渡す通路
+
+---
+
+### 今日説明できるようになったこと
+
+今日の最終的な説明:
+
+フォームから受け取った `data` をもとに、追加・削除・更新に応じて `patients` や `records` の新しい配列を作る。
+
+その新しいデータを App 側の保存処理に渡して、サーバーに保存する。
+
+保存後に App の state が更新されると、props 経由で各コンポーネントに最新データが渡り、画面も更新される。
+
+さらに短くすると、
+
+```txt
+フォーム入力
+→ 新しいデータ作成
+→ 新しい配列作成
+→ 保存処理に渡す
+→ state更新
+→ props更新
+→ 画面更新
+```
+
+---
+
+### 今日のまとめ
+
+React では、画面を直接書き換えるのではなく、データを更新することで画面が変わる。
+
+そのために、
+
+- 追加はスプレッド構文で新しい配列を作る
+- 削除は `filter()` で新しい配列を作る
+- 更新は `map()` で新しい配列を作る
+- 表示は `find()` や `filter()` で対象データを探す
+- 保存は `onSaveData` または `onSaveData` 入りの関数を通して行う
+- 子 Route には Outlet context でデータや関数を渡す
+
+という流れを理解した。
+
+---
+
+### 次回やること
+
+次回は、この続きとして以下を復習する。
+
+```txt
+App
+↓ props
+PatientPage
+↓ Outlet context
+子Route
+↓ useOutletContext()
+```
+
+特に、`PatientPage` の中で `patient` と `patientRecords` を作り、それを Outlet context で子 Route に渡す流れを、コードを見ながらもう一度整理する。
+
+---
+
 ## 2026-04-30 学習ログ（React と Express の保存処理のつながり）
 
 ### 今日やったこと

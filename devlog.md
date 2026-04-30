@@ -1,5 +1,350 @@
 # Dev Log
 
+## 2026-04-30 学習ログ（React と Express の保存処理のつながり）
+
+### 今日やったこと
+
+今日は、React側の `onSaveData` / `saveAppData` と、Express側の `app.put("/api/data")` がどうつながっているかを整理した。
+
+前回までに、Reactは `data.json` を直接触らず、Express API にお願いしてデータを読み書きすることを学んだ。
+
+今日は特に「保存処理」の流れを中心に確認した。
+
+---
+
+### React と Express の役割
+
+React側は、画面と state を管理する。
+
+Express側は、APIとしてリクエストを受け取り、`data.json` を読み書きする。
+
+役割を整理すると、
+
+```txt
+React      = 画面担当
+fetch      = APIにお願いを送る係
+Express    = APIの受付担当
+data.json  = 保存場所
+```
+
+保存の流れは、
+
+```txt
+React
+↓
+saveAppData(payload)
+↓
+fetch で PUT /api/data に送る
+↓
+Express の app.put("/api/data") が受け取る
+↓
+writeData(next) で data.json に保存する
+↓
+res.json(next) でReactに返す
+↓
+React側で response.json() して受け取る
+↓
+setAppData(responseAppData)
+```
+
+つまり、`saveAppData` は「実際に保存する関数」ではなく、Expressに保存をお願いする通信係。
+
+実際に `data.json` に保存しているのは、Express側の `writeData(next)`。
+
+---
+
+### onSaveData の修正
+
+今日確認した `onSaveData` は以下の形。
+
+```js
+const onSaveData = async (nextAppData) => {
+  try {
+    setApiError("");
+
+    const responseAppData = await saveAppData(nextAppData);
+
+    if (!isValidAppData(responseAppData)) {
+      throw new Error("保存のレスポンス形式が不正です");
+    }
+
+    setAppData(responseAppData);
+  } catch (error) {
+    console.error("データの保存に失敗しました", error);
+    setApiError("データの保存に失敗しました");
+  }
+};
+```
+
+修正点として、引数名を `payload` から `nextAppData` に変更した。
+
+`nextAppData` は「これから保存したい新しいアプリ全体のデータ」という意味で、役割が分かりやすい。
+
+また、APIから返ってきたデータは `responseAppData` という名前にした。
+
+`saveAppData` と `savedAppData` は名前が似ていて typo しやすいため、`responseAppData` にすることで読み間違いを防ぎやすくした。
+
+---
+
+### typo によるエラー
+
+途中で以下のようなエラーが出た。
+
+```
+PatientList.jsx:62 Uncaught TypeError: Cannot read properties of undefined (reading 'map')
+```
+
+原因は、`setAppData` に保存後データではなく、API関数そのものを渡してしまっていたこと。
+
+間違いの例。
+
+```js
+setAppData(saveAppData);
+```
+
+これは `appData` に「データ」ではなく「関数」を入れてしまう。
+
+その結果、`appData.patients` が `undefined` になり、`patients.map(...)` でエラーになった。
+
+正しくは以下。
+
+```js
+setAppData(responseAppData);
+```
+
+今回の学びとして、`setAppData` に入れるのは関数ではなく、APIから返ってきた保存後データである。
+
+---
+
+### fetch / await / throw / catch の復習
+
+`fetch` は、サーバーにお願いを送る関数。
+
+```js
+fetch(`${API_BASE}/data`, {
+  method: "PUT",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify(payload),
+});
+```
+
+これは、React側から Express の `PUT /api/data` に保存リクエストを送っている。
+
+`await` は、サーバーから返事が返ってくるまで待つ。
+
+```js
+const response = await fetch(...);
+```
+
+`throw` は、意図的にエラーを発生させる処理。
+
+```js
+throw new Error("保存のレスポンス形式が不正です");
+```
+
+今回のコードでは、APIから返ってきたデータの形がおかしい場合に、`throw` で処理を止めて `catch` に飛ばしている。
+
+`catch` は、通信エラーや `throw` されたエラーを受け取る場所。
+
+```js
+catch (error) {
+  console.error("データの保存に失敗しました", error);
+  setApiError("データの保存に失敗しました");
+}
+```
+
+つまり、
+
+```txt
+fetch = サーバーにお願いする
+await = 返事を待つ
+throw = エラーとして止める
+catch = エラーを受け取る
+```
+
+---
+
+### saveAppData の復習
+
+`saveAppData` は、React側から Express API へ保存リクエストを送る関数。
+
+```js
+export const saveAppData = async (payload) => {
+  const response = await fetch(`${API_BASE}/data`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    throw new Error(`API error:${response.status}`);
+  }
+
+  return response.json();
+};
+```
+
+`payload` は、APIに送るデータ本体。
+
+`body: JSON.stringify(payload)` は、JavaScriptのデータをJSON文字列に変換して、サーバーに送るための処理。
+
+`response.ok` が `false` の場合は、サーバーからの返事が成功ではないので、`throw` でエラーにする。
+
+`return response.json()` は、サーバーから返ってきたJSONをJavaScriptのデータに変換して返す処理。
+
+ここで `data.json` に保存しているわけではない。
+
+保存しているのは Express側の `writeData(next)`。
+
+---
+
+### Express側の app.put の復習
+
+Express側の保存APIは以下。
+
+```js
+app.put("/api/data", (req, res) => {
+  try {
+    const { patients, records } = req.body;
+
+    if (!Array.isArray(patients) || !Array.isArray(records)) {
+      return res.status(400).json({ error: "invalid payload" });
+    }
+
+    const next = { patients, records };
+    writeData(next);
+    res.json(next);
+  } catch (error) {
+    console.error("PUT /api/data error:", error);
+    res.status(500).json({ error: "Failed to write data" });
+  }
+});
+```
+
+`app.put("/api/data")` は、Reactから来た `PUT /api/data` の保存リクエストを受け取る場所。
+
+React側では `fetch` でリクエストを送る。
+
+Express側では `app.put` でそのリクエストを受け取る。
+
+```txt
+Reactの fetch   = 送る側
+Expressの app.put = 受け取る側
+```
+
+`req.body` には、Reactから送られてきたデータが入る。
+
+```js
+const { patients, records } = req.body;
+```
+
+これは、送られてきたデータの中から `patients` と `records` を取り出している。
+
+その後、
+
+```js
+if (!Array.isArray(patients) || !Array.isArray(records)) {
+  return res.status(400).json({ error: "invalid payload" });
+}
+```
+
+で、`patients` と `records` が配列か確認している。
+
+形が悪い場合は、400 エラーを返す。
+
+問題なければ、
+
+```js
+const next = { patients, records };
+writeData(next);
+res.json(next);
+```
+
+で、`patients` と `records` をまとめて `next` にし、`writeData(next)` で `data.json` に保存する。
+
+最後に `res.json(next)` で保存したデータをReact側に返す。
+
+---
+
+### 今日の理解
+
+今日の一番大事な理解は、保存処理の流れ。
+
+```txt
+React側
+saveAppData(payload)
+↓
+fetch で PUT /api/data に送る
+
+Express側
+app.put("/api/data")
+↓
+req.body で受け取る
+↓
+patients / records が配列か確認
+↓
+writeData(next) で data.json に保存
+↓
+res.json(next) でReactに返す
+
+React側
+response.json()
+↓
+responseAppData として受け取る
+↓
+isValidAppData で確認
+↓
+setAppData(responseAppData)
+```
+
+つまり、
+
+```txt
+fetch      = 送る側
+app.put    = 受け取る側
+writeData  = 実際に保存する係
+res.json   = Reactへ返す係
+setAppData = ReactのStateを更新する係
+```
+
+`setAppData` が直接画面を描画するわけではない。
+
+`setAppData` で state が変わることで、Reactが再レンダリングし、患者リストが更新される。
+
+---
+
+### 次回やること
+
+次回は、患者追加の `addPatientSubmit` が `onSaveData` にどうつながるかを確認する。
+
+特に以下の流れを整理する。
+
+```txt
+フォーム入力
+↓
+addPatientSubmit(data)
+↓
+patientToAdd を作る
+↓
+nextPatients を作る
+↓
+onSaveData({ patients: nextPatients, records })
+↓
+saveAppData
+↓
+Express
+↓
+data.json
+↓
+setAppData
+↓
+画面更新
+```
+
+次回は、フォーム入力から保存、画面更新までを一本の流れで説明できるようにする。
+
+---
+
 ## 2026-04-29 学習ログ（Express APIサーバーの全体像とひな型）
 
 ### 学んだこと
@@ -183,7 +528,7 @@ const __filename = fileURLToPath(import.meta.url);
 
 例：
 
-`C:\Users\岡崎陽平\OneDrive\デスクトップ\nurse-apri\server\index.js`
+`C:\Users\岡崎陽平\OneDrive\デスクトップ\nurse-app\server\index.js`
 
 つまり、
 

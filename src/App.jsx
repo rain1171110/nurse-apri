@@ -71,12 +71,17 @@ function App() {
     );
   };
 
-  const onSaveData = async (payload) => {
-    const saved = await saveAppData(payload);
-    if (isValidAppData(saved)) {
-      setAppData(saved);
-    } else {
-      console.error("保存のレスポンス形式が不正です", saved);
+  const onSaveData = async (nextAppData) => {
+    try {
+      setApiError("");
+      const responseAppData = await saveAppData(nextAppData);
+      if (!isValidAppData(responseAppData)) {
+        throw new Error("保存のレスポンス形式が不正です");
+      }
+      setAppData(responseAppData);
+    } catch (error) {
+      console.error("データの保存に失敗しました", error);
+      setApiError("データの保存に失敗しました");
     }
   };
 

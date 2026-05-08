@@ -168,10 +168,11 @@
 
 // 3つ、書いてみてください。
 
-次は1つだけ書いてみましょう。
+// 次は1つだけ書いてみましょう。
 
-const { T, P, R, SBP, DBP, SPO2 } = r.vitals ?? {};
-const bpText = formatBpText(SBP, DBP);
-const bpDisplay = bpText === "--" ? "--" : `${bpText}mmHg`;
+// const { T, P, R, SBP, DBP, SPO2 } = r.vitals ?? {};
+// const bpText = formatBpText(SBP, DBP);
+// const bpDisplay = bpText === "--" ? "--" : `${bpText}mmHg`;
 
-空欄を書いてみてください。
+// 空欄を書いてみてください。
+

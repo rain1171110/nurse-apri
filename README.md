@@ -1,16 +1,29 @@
-# React + Vite
+# 看護記録管理アプリ
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## 作成した理由
+看護師として働く中で、患者情報や看護記録を効率よく管理する重要性を感じたため作成しました。
 
-Currently, two official plugins are available:
+## 使用技術
+- React
+- JavaScript
+- Express
+- Node.js
+- JSON file
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 主な機能
+- 患者情報の登録・編集・削除
+- 看護記録の登録・編集・削除
+- バイタル情報の管理
+- フォームバリデーション
 
-## React Compiler
+## 工夫した点
+- 患者ごとに記録を紐づけて管理できるようにした
+- React Routerで画面遷移を整理した
+- ZodとReact Hook Formで入力チェックを実装した
+- Express APIを使ってフロントとバックエンドを分離した
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## 今後追加したい機能
+- TypeScript化
+- データベース連携
+- ログイン機能
+- デプロイ

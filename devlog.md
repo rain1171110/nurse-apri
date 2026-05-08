@@ -1,5 +1,14 @@
 # Dev Log
 
+## 運用ルール（2026-05-08 から）
+
+これからは日付ごとにファイルを分けて記録する。
+
+- [devlog/2026-05-08.md](devlog/2026-05-08.md)
+- [devlog/2026-05-09.md](devlog/2026-05-09.md)
+
+既存の内容は、このファイルに履歴として残す。
+
 ## 2026-05-01 学習ログ（フォーム入力から保存・画面更新までの流れ）
 
 ### 今日やったこと
@@ -1598,6 +1607,290 @@ NursingRecordItem
 NursingRecordForm は共通の入力部品。
 
 追加するか、編集するかは親が決める。
+
+## 2026-05-08 学習ログ（患者APIの分割開始）
+
+### 今日やったこと
+
+今日は、これまで `GET /api/data` と `PUT /api/data` の2本でまとめて扱っていたAPIを、患者ごとのCRUD APIに分割する作業を始めた。
+
+今までの形:
+
+```txt
+GET /api/data
+PUT /api/data
+```
+
+これからは、患者・記録それぞれにAPIを分けて、より実務に近い形にしていく。
+
+---
+
+### 今日作った患者API
+
+今日作成・確認したAPIは以下。
+
+```txt
+GET  /api/patients
+POST /api/patients
+PUT  /api/patients/:id
+```
+
+---
+
+### 1. GET /api/patients
+
+目的:
+患者一覧だけを取得するAPI。
+
+```js
+app.get("/api/patients", (req, res) => {
+  try {
+    const data = readData();
+    res.json(data.patients);
+  } catch (error) {
+    console.error("GET /api/patients error:", error);
+    res.status(500).json({ error: "Failed to read patients" });
+  }
+});
+```
+
+理解したこと:
+
+- `app.get("/api/patients", ...)` と書くことで、Expressサーバーに患者一覧取得の入口が作られる
+- URLは `http://localhost:3001/api/patients`
+- `http://localhost:3001` は自分のPCで動いているExpressサーバーの住所
+- `/api/patients` は患者一覧を返す入口
+- このURLにアクセスすると、`data.json` 全体ではなく `patients` だけが返る
+
+---
+
+### 2. POST /api/patients
+
+目的:
+新しい患者を作成するAPI。
+
+```js
+app.post("/api/patients", (req, res) => {
+  try {
+    const data = readData();
+
+    const newPatient = {
+      ...req.body,
+      id: crypto.randomUUID(),
+    };
+
+    const next = {
+      ...data,
+      patients: [...data.patients, newPatient],
+    };
+
+    writeData(next);
+    res.status(201).json(newPatient);
+  } catch (error) {
+    console.error("POST /api/patients error:", error);
+    res.status(500).json({ error: "Failed to create patient" });
+  }
+});
+```
+
+理解したこと:
+
+- 最初は `res.json(data.patients)` を書いていたが、それだとGETと同じで「読むだけ」になる
+- POSTでは、フロント側から送られてきたデータを `req.body` で受け取り、新しい患者を作る必要がある
+
+流れ:
+
+```txt
+Reactから患者データが送られてくる
+↓
+req.body で受け取る
+↓
+crypto.randomUUID() で id を付ける
+↓
+data.patients に追加する
+↓
+writeData(next) で data.json に保存する
+↓
+作成した患者データを返す
+```
+
+重要ポイント:
+
+```js
+const newPatient = {
+  ...req.body,
+  id: crypto.randomUUID(),
+};
+```
+
+ここでは、送られてきた患者情報にサーバー側で `id` を追加している。
+
+```js
+const next = {
+  ...data,
+  patients: [...data.patients, newPatient],
+};
+```
+
+ここでは、元の `data` をコピーしつつ、`patients` だけ新しい患者を追加した配列にしている。
+
+---
+
+### 3. PUT /api/patients/:id
+
+目的:
+指定したIDの患者情報を更新するAPI。
+
+```js
+app.put("/api/patients/:id", (req, res) => {
+  try {
+    const data = readData();
+    const { id } = req.params;
+
+    const exists = data.patients.some((patient) => patient.id === id);
+
+    if (!exists) {
+      return res.status(404).json({ error: "Patient not found" });
+    }
+
+    const updatedPatient = {
+      ...req.body,
+      id,
+    };
+
+    const next = {
+      ...data,
+      patients: data.patients.map((patient) =>
+        patient.id === id ? updatedPatient : patient,
+      ),
+    };
+
+    writeData(next);
+    res.json(updatedPatient);
+  } catch (error) {
+    console.error("PUT /api/patients/:id error:", error);
+    res.status(500).json({ error: "Failed to update patient" });
+  }
+});
+```
+
+今日理解したこと:
+
+- `/api/patients/:id` の `:id` は、URLの中に入る患者IDを表す
+- 例: `/api/patients/abc123`
+- Express側では `const { id } = req.params;` で `abc123` を取り出せる
+
+---
+
+### 今日の注意点
+
+`app.listen()` は一番最後に書く。
+
+最初は `app.listen()` の下に `app.put("/api/patients/:id", ...)` を書いていたが、基本的にはすべてのAPIを書いた後に `app.listen()` を置く。
+
+正しい順番のイメージ:
+
+```js
+app.get("/api/data", ...);
+app.put("/api/data", ...);
+
+app.get("/api/patients", ...);
+app.post("/api/patients", ...);
+app.put("/api/patients/:id", ...);
+
+app.listen(PORT, () => {
+  console.log(`API server running on http://localhost:${PORT}`);
+});
+```
+
+`app.listen()` は、ここまで作ったAPIサーバーを起動する処理なので、最後に置くイメージ。
+
+---
+
+### 今日の学び
+
+今までは以下の2本で、アプリ全体のデータをまとめて取得・保存していた。
+
+```txt
+GET /api/data
+PUT /api/data
+```
+
+今日からは以下のように、操作ごとにAPIを分け始めた。
+
+```txt
+GET  /api/patients
+POST /api/patients
+PUT  /api/patients/:id
+```
+
+これにより、
+
+- 患者一覧を取得する
+- 患者を作成する
+- 患者を更新する
+
+という処理が、それぞれ別のAPIとして整理される。
+
+---
+
+### 明日やること
+
+明日は、今日最後に書いた以下のコードの解説から再開する。
+
+```js
+app.put("/api/patients/:id", (req, res) => {
+  try {
+    const data = readData();
+    const { id } = req.params;
+
+    const exists = data.patients.some((patient) => patient.id === id);
+
+    if (!exists) {
+      return res.status(404).json({ error: "Patient not found" });
+    }
+
+    const updatedPatient = {
+      ...req.body,
+      id,
+    };
+
+    const next = {
+      ...data,
+      patients: data.patients.map((patient) =>
+        patient.id === id ? updatedPatient : patient,
+      ),
+    };
+
+    writeData(next);
+    res.json(updatedPatient);
+  } catch (error) {
+    console.error("PUT /api/patients/:id error:", error);
+    res.status(500).json({ error: "Failed to update patient" });
+  }
+});
+```
+
+特に明日は以下を理解する。
+
+- `const { id } = req.params;`
+- `some()` で存在確認する理由
+- `map()` で該当する患者だけ更新する流れ
+- `updatedPatient` に `id` を入れ直す理由
+
+---
+
+### 今日のまとめ
+
+今日は、Express APIを「全部まとめて保存する形」から、「患者ごとのCRUD API」に分ける第一歩を進めた。
+
+特に、以下の3つを作った。
+
+- `GET  /api/patients` : 患者一覧取得
+- `POST /api/patients` : 患者作成
+- `PUT  /api/patients/:id` : 患者更新
+
+明日は `PUT /api/patients/:id` の中身を1行ずつ理解してから、次に `DELETE /api/patients/:id` を作る。
 
 ### 4. initialValues の理解
 

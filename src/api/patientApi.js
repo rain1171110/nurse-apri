@@ -20,3 +20,17 @@ export const saveAppData = async (payload) => {
   }
   return response.json();
 };
+
+export const updatePatientApi = async (id, patient) => {
+  const response = await fetch(`${API_BASE}/patients/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(patient),
+  });
+
+  if (!response.ok) {
+    throw new Error(`API error:${response.status}`);
+  }
+
+  return response.json();
+};

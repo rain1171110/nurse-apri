@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import PatientList from "./PatientList";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { fetchAppData, saveAppData } from "./api/patientApi";
+import { fetchAppData, saveAppData, updatePatientApi } from "./api/patientApi";
 import { Routes, Route } from "react-router-dom";
 import PatientPage from "./PatientPage";
 import PatientDetail from "./PatientDetail";
@@ -99,10 +99,14 @@ function App() {
   };
 
   const updatePatient = async (updated) => {
-    const nextPatients = appData.patients.map((p) =>
-      p.id === updated.id ? updated : p,
-    );
-    await onSaveData({ patients: nextPatients, records: appData.records });
+    const savedPatient = await updatePatientApi(updated.id, updated);
+
+    setAppData((prev) => ({
+      ...prev,
+      patients: prev.patients.map((p) =>
+        p.id === savedPatient.id ? savedPatient : p,
+      ),
+    }));
   };
 
   const updateRecord = async (updatedRecord) => {

@@ -2,31 +2,18 @@
   "patients": [
     {
       "name": "鈴木次郎",
-      "room": 4,
-      "id": "e6fe53c6-b694-4e31-92e0-99227d531611",
-      "age": 34,
-      "disease": "心不全",
-      "history": "肺炎",
-      "progress": ""
-    },
-    {
-      "name": "鈴木次郎",
-      "room": 106,
-      "id": "b92d1fc6-2461-4367-8fb6-709bbeb14ac9"
-    },
-    {
-      "name": "okazaki",
-      "room": 5,
-      "id": "1291b61d-5242-42dd-aba0-bd1e8c8b491d",
-      "age": 34,
-      "disease": "肺炎",
-      "history": "肺炎",
-      "progress": "患者編集してみた結果"
-    },
-    {
-      "name": "鈴木次郎",
       "room": 111,
       "id": "41c902d6-7b4f-49c0-8cc1-65a9ca81b78b"
+    },
+    {
+      "name": "鈴木次郎",
+      "room": 222,
+      "id": "7d29540f-8187-4c78-8cbd-560008f9a882"
+    },
+    {
+      "name": "鈴木次郎",
+      "room": 108,
+      "id": "31caec61-e526-4114-b3be-ed714fb36ffd"
     }
   ],
   "records": []

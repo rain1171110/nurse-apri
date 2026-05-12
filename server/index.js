@@ -86,7 +86,6 @@ app.put("/api/patients/:id", (req, res) => {
   console.log("URLのid:", req.params.id);
   console.log("送られてきたbody:", req.body);
 
-
   try {
     const data = readData();
     const { id } = req.params;
@@ -97,7 +96,7 @@ app.put("/api/patients/:id", (req, res) => {
       return res.status(404).json({ error: "Patient not found" });
     }
 
-    const updatedPatient = {
+    const patientToSave = {
       ...req.body,
       id,
     };
@@ -105,20 +104,58 @@ app.put("/api/patients/:id", (req, res) => {
     const next = {
       ...data,
       patients: data.patients.map((patient) =>
-        patient.id === id ? updatedPatient : patient,
+        patient.id === id ? patientToSave : patient,
       ),
     };
 
-    console.log("更新する患者:", updatedPatient);
+    console.log("更新する患者:", patientToSave);
 
     writeData(next);
 
-    console.log("data.jsonに保存完了")
+    console.log("data.jsonに保存完了");
 
-    res.json(updatedPatient);
+    res.json(patientToSave);
   } catch (error) {
     console.error("PUT /api/patients/:id error:", error);
     res.status(500).json({ error: "Failed to update patient" });
+  }
+});
+
+app.delete("/api/patients/:id", (req, res) => {
+  try {
+    const data = readData();
+    const { id } = req.params;
+
+    console.log("DELETE URLのid:", id);
+    console.log(
+      "data.json内の患者ID一覧:",
+      data.patients.map((patient) => patient.id),
+    );
+
+    const exists = data.patients.some(
+      (patient) => String(patient.id) === String(id),
+    );
+
+    if (!exists) {
+      return res.status(404).json({ error: "Patient not found" });
+    }
+
+    const next = {
+      ...data,
+      patients: data.patients.filter(
+        (patient) => String(patient.id) !== String(id),
+      ),
+      records: data.records.filter(
+        (record) => String(record.patientId) !== String(id),
+      ),
+    };
+
+    writeData(next);
+
+    res.json({ id });
+  } catch (error) {
+    console.error("DELETE /api/patients/:id error:", error);
+    res.status(500).json({ error: "Failed to delete patient" });
   }
 });
 

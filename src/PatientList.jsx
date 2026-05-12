@@ -3,6 +3,7 @@ import { CircularProgress, Snackbar, Alert } from "@mui/material";
 import { useState } from "react";
 import AddPatientForm from "./AddPatientForm";
 import { useNavigate } from "react-router-dom";
+import PatientCard from "./PatientCard";
 
 export default function PatientList({
   onSaveData,
@@ -11,6 +12,7 @@ export default function PatientList({
   isLoading,
   apiError,
   onErrorsChange,
+  deletePatient,
 }) {
   const [showAddForm, setShowAddForm] = useState(false);
 
@@ -71,6 +73,7 @@ export default function PatientList({
                     {patient.room}号室 {patient.name}
                   </h2>
                 </div>
+
               </div>
             ))}
           </div>

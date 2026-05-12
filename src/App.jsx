@@ -2,7 +2,12 @@ import { useState, useEffect, useRef } from "react";
 import PatientList from "./PatientList";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { fetchAppData, saveAppData, updatePatientApi } from "./api/patientApi";
+import {
+  deletePatientApi,
+  fetchAppData,
+  saveAppData,
+  updatePatientApi,
+} from "./api/patientApi";
 import { Routes, Route } from "react-router-dom";
 import PatientPage from "./PatientPage";
 import PatientDetail from "./PatientDetail";
@@ -98,17 +103,20 @@ function App() {
     });
   };
 
-  const updatePatient = async (updated) => {
-    console.log ("App.jsx updatePatient が呼ばれた：", updated);
+  const updatePatient = async (patientToUpdate) => {
+    console.log("App.jsx updatePatient が呼ばれた：", patientToUpdate);
 
-    const savedPatient = await updatePatientApi(updated.id, updated);
+    const savedPatient = await updatePatientApi(
+      patientToUpdate.id,
+      patientToUpdate,
+    );
 
-    console.log("サーバーから返ってきた savedPatient",savedPatient);
+    console.log("サーバーから返ってきた savedPatient", savedPatient);
 
     setAppData((prev) => ({
       ...prev,
-      patients: prev.patients.map((p) =>
-        p.id === savedPatient.id ? savedPatient : p,
+      patients: prev.patients.map((patient) =>
+        patient.id === savedPatient.id ? savedPatient : patient,
       ),
     }));
   };
@@ -120,11 +128,24 @@ function App() {
     await onSaveData({ patients: appData.patients, records: nextRecords });
   };
 
+
+
   const deletePatient = async (id) => {
-    const nextPatients = appData.patients.filter((p) => p.id !== id);
-    const nextRecords = appData.records.filter((r) => r.patientId !== id);
-    await onSaveData({ patients: nextPatients, records: nextRecords });
+     console.log("App deletePatient に来た id:", id);
+    const deletedPatient = await deletePatientApi(id);
+    console.log("サーバーから返ってきた deletedPatient:", deletedPatient);
+
+    setAppData((prev) => ({
+      ...prev,
+      patients: prev.patients.filter(
+        (patient) => String(patient.id) !== String(deletedPatient.id),
+      ),
+      records: prev.records.filter(
+        (record) => String(record.patientId) !== String(deletedPatient.id),
+      ),
+    }));
   };
+
   const deleteRecord = async (id) => {
     const nextRecords = appData.records.filter((r) => r.id !== id);
     await onSaveData({ patients: appData.patients, records: nextRecords });
@@ -147,6 +168,7 @@ function App() {
                 isLoading={loading}
                 apiError={apiError}
                 onErrorsChange={setGlobalErrors}
+                deletePatient={deletePatient}
               />
             }
           />

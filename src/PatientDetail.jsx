@@ -24,9 +24,11 @@ export default function PatientDetail({ onErrorsChange }) {
   );
 
   const handlePatientSubmit = async (data) => {
-    const updated = { ...patient, ...data };
-    await updatePatient(updated);
-    reset(updated);
+    const patientToUpdate = { ...patient, ...data };
+
+    console.log("① 患者情報の編集", patientToUpdate);
+    await updatePatient(patientToUpdate);
+    reset(patientToUpdate);
     clearErrors();
     onErrorsChange?.({});
     setIsEditing(false);
@@ -115,9 +117,7 @@ export default function PatientDetail({ onErrorsChange }) {
             <h3 className="card-title">患者情報を編集</h3>
           </div>
 
-          <form
-            onSubmit={handleSubmit(handlePatientSubmit)}
-          >
+          <form onSubmit={handleSubmit(handlePatientSubmit)}>
             <div className="card-body">
               <div className="form-group">
                 <label className="form-label form-required">氏名</label>

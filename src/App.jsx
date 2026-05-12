@@ -99,7 +99,11 @@ function App() {
   };
 
   const updatePatient = async (updated) => {
+    console.log ("App.jsx updatePatient が呼ばれた：", updated);
+
     const savedPatient = await updatePatientApi(updated.id, updated);
+
+    console.log("サーバーから返ってきた savedPatient",savedPatient);
 
     setAppData((prev) => ({
       ...prev,

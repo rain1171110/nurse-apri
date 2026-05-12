@@ -22,6 +22,11 @@ export const saveAppData = async (payload) => {
 };
 
 export const updatePatientApi = async (id, patient) => {
+  console.log("api.js updatePatientApi が呼ばれた");
+  console.log("id:", id);
+  console.log("patient:", patient);
+
+
   const response = await fetch(`${API_BASE}/patients/${id}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },

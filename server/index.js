@@ -82,6 +82,11 @@ app.put("/api/data", (req, res) => {
 });
 
 app.put("/api/patients/:id", (req, res) => {
+  console.log("server/index.js PUT /api/patients/:id が呼ばれた");
+  console.log("URLのid:", req.params.id);
+  console.log("送られてきたbody:", req.body);
+
+
   try {
     const data = readData();
     const { id } = req.params;
@@ -104,7 +109,12 @@ app.put("/api/patients/:id", (req, res) => {
       ),
     };
 
+    console.log("更新する患者:", updatedPatient);
+
     writeData(next);
+
+    console.log("data.jsonに保存完了")
+
     res.json(updatedPatient);
   } catch (error) {
     console.error("PUT /api/patients/:id error:", error);

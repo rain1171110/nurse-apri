@@ -3,7 +3,11 @@
     {
       "name": "鈴木次郎",
       "room": 4,
-      "id": "e6fe53c6-b694-4e31-92e0-99227d531611"
+      "id": "e6fe53c6-b694-4e31-92e0-99227d531611",
+      "age": 34,
+      "disease": "心不全",
+      "history": "肺炎",
+      "progress": ""
     },
     {
       "name": "鈴木次郎",
@@ -13,7 +17,11 @@
     {
       "name": "okazaki",
       "room": 5,
-      "id": "1291b61d-5242-42dd-aba0-bd1e8c8b491d"
+      "id": "1291b61d-5242-42dd-aba0-bd1e8c8b491d",
+      "age": 34,
+      "disease": "肺炎",
+      "history": "肺炎",
+      "progress": "患者編集してみた結果"
     },
     {
       "name": "鈴木次郎",

@@ -9,6 +9,7 @@ export default function PatientMenu() {
 
   const handleDelete = async () => {
     await deletePatient(patient.id);
+    console.log("削除する患者ID:", patient.id);
     navigate("/")
   };
 

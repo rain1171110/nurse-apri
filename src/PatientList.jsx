@@ -12,7 +12,6 @@ export default function PatientList({
   isLoading,
   apiError,
   onErrorsChange,
-  deletePatient,
 }) {
   const [showAddForm, setShowAddForm] = useState(false);
 

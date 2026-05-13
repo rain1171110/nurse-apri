@@ -1,20 +1,4 @@
 {
-  "patients": [
-    {
-      "name": "鈴木次郎",
-      "room": 111,
-      "id": "41c902d6-7b4f-49c0-8cc1-65a9ca81b78b"
-    },
-    {
-      "name": "鈴木次郎",
-      "room": 222,
-      "id": "7d29540f-8187-4c78-8cbd-560008f9a882"
-    },
-    {
-      "name": "鈴木次郎",
-      "room": 108,
-      "id": "31caec61-e526-4114-b3be-ed714fb36ffd"
-    }
-  ],
+  "patients": [],
   "records": []
 }

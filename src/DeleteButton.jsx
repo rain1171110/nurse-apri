@@ -1,6 +1,6 @@
-export default function DeleteButton({ onDelete, patient }) {
+export default function DeleteButton({ onDelete }) {
   const handleDelete = () => {
-    const ok = window.confirm(`${patient.name}さんを削除しますか？`);
+    const ok = window.confirm("この患者を削除しますか？");
 
     if (!ok) return;
 

@@ -4,6 +4,7 @@ import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import {
   deletePatientApi,
+  deleteRecordApi,
   fetchAppData,
   saveAppData,
   updatePatientApi,
@@ -128,10 +129,8 @@ function App() {
     await onSaveData({ patients: appData.patients, records: nextRecords });
   };
 
-
-
   const deletePatient = async (id) => {
-     console.log("App deletePatient に来た id:", id);
+    console.log("App deletePatient に来た id:", id);
     const deletedPatient = await deletePatientApi(id);
     console.log("サーバーから返ってきた deletedPatient:", deletedPatient);
 
@@ -144,11 +143,23 @@ function App() {
         (record) => String(record.patientId) !== String(deletedPatient.id),
       ),
     }));
+    return deletedPatient;
   };
 
   const deleteRecord = async (id) => {
-    const nextRecords = appData.records.filter((r) => r.id !== id);
-    await onSaveData({ patients: appData.patients, records: nextRecords });
+    console.log("App deleteRecord に来た id:", id);
+
+    const deletedRecord = await deleteRecordApi(id);
+
+    console.log("サーバーから返ってきた deletedRecord:", deletedRecord);
+
+    setAppData((prev) => ({
+      ...prev,
+      records: prev.records.filter(
+        (record) => String(record.id) !== String(deletedRecord.id),
+      ),
+    }));
+    return deletedRecord;
   };
 
   return (

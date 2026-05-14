@@ -52,3 +52,17 @@ export const deletePatientApi = async (id) => {
 
   return response.json();
 };
+
+
+export const deleteRecordApi = async (id) => {
+
+  const response = await fetch(`${API_BASE}/records/${id}`, {
+    method: "DELETE",
+  });
+
+  if (!response.ok) {
+    throw new Error(`API error:${response.status}`);
+  }
+
+  return response.json();
+};

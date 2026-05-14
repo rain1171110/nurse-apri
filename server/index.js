@@ -159,6 +159,36 @@ app.delete("/api/patients/:id", (req, res) => {
   }
 });
 
+app.delete("/api/records/:id", (req, res) => {
+  try {
+    const data = readData();
+    const { id } = req.params;
+
+
+    const exists = data.records.some(
+      (record) => String(record.id) === String(id),
+    );
+
+    if (!exists) {
+      return res.status(404).json({ error: "Record not found" });
+    }
+
+    const next = {
+      ...data,
+      records: data.records.filter(
+        (record) => String(record.id) !== String(id),
+      ),
+    };
+
+    writeData(next);
+
+    res.json({ id });
+  } catch (error) {
+    console.error("DELETE /api/records/:id error:", error);
+    res.status(500).json({ error: "Failed to delete record" });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`API server running on http://localhost:${PORT}`);
 });

@@ -39,7 +39,7 @@ app.get("/api/patients", (req, res) => {
     const data = readData();
     res.json(data.patients);
   } catch (error) {
-    console.error("Get/api/patients error", error);
+    console.error("Get /api/patients error", error);
     res.status(500).json({ error: "Failed to read patients" });
   }
 });
@@ -61,8 +61,30 @@ app.post("/api/patients", (req, res) => {
     writeData(next);
     res.status(201).json(newPatient);
   } catch (error) {
-    console.error("Get/api/patients error", error);
+    console.error("POST /api/patients error", error);
     res.status(500).json({ error: "Failed to create patients" });
+  }
+});
+
+app.post("/api/records", (req, res) => {
+  try {
+    const data = readData();
+
+    const newRecord = {
+      ...req.body,
+      id: crypto.randomUUID(),
+    };
+
+    const next = {
+      ...data,
+      records: [...data.records, newRecord],
+    };
+
+    writeData(next);
+    res.status(201).json(newRecord);
+  } catch (error) {
+    console.error("POST /api/records error", error);
+    res.status(500).json({ error: "Failed to create records" });
   }
 });
 
@@ -90,7 +112,9 @@ app.put("/api/patients/:id", (req, res) => {
     const data = readData();
     const { id } = req.params;
 
-    const exists = data.patients.some((patient) => patient.id === id);
+    const exists = data.patients.some(
+      (patient) => String(patient.id) === String(id),
+    );
 
     if (!exists) {
       return res.status(404).json({ error: "Patient not found" });
@@ -104,7 +128,7 @@ app.put("/api/patients/:id", (req, res) => {
     const next = {
       ...data,
       patients: data.patients.map((patient) =>
-        patient.id === id ? patientToSave : patient,
+        String(patient.id) === String(id) ? patientToSave : patient,
       ),
     };
 
@@ -118,6 +142,48 @@ app.put("/api/patients/:id", (req, res) => {
   } catch (error) {
     console.error("PUT /api/patients/:id error:", error);
     res.status(500).json({ error: "Failed to update patient" });
+  }
+});
+
+app.put("/api/records/:id", (req, res) => {
+  console.log("server/index.js PUT /api/records/:id が呼ばれた");
+  console.log("URLのid:", req.params.id);
+  console.log("送られてきたbody:", req.body);
+
+  try {
+    const data = readData();
+    const { id } = req.params;
+
+    const exists = data.records.some(
+      (record) => String(record.id) === String(id),
+    );
+
+    if (!exists) {
+      return res.status(404).json({ error: "Record not found" });
+    }
+
+    const recordToSave = {
+      ...req.body,
+      id,
+    };
+
+    const next = {
+      ...data,
+      records: data.records.map((record) =>
+        String(record.id) === String(id) ? recordToSave : record,
+      ),
+    };
+
+    console.log("更新する看護記録:", recordToSave);
+
+    writeData(next);
+
+    console.log("data.jsonに保存完了");
+
+    res.json(recordToSave);
+  } catch (error) {
+    console.error("PUT /api/records/:id error:", error);
+    res.status(500).json({ error: "Failed to update record" });
   }
 });
 
@@ -163,7 +229,6 @@ app.delete("/api/records/:id", (req, res) => {
   try {
     const data = readData();
     const { id } = req.params;
-
 
     const exists = data.records.some(
       (record) => String(record.id) === String(id),

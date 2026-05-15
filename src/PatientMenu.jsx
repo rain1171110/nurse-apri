@@ -16,7 +16,7 @@ export default function PatientMenu() {
 
   return (
     <div>
-      <PatientCard patient={patient} onDelete={handleDelete} />
+      <PatientCard patient={patient} onDeletePatient={handleDelete} />
     </div>
   );
 }

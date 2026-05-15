@@ -39,9 +39,7 @@ export const updatePatientApi = async (id, patient) => {
   return response.json();
 };
 
-
 export const deletePatientApi = async (id) => {
-
   const response = await fetch(`${API_BASE}/patients/${id}`, {
     method: "DELETE",
   });
@@ -53,9 +51,35 @@ export const deletePatientApi = async (id) => {
   return response.json();
 };
 
+export const createRecordApi = async (record) => {
+  const response = await fetch(`${API_BASE}/records`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(record),
+  });
+
+  if (!response.ok) {
+    throw new Error(`API error: ${response.status}`);
+  }
+
+  return response.json();
+};
+
+export const updateRecordApi = async (id, record) => {
+  const response = await fetch(`${API_BASE}/records/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(record),
+  });
+
+  if (!response.ok) {
+    throw new Error(`API error: ${response.status}`);
+  }
+
+  return response.json();
+};
 
 export const deleteRecordApi = async (id) => {
-
   const response = await fetch(`${API_BASE}/records/${id}`, {
     method: "DELETE",
   });

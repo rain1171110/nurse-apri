@@ -1,26 +1,10 @@
 {
   "patients": [
     {
-      "name": "okazaki",
-      "room": 111,
-      "id": "b68d6968-6628-451c-996b-24d15968325a"
-    },
-    {
       "name": "鈴木次郎",
-      "room": 108,
-      "id": "cb981342-b387-47ab-bb5e-f4937af7de98"
+      "room": 111,
+      "id": "b294ba3c-c4a1-452c-b3f0-564b754332fd"
     }
   ],
-  "records": [
-    {
-      "date": "2026-05-15",
-      "author": "岡崎洋子",
-      "content": "",
-      "vitals": {
-        "T": 35
-      },
-      "patientId": "b68d6968-6628-451c-996b-24d15968325a",
-      "id": "2a80774b-21d0-4c8a-a841-7916cd4559e6"
-    }
-  ]
+  "records": []
 }

@@ -179,7 +179,6 @@ function App() {
                 isLoading={loading}
                 apiError={apiError}
                 onErrorsChange={setGlobalErrors}
-                deletePatient={deletePatient}
               />
             }
           />

@@ -3,6 +3,7 @@ import { formatBpText, formatValue } from "./Utils";
 import NursingRecordForm from "./NursingRecordForm";
 import DeleteButton from "./DeleteButton";
 import { useParams, useNavigate, useOutletContext } from "react-router-dom";
+
 export default function NursingRecordItem({ onErrorsChange }) {
   const [isEditing, setIsEditing] = useState(false);
 
@@ -108,7 +109,7 @@ export default function NursingRecordItem({ onErrorsChange }) {
           >
             戻る
           </button>
-          <DeleteButton onClick={handleDelete} />
+          <DeleteButton onDelete={handleDelete} />
         </div>
       )}
     </div>

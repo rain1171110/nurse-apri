@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import DeleteButton from "./DeleteButton";
 
-export default function PatientCard({ patient, onDelete }) {
+export default function PatientCard({ patient, onDeletePatient }) {
   const navigate = useNavigate();
 
   return (
@@ -44,7 +44,7 @@ export default function PatientCard({ patient, onDelete }) {
         >
           一覧に戻る
         </button>
-        <DeleteButton onDelete={onDelete} />
+        <DeleteButton onDelete={onDeletePatient} />
       </div>
     </div>
   );

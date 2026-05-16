@@ -3,11 +3,13 @@ import PatientList from "./PatientList";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import {
+  createRecordApi,
   deletePatientApi,
   deleteRecordApi,
   fetchAppData,
   saveAppData,
   updatePatientApi,
+  updateRecordApi,
 } from "./api/patientApi";
 import { Routes, Route } from "react-router-dom";
 import PatientPage from "./PatientPage";
@@ -91,28 +93,11 @@ function App() {
     }
   };
 
-  const addRecord = async (record, patientId) => {
-    const recordToAdd = {
-      ...record,
-      patientId,
-      id: crypto.randomUUID(),
-    };
-    const nextRecords = [...appData.records, recordToAdd];
-    await onSaveData({
-      patients: appData.patients,
-      records: nextRecords,
-    });
-  };
-
   const updatePatient = async (patientToUpdate) => {
-    console.log("App.jsx updatePatient が呼ばれた：", patientToUpdate);
-
     const savedPatient = await updatePatientApi(
       patientToUpdate.id,
       patientToUpdate,
     );
-
-    console.log("サーバーから返ってきた savedPatient", savedPatient);
 
     setAppData((prev) => ({
       ...prev,
@@ -122,17 +107,8 @@ function App() {
     }));
   };
 
-  const updateRecord = async (updatedRecord) => {
-    const nextRecords = appData.records.map((r) =>
-      r.id === updatedRecord.id ? updatedRecord : r,
-    );
-    await onSaveData({ patients: appData.patients, records: nextRecords });
-  };
-
   const deletePatient = async (id) => {
-    console.log("App deletePatient に来た id:", id);
     const deletedPatient = await deletePatientApi(id);
-    console.log("サーバーから返ってきた deletedPatient:", deletedPatient);
 
     setAppData((prev) => ({
       ...prev,
@@ -146,20 +122,63 @@ function App() {
     return deletedPatient;
   };
 
+  const addRecord = async (record, patientId) => {
+    const recordToAdd = {
+      ...record,
+      patientId,
+      id: crypto.randomUUID(),
+    };
+
+    try {
+      setApiError("");
+      const savedRecord = await createRecordApi(recordToAdd);
+
+      setAppData((prev) => ({
+        ...prev,
+        records: [...prev.records, savedRecord],
+      }));
+
+      return savedRecord;
+    } catch (error) {
+      console.error("看護記録追加に失敗しました", error);
+      setApiError("看護記録追加に失敗しました");
+    }
+  };
+
+  const updateRecord = async (record) => {
+    try {
+      setApiError("");
+      const updatedRecord = await updateRecordApi(record.id, record);
+
+      setAppData((prev) => ({
+        ...prev,
+        records: prev.records.map((r) =>
+          String(r.id) === String(updatedRecord.id) ? updatedRecord : r,
+        ),
+      }));
+      return updatedRecord;
+    } catch (error) {
+      console.error("看護記録修正に失敗しました", error);
+      setApiError("看護記録修正に失敗しました");
+    }
+  };
+
   const deleteRecord = async (id) => {
-    console.log("App deleteRecord に来た id:", id);
+    try {
+      setApiError("");
+      const deletedRecord = await deleteRecordApi(id);
 
-    const deletedRecord = await deleteRecordApi(id);
-
-    console.log("サーバーから返ってきた deletedRecord:", deletedRecord);
-
-    setAppData((prev) => ({
-      ...prev,
-      records: prev.records.filter(
-        (record) => String(record.id) !== String(deletedRecord.id),
-      ),
-    }));
-    return deletedRecord;
+      setAppData((prev) => ({
+        ...prev,
+        records: prev.records.filter(
+          (record) => String(record.id) !== String(deletedRecord.id),
+        ),
+      }));
+      return deletedRecord;
+    } catch (error) {
+      console.error("看護記録削除に失敗しました", error);
+      setApiError("看護記録削除に失敗しました");
+    }
   };
 
   return (

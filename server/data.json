@@ -2,8 +2,16 @@
   "patients": [
     {
       "name": "鈴木次郎",
+      "room": 108,
+      "id": "7b0d5172-8d2e-43d1-b99b-8e843876b7c6"
+    },
+    {
+      "name": "岡本花子",
       "room": 111,
-      "id": "b294ba3c-c4a1-452c-b3f0-564b754332fd"
+      "id": "a0f3d916-5644-44df-85bc-c733c0850b3d",
+      "disease": "",
+      "history": "",
+      "progress": ""
     }
   ],
   "records": []

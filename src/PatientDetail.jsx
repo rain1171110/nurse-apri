@@ -26,7 +26,6 @@ export default function PatientDetail({ onErrorsChange }) {
   const handlePatientSubmit = async (data) => {
     const patientToUpdate = { ...patient, ...data };
 
-    console.log("① 患者情報の編集", patientToUpdate);
     await updatePatient(patientToUpdate);
     reset(patientToUpdate);
     clearErrors();

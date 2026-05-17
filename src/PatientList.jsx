@@ -3,15 +3,13 @@ import { CircularProgress, Snackbar, Alert } from "@mui/material";
 import { useState } from "react";
 import AddPatientForm from "./AddPatientForm";
 import { useNavigate } from "react-router-dom";
-import PatientCard from "./PatientCard";
 
 export default function PatientList({
-  onSaveData,
   patients,
-  records,
   isLoading,
   apiError,
   onErrorsChange,
+  addPatient,
 }) {
   const [showAddForm, setShowAddForm] = useState(false);
 
@@ -19,8 +17,7 @@ export default function PatientList({
 
   const addPatientSubmit = async (data) => {
     const patientToAdd = { ...data, id: crypto.randomUUID() };
-    const nextPatients = [...patients, patientToAdd];
-    await onSaveData({ patients: nextPatients, records });
+    await addPatient(patientToAdd);
   };
 
   return (
@@ -72,7 +69,6 @@ export default function PatientList({
                     {patient.room}号室 {patient.name}
                   </h2>
                 </div>
-
               </div>
             ))}
           </div>

@@ -3,11 +3,11 @@ import PatientList from "./PatientList";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import {
+  createPatientApi,
   createRecordApi,
   deletePatientApi,
   deleteRecordApi,
   fetchAppData,
-  saveAppData,
   updatePatientApi,
   updateRecordApi,
 } from "./api/patientApi";
@@ -70,56 +70,67 @@ function App() {
     run();
   }, []);
 
-  const isValidAppData = (data) => {
-    return (
-      data &&
-      typeof data === "object" &&
-      Array.isArray(data.patients) &&
-      Array.isArray(data.records)
-    );
-  };
-
-  const onSaveData = async (nextAppData) => {
+  const addPatient = async (patient) => {
     try {
       setApiError("");
-      const responseAppData = await saveAppData(nextAppData);
-      if (!isValidAppData(responseAppData)) {
-        throw new Error("保存のレスポンス形式が不正です");
-      }
-      setAppData(responseAppData);
+
+      const savedPatient = await createPatientApi(patient);
+
+      setAppData((prev) => ({
+        ...prev,
+        patients: [...prev.patients, savedPatient],
+      }));
+      return savedPatient;
     } catch (error) {
-      console.error("データの保存に失敗しました", error);
-      setApiError("データの保存に失敗しました");
+      console.error("患者追加に失敗しました", error);
+      setApiError("患者追加に失敗しました");
     }
   };
 
   const updatePatient = async (patientToUpdate) => {
-    const savedPatient = await updatePatientApi(
-      patientToUpdate.id,
-      patientToUpdate,
-    );
+    try {
+      setApiError("");
 
-    setAppData((prev) => ({
-      ...prev,
-      patients: prev.patients.map((patient) =>
-        patient.id === savedPatient.id ? savedPatient : patient,
-      ),
-    }));
+      const updatedPatient = await updatePatientApi(
+        patientToUpdate.id,
+        patientToUpdate,
+      );
+
+      setAppData((prev) => ({
+        ...prev,
+        patients: prev.patients.map((patient) =>
+          String(patient.id) === String(updatedPatient.id)
+            ? updatedPatient
+            : patient,
+        ),
+      }));
+      return updatedPatient;
+    } catch (error) {
+      console.error("患者情報更新に失敗しました", error);
+      setApiError("患者情報更新に失敗しました");
+    }
   };
 
   const deletePatient = async (id) => {
-    const deletedPatient = await deletePatientApi(id);
+    try {
+      setApiError("");
 
-    setAppData((prev) => ({
-      ...prev,
-      patients: prev.patients.filter(
-        (patient) => String(patient.id) !== String(deletedPatient.id),
-      ),
-      records: prev.records.filter(
-        (record) => String(record.patientId) !== String(deletedPatient.id),
-      ),
-    }));
-    return deletedPatient;
+      const deletedPatient = await deletePatientApi(id);
+
+      setAppData((prev) => ({
+        ...prev,
+        patients: prev.patients.filter(
+          (patient) => String(patient.id) !== String(deletedPatient.id),
+        ),
+        records: prev.records.filter(
+          (record) => String(record.patientId) !== String(deletedPatient.id),
+        ),
+      }));
+      return deletedPatient;
+    } catch (error) {
+      console.error("患者削除に失敗しました", error);
+      setApiError("患者削除に失敗しました");
+    }
   };
 
   const addRecord = async (record, patientId) => {
@@ -192,12 +203,12 @@ function App() {
             path="/"
             element={
               <PatientList
-                onSaveData={onSaveData}
                 patients={appData.patients}
                 records={appData.records}
                 isLoading={loading}
                 apiError={apiError}
                 onErrorsChange={setGlobalErrors}
+                addPatient={addPatient}
               />
             }
           />

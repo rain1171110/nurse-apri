@@ -8,8 +8,6 @@ export default function PatientMenu() {
   if (!patient) return <div>患者が見つかりません</div>;
 
   const handleDelete = async () => {
-    console.log("削除する患者ID:", patient.id);
-
     await deletePatient(patient.id);
     navigate("/");
   };

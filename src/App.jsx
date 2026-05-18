@@ -2,15 +2,17 @@ import { useState, useEffect, useRef } from "react";
 import PatientList from "./PatientList";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { fetchAppData } from "./api/appDataApi";
 import {
   createPatientApi,
-  createRecordApi,
-  deletePatientApi,
-  deleteRecordApi,
-  fetchAppData,
   updatePatientApi,
-  updateRecordApi,
+  deletePatientApi,
 } from "./api/patientApi";
+import {
+  createRecordApi,
+  updateRecordApi,
+  deleteRecordApi,
+} from "./api/recordApi";
 import { Routes, Route } from "react-router-dom";
 import PatientPage from "./PatientPage";
 import PatientDetail from "./PatientDetail";

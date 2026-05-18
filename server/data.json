@@ -12,6 +12,21 @@
       "disease": "",
       "history": "",
       "progress": ""
+    },
+    {
+      "name": "okazaki",
+      "room": 4,
+      "id": "03f8556b-e4c8-4634-a576-646993d7e7dd"
+    },
+    {
+      "name": "鈴木次郎",
+      "room": 106,
+      "id": "7ce7ec64-83e6-40de-8960-08b225ba374f"
+    },
+    {
+      "name": "鈴木次郎",
+      "room": 101,
+      "id": "25ea401f-f84f-4b35-8b03-b7ceaa5c0f0c"
     }
   ],
   "records": []

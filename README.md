@@ -21,7 +21,7 @@
 - Zod
 - Express
 - Node.js
-- - JSON file（簡易データ保存）
+- JSON file（簡易データ保存）
 
 ## 主な機能
 
@@ -52,7 +52,7 @@
 ↓
 App.jsx
 ↓
-api/patientApi.js
+api/patientApi.js / api/recordApi.js
 ↓
 server/index.js
 ↓
@@ -61,7 +61,6 @@ server/data.json
 React state 更新
 ↓
 画面に反映
-```
 
 ## API 一覧
 
@@ -79,6 +78,8 @@ React state 更新
 
 - 患者ごとに看護記録を紐づけて管理できるようにした
 - React Router を使い、患者詳細・看護記録・バイタル画面への遷移を整理した
+- React Router の URL パラメータ（/patient/:id）を使って対象患者を特定し、患者ごとの情報を表示できるようにした
+- 患者情報と看護記録の state を App.jsx で一元管理し、画面ごとのデータ不整合が起きにくい構成にした
 - Zod と React Hook Form を使って入力チェックを実装した
 - Express API を使って、フロントエンドとバックエンドを分離した
 - 以前は `PUT /api/data` で全体データをまとめて保存していたが、患者用 API と看護記録用 API に分割した

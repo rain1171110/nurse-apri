@@ -39,5 +39,17 @@
       "id": "7cec9837-7dab-4ce4-aed3-01e4118f165a"
     }
   ],
-  "records": []
+  "records": [
+    {
+      "date": "2026-07-08",
+      "author": "岡崎洋子",
+      "content": "",
+      "vitals": {
+        "T": 35,
+        "P": 50
+      },
+      "patientId": "7b0d5172-8d2e-43d1-b99b-8e843876b7c6",
+      "id": "7905c277-e94e-4568-b384-29ddf8096477"
+    }
+  ]
 }

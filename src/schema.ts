@@ -1,6 +1,11 @@
 import { z } from "zod";
 
-export const optionalNumber = (min, max, msgMin, msgMax) =>
+export const optionalNumber = (
+  min: number,
+  max: number,
+  msgMin: string,
+  msgMax: string,
+) =>
   z
     .union([z.string(), z.number()])
     .optional()
@@ -12,7 +17,7 @@ export const optionalNumber = (min, max, msgMin, msgMax) =>
     .refine((v) => v === undefined || v >= min, { message: msgMin })
     .refine((v) => v === undefined || v <= max, { message: msgMax });
 
-export const makePatientSchemaPartial = (usedRooms) => {
+export const makePatientSchemaPartial = (usedRooms: number[]) => {
   return z
     .object({
       name: z
@@ -40,7 +45,24 @@ export const makePatientSchemaPartial = (usedRooms) => {
     });
 };
 
-export const createPatientValidationCases = () => [
+type PatientValidationCase = {
+  id: string;
+  label: string;
+  usedRooms: number[];
+  input: {
+    name: string;
+    room: string;
+    age: string;
+    disease: string;
+    history: string;
+    progress: string;
+  };
+  expectValid: boolean;
+  expectErrorPath?: string;
+  expectErrorMessage?: string;
+};
+
+export const createPatientValidationCases = (): PatientValidationCase[] => [
   {
     id: "normal-input",
     label: "正常入力",
@@ -131,11 +153,15 @@ export const runPatientValidationCases = () => {
 };
 // ブラウザのコンソールから叩けるようにする（安全ガード付き）
 if (import.meta.env?.DEV && typeof window !== "undefined") {
-  window.runPatientValidationCases = runPatientValidationCases;
+  (
+    window as typeof window & {
+      runPatientValidationCases: typeof runPatientValidationCases;
+    }
+  ).runPatientValidationCases = runPatientValidationCases;
 }
 
 export const recordSchema = z.object({
-  date: z.string().trim().min(1, "日付は必須").optional(),
+  date: z.string().trim().min(1, "日付は必須"),
   author: z.string().trim().min(1, "記録者は必須"),
   content: z.string().trim().optional(),
   vitals: z.object({
@@ -145,5 +171,5 @@ export const recordSchema = z.object({
     SBP: optionalNumber(0, 250, "収縮期は0以上", "収縮期は250以下"),
     DBP: optionalNumber(0, 150, "拡張期は0以上", "拡張期は150以下"),
     SPO2: optionalNumber(0, 100, "SPO2は0以上", "SPO2は100以下"),
-  })
+  }),
 });

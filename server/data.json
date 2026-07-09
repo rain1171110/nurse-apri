@@ -20,23 +20,18 @@
     },
     {
       "name": "鈴木次郎",
-      "room": 106,
-      "id": "7ce7ec64-83e6-40de-8960-08b225ba374f"
-    },
-    {
-      "name": "鈴木次郎",
       "room": 101,
       "id": "25ea401f-f84f-4b35-8b03-b7ceaa5c0f0c"
-    },
-    {
-      "name": "鈴木次郎",
-      "room": 105,
-      "id": "9d7cbc3a-fd40-4bf1-a2bf-ab196a4c85cd"
     },
     {
       "name": "岡﨑　ひなの",
       "room": 12,
       "id": "7cec9837-7dab-4ce4-aed3-01e4118f165a"
+    },
+    {
+      "name": "okazaki hinano",
+      "room": 106,
+      "id": "b0f70382-0d5c-4416-ae3a-e65ecd97facb"
     }
   ],
   "records": [

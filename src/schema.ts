@@ -45,7 +45,35 @@ export const makePatientSchemaPartial = (usedRooms: number[]) => {
     });
 };
 
-type PatientValidationCase = {
+export const recordSchema = z.object({
+  date: z.string().trim().min(1, "日付は必須"),
+  author: z.string().trim().min(1, "記録者は必須"),
+  content: z.string().trim().optional(),
+  vitals: z.object({
+    T: optionalNumber(35, 42, "体温は35以上", "体温は42以下"),
+    P: optionalNumber(0, 200, "脈拍は0以上", "脈拍は200以下"),
+    R: optionalNumber(0, 40, "呼吸は0以上", "呼吸は40以下"),
+    SBP: optionalNumber(0, 250, "収縮期は0以上", "収縮期は250以下"),
+    DBP: optionalNumber(0, 150, "拡張期は0以上", "拡張期は150以下"),
+    SPO2: optionalNumber(0, 100, "SPO2は0以上", "SPO2は100以下"),
+  }),
+});
+
+type RecordInput = {
+  date: string;
+  author: string;
+  content: string;
+  vitals: {
+    T: string;
+    P: string;
+    R: string;
+    SBP: string;
+    DBP: string;
+    SPO2: string;
+  };
+};
+
+type ValidPatientValidationCase = {
   id: string;
   label: string;
   usedRooms: number[];
@@ -57,10 +85,28 @@ type PatientValidationCase = {
     history: string;
     progress: string;
   };
-  expectValid: boolean;
-  expectErrorPath?: string;
+  expectValid: true;
+};
+type InvalidPatientValidationCase = {
+  id: string;
+  label: string;
+  usedRooms: number[];
+  input: {
+    name: string;
+    room: string;
+    age: string;
+    disease: string;
+    history: string;
+    progress: string;
+  };
+  expectValid: false;
+  expectErrorPath: string;
   expectErrorMessage?: string;
 };
+
+type PatientValidationCase =
+  | ValidPatientValidationCase
+  | InvalidPatientValidationCase;
 
 export const createPatientValidationCases = (): PatientValidationCase[] => [
   {
@@ -127,7 +173,17 @@ export const createPatientValidationCases = (): PatientValidationCase[] => [
   },
 ];
 
-export const runPatientValidationCases = () => {
+type PatientValidationResult = {
+  id: string;
+  label: string;
+  expected: "valid" | "invalid";
+  actual: "valid" | "invalid";
+  ok: boolean;
+  firstErrorPath: string;
+  firstErrorMessage: string;
+};
+
+export const runPatientValidationCases = (): PatientValidationResult[] => {
   return createPatientValidationCases().map((testCase) => {
     const schema = makePatientSchemaPartial(testCase.usedRooms);
     const result = schema.safeParse(testCase.input);
@@ -135,15 +191,17 @@ export const runPatientValidationCases = () => {
       ? ""
       : (result.error.issues[0]?.path ?? []).join(".");
 
+    const isExpectedResult = result.success === testCase.expectValid;
+
+    const isExpectedErrorPath =
+      testCase.expectValid || firstPath === testCase.expectErrorPath;
+
     return {
       id: testCase.id,
       label: testCase.label,
       expected: testCase.expectValid ? "valid" : "invalid",
       actual: result.success ? "valid" : "invalid",
-      ok:
-        result.success === testCase.expectValid &&
-        (testCase.expectErrorPath == null ||
-          firstPath === testCase.expectErrorPath),
+      ok: isExpectedResult && isExpectedErrorPath,
       firstErrorPath: firstPath,
       firstErrorMessage: result.success
         ? ""
@@ -151,25 +209,171 @@ export const runPatientValidationCases = () => {
     };
   });
 };
+
+type ValidRecordValidationCase = {
+  id: string;
+  label: string;
+  input: RecordInput;
+  expectValid: true;
+};
+
+type InvalidRecordValidationCase = {
+  id: string;
+  label: string;
+  input: RecordInput;
+  expectValid: false;
+  expectErrorPath: string;
+  expectErrorMessage?: string;
+};
+
+type RecordValidationCase =
+  | ValidRecordValidationCase
+  | InvalidRecordValidationCase;
+
+export const createRecordValidationCases = (): RecordValidationCase[] => [
+  {
+    id: "normal-record",
+    label: "正常な看護記録",
+    input: {
+      date: "2026-07-10",
+      author: "岡﨑",
+      content: "発熱なし。食事摂取良好。",
+      vitals: {
+        T: "36.5",
+        P: "80",
+        R: "18",
+        SBP: "120",
+        DBP: "70",
+        SPO2: "98",
+      },
+    },
+    expectValid: true,
+  },
+  {
+    id: "date-required",
+    label: "日付未入力",
+    input: {
+      date: "",
+      author: "岡﨑",
+      content: "発熱なし。",
+      vitals: {
+        T: "36.5",
+        P: "80",
+        R: "18",
+        SBP: "120",
+        DBP: "70",
+        SPO2: "98",
+      },
+    },
+    expectValid: false,
+    expectErrorPath: "date",
+    expectErrorMessage: "日付は必須",
+  },
+  {
+    id: "author-required",
+    label: "記録者未入力",
+    input: {
+      date: "2026-07-10",
+      author: "",
+      content: "発熱なし。",
+      vitals: {
+        T: "36.5",
+        P: "80",
+        R: "18",
+        SBP: "120",
+        DBP: "70",
+        SPO2: "98",
+      },
+    },
+    expectValid: false,
+    expectErrorPath: "author",
+    expectErrorMessage: "記録者は必須",
+  },
+  {
+    id: "temperature-too-low",
+    label: "体温が低すぎる",
+    input: {
+      date: "2026-07-10",
+      author: "岡﨑",
+      content: "低体温チェック。",
+      vitals: {
+        T: "34",
+        P: "80",
+        R: "18",
+        SBP: "120",
+        DBP: "70",
+        SPO2: "98",
+      },
+    },
+    expectValid: false,
+    expectErrorPath: "vitals.T",
+    expectErrorMessage: "体温は35以上",
+  },
+  {
+    id: "spo2-too-high",
+    label: "SPO2が高すぎる",
+    input: {
+      date: "2026-07-10",
+      author: "岡﨑",
+      content: "SPO2入力チェック。",
+      vitals: {
+        T: "36.5",
+        P: "80",
+        R: "18",
+        SBP: "120",
+        DBP: "70",
+        SPO2: "101",
+      },
+    },
+    expectValid: false,
+    expectErrorPath: "vitals.SPO2",
+    expectErrorMessage: "SPO2は100以下",
+  },
+];
+
+type RecordValidationResult = {
+  id: string;
+  label: string;
+  expected: "valid" | "invalid";
+  actual: "valid" | "invalid";
+  ok: boolean;
+  firstErrorPath: string;
+  firstErrorMessage: string;
+};
+
+export const runRecordValidationCases = (): RecordValidationResult[] => {
+  return createRecordValidationCases().map((testCase) => {
+    const result = recordSchema.safeParse(testCase.input);
+
+    const firstPath = result.success
+      ? ""
+      : (result.error.issues[0]?.path ?? []).join(".");
+
+    const isExpectedResult = result.success === testCase.expectValid;
+
+    const isExpectedErrorPath =
+      testCase.expectValid || firstPath === testCase.expectErrorPath;
+
+    return {
+      id: testCase.id,
+      label: testCase.label,
+      expected: testCase.expectValid ? "valid" : "invalid",
+      actual: result.success ? "valid" : "invalid",
+      ok: isExpectedResult && isExpectedErrorPath,
+      firstErrorPath: firstPath,
+      firstErrorMessage: result.success
+        ? ""
+        : (result.error.issues[0]?.message ?? ""),
+    };
+  });
+};
+
 // ブラウザのコンソールから叩けるようにする（安全ガード付き）
 if (import.meta.env?.DEV && typeof window !== "undefined") {
-  (
-    window as typeof window & {
-      runPatientValidationCases: typeof runPatientValidationCases;
-    }
-  ).runPatientValidationCases = runPatientValidationCases;
+  const devWindow = window as typeof window & {
+    runPatientValidationCases: typeof runPatientValidationCases;
+    runRecordValidationCases: typeof runRecordValidationCases;
+  };
+  devWindow.runPatientValidationCases = runPatientValidationCases;
+  devWindow.runRecordValidationCases = runRecordValidationCases;
 }
-
-export const recordSchema = z.object({
-  date: z.string().trim().min(1, "日付は必須"),
-  author: z.string().trim().min(1, "記録者は必須"),
-  content: z.string().trim().optional(),
-  vitals: z.object({
-    T: optionalNumber(35, 42, "体温は35以上", "体温は42以下"),
-    P: optionalNumber(0, 200, "脈拍は0以上", "脈拍は200以下"),
-    R: optionalNumber(0, 40, "呼吸は0以上", "呼吸は40以下"),
-    SBP: optionalNumber(0, 250, "収縮期は0以上", "収縮期は250以下"),
-    DBP: optionalNumber(0, 150, "拡張期は0以上", "拡張期は150以下"),
-    SPO2: optionalNumber(0, 100, "SPO2は0以上", "SPO2は100以下"),
-  }),
-});

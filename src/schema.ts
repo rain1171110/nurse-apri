@@ -59,19 +59,7 @@ export const recordSchema = z.object({
   }),
 });
 
-type RecordInput = {
-  date: string;
-  author: string;
-  content: string;
-  vitals: {
-    T: string;
-    P: string;
-    R: string;
-    SBP: string;
-    DBP: string;
-    SPO2: string;
-  };
-};
+type RecordInput = z.input<typeof recordSchema>;
 
 type ValidPatientValidationCase = {
   id: string;
@@ -209,9 +197,7 @@ export const runPatientValidationCases = (): PatientValidationResult[] => {
       actual: result.success ? "valid" : "invalid",
       ok: isExpectedResult && isExpectedErrorPath && isExpectedErrorMessage,
       firstErrorPath: firstPath,
-      firstErrorMessage: result.success
-        ? ""
-        : (result.error.issues[0]?.message ?? ""),
+      firstErrorMessage: firstMessage,
     };
   });
 };
@@ -252,6 +238,17 @@ export const createRecordValidationCases = (): RecordValidationCase[] => [
         DBP: "70",
         SPO2: "98",
       },
+    },
+    expectValid: true,
+  },
+  {
+    id: "record-without-vitals",
+    label: "バイタル未入力でも正常",
+    input: {
+      date: "2026-07-10",
+      author: "岡﨑",
+      content: "変化なし",
+      vitals: {},
     },
     expectValid: true,
   },
@@ -372,9 +369,7 @@ export const runRecordValidationCases = (): RecordValidationResult[] => {
       actual: result.success ? "valid" : "invalid",
       ok: isExpectedResult && isExpectedErrorPath && isExpectedErrorMessage,
       firstErrorPath: firstPath,
-      firstErrorMessage: result.success
-        ? ""
-        : (result.error.issues[0]?.message ?? ""),
+      firstErrorMessage: firstMessage,
     };
   });
 };

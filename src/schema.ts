@@ -187,21 +187,27 @@ export const runPatientValidationCases = (): PatientValidationResult[] => {
   return createPatientValidationCases().map((testCase) => {
     const schema = makePatientSchemaPartial(testCase.usedRooms);
     const result = schema.safeParse(testCase.input);
-    const firstPath = result.success
-      ? ""
-      : (result.error.issues[0]?.path ?? []).join(".");
+
+    const firstIssue = result.success ? undefined : result.error.issues[0];
+    const firstPath = (firstIssue?.path ?? []).join(".");
+    const firstMessage = firstIssue?.message ?? "";
 
     const isExpectedResult = result.success === testCase.expectValid;
 
     const isExpectedErrorPath =
       testCase.expectValid || firstPath === testCase.expectErrorPath;
 
+    const isExpectedErrorMessage =
+      testCase.expectValid ||
+      testCase.expectErrorMessage === undefined ||
+      firstMessage === testCase.expectErrorMessage;
+
     return {
       id: testCase.id,
       label: testCase.label,
       expected: testCase.expectValid ? "valid" : "invalid",
       actual: result.success ? "valid" : "invalid",
-      ok: isExpectedResult && isExpectedErrorPath,
+      ok: isExpectedResult && isExpectedErrorPath && isExpectedErrorMessage,
       firstErrorPath: firstPath,
       firstErrorMessage: result.success
         ? ""
@@ -345,21 +351,26 @@ export const runRecordValidationCases = (): RecordValidationResult[] => {
   return createRecordValidationCases().map((testCase) => {
     const result = recordSchema.safeParse(testCase.input);
 
-    const firstPath = result.success
-      ? ""
-      : (result.error.issues[0]?.path ?? []).join(".");
+    const firstIssue = result.success ? undefined : result.error.issues[0];
+    const firstPath = (firstIssue?.path ?? []).join(".");
+    const firstMessage = firstIssue?.message ?? "";
 
     const isExpectedResult = result.success === testCase.expectValid;
 
     const isExpectedErrorPath =
       testCase.expectValid || firstPath === testCase.expectErrorPath;
 
+    const isExpectedErrorMessage =
+      testCase.expectValid ||
+      testCase.expectErrorMessage === undefined ||
+      firstMessage === testCase.expectErrorMessage;
+
     return {
       id: testCase.id,
       label: testCase.label,
       expected: testCase.expectValid ? "valid" : "invalid",
       actual: result.success ? "valid" : "invalid",
-      ok: isExpectedResult && isExpectedErrorPath,
+      ok: isExpectedResult && isExpectedErrorPath && isExpectedErrorMessage,
       firstErrorPath: firstPath,
       firstErrorMessage: result.success
         ? ""

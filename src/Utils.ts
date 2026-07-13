@@ -1,11 +1,18 @@
-import dayjs from "dayjs";
-
+import dayjs, { type Dayjs } from "dayjs";
+import type { RecordInput } from "./schema";
+import type { Patient } from "./types";
 export const VITAL_FIELDS = ["T", "P", "R", "SBP", "DBP", "SPO2"];
 
-export const formatValue = (value, unit = "", empty = "--") =>
+type FormatValue = (
+  value: string | number | null | undefined,
+  unit?: string,
+  empty?: string,
+) => string;
+
+export const formatValue: FormatValue = (value, unit = "", empty = "--") =>
   value !== "" && value != null ? `${value}${unit}` : empty;
 
-export const createEmptyRecord = () => ({
+export const createEmptyRecord = (): RecordInput => ({
   date: "",
   vitals: {
     T: "",
@@ -57,16 +64,29 @@ export const DBP_OPTIONS = [
   "100",
 ];
 export const SPO2_OPTIONS = ["90", "92", "94", "96", "98", "100"];
-export const formatBpText = (sbp, dbp) =>
-  sbp && dbp ? `${sbp}/${dbp}` : sbp || dbp || "--";
 
-export const formatDate = (date) => {
+export const formatBpText = (
+  sbp: string | number | null | undefined,
+  dbp: string | number | null | undefined,
+): string => {
+  if (sbp && dbp) {
+    return `${sbp}/${dbp}`;
+  }
+  return "--";
+};
+
+export const formatDate = (
+  date: string | number | Date | Dayjs | null | undefined,
+): string => {
   return date ? dayjs(date).format("YYYY-MM-DD") : "";
 };
 
-export const extractUsedRoomNumbers = (patients, excludePatientId = null) => {
+export const extractUsedRoomNumbers = (
+  patients: Patient[],
+  excludePatientId: string | null = null,
+): number[] => {
   return patients
     .filter((p) => p.id !== excludePatientId)
-    .map((p) => (p.room == null || p.room === "" ? undefined : Number(p.room)))
+    .map((p) => p.room)
     .filter((r) => Number.isFinite(r));
 };

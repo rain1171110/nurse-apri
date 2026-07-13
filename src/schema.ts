@@ -59,7 +59,8 @@ export const recordSchema = z.object({
   }),
 });
 
-type RecordInput = z.input<typeof recordSchema>;
+export type RecordInput = z.input<typeof recordSchema>;
+export type RecordOutput = z.output<typeof recordSchema>;
 
 type ValidPatientValidationCase = {
   id: string;

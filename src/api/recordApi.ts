@@ -1,12 +1,3 @@
-// const API_BASE = import.meta.env.VITE_API_BASE ?? "http://localhost:3001/api";
-
-// export const fetchAppData = async () => {
-//   const response = await fetch(`${API_BASE}/data`);
-//   if (!response.ok) {
-//     throw new Error(`API error:${response.status}`);
-//   }
-//   return response.json();
-// };
 import type { NursingRecord } from "../types";
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? "http://localhost:3001/api";
@@ -30,7 +21,7 @@ export const createRecordApi = async (
 export const updateRecordApi = async (
   id: string,
   record: Omit<NursingRecord, "id">,
-) => {
+): Promise<NursingRecord> => {
   const response = await fetch(`${API_BASE}/records/${id}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },

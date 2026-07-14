@@ -2,21 +2,44 @@ import { useState } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import { createEmptyRecord, formatDate } from "./Utils";
 import NursingRecordForm from "./NursingRecordForm";
+import type { NursingRecord, Patient } from "./types";
+import type { RecordInput, RecordOutput } from "./schema";
+import type { FieldErrors } from "react-hook-form";
 
-export default function NursingRecordList({ onErrorsChange }) {
+type NursingRecordListProps = {
+  onErrorsChange?: (errors: FieldErrors<RecordInput>) => void;
+};
+
+type NursingRecordOutletContext = {
+  patient: Patient | undefined | null;
+  patientRecords: NursingRecord[];
+  addRecord: (
+    data: RecordOutput,
+    patientId: string,
+  ) => Promise<NursingRecord | undefined>;
+};
+
+export default function NursingRecordList({
+  onErrorsChange,
+}: NursingRecordListProps) {
   const navigate = useNavigate();
-  const { patient, patientRecords, addRecord } = useOutletContext();
+
+  const { patient, patientRecords, addRecord } =
+    useOutletContext<NursingRecordOutletContext>();
 
   const [isAdding, setIsAdding] = useState(false);
   const [formData, setFormData] = useState(createEmptyRecord());
 
-  const handleAddRecordSubmit = async (data) => {
+  if (!patient) {
+    return <div>患者が見つかりません</div>;
+  }
+
+  const handleAddRecordSubmit = async (data: RecordOutput): Promise<void> => {
     await addRecord(data, patient.id);
     setIsAdding(false);
     setFormData(createEmptyRecord());
   };
 
-  if (!patient) return <div>患者が見つかりません</div>;
   return (
     <div className="container-md">
       <div className="section-header">

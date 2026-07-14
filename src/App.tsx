@@ -20,13 +20,18 @@ import PatientVitals from "./PatientVitals";
 import NursingRecordList from "./NursingRecordList";
 import NursingRecordItem from "./NursingRecordItem";
 import PatientMenu from "./PatientMenu";
+import type { AppData, NursingRecord, Patient } from "./types";
+import type { RecordOutput } from "./schema";
 
 function App() {
   const [globalErrors, setGlobalErrors] = useState({});
   const [displayErrors, setDisplayErrors] = useState({});
-  const timerRef = useRef(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const [appData, setAppData] = useState({ patients: [], records: [] });
+  const [appData, setAppData] = useState<AppData>({
+    patients: [],
+    records: [],
+  });
   const [loading, setLoading] = useState(true);
   const [apiError, setApiError] = useState("");
 
@@ -72,7 +77,9 @@ function App() {
     run();
   }, []);
 
-  const addPatient = async (patient) => {
+  const addPatient = async (
+    patient: Omit<Patient, "id">,
+  ): Promise<Patient | undefined> => {
     try {
       setApiError("");
 
@@ -89,14 +96,16 @@ function App() {
     }
   };
 
-  const updatePatient = async (patientToUpdate) => {
+  const updatePatient = async (
+    patientToUpdate: Patient,
+  ): Promise<Patient | undefined> => {
     try {
       setApiError("");
 
-      const updatedPatient = await updatePatientApi(
-        patientToUpdate.id,
-        patientToUpdate,
-      );
+
+      const {id,...patientData} = patientToUpdate;
+
+      const updatedPatient = await updatePatientApi(id,patientData)
 
       setAppData((prev) => ({
         ...prev,
@@ -113,7 +122,7 @@ function App() {
     }
   };
 
-  const deletePatient = async (id) => {
+  const deletePatient = async (id:string) => {
     try {
       setApiError("");
 
@@ -135,8 +144,11 @@ function App() {
     }
   };
 
-  const addRecord = async (record, patientId) => {
-    const recordToAdd = {
+  const addRecord = async (
+    record: RecordOutput,
+    patientId: string,
+  ): Promise<void> => {
+    const recordToAdd: NursingRecord = {
       ...record,
       patientId,
       id: crypto.randomUUID(),
@@ -150,8 +162,6 @@ function App() {
         ...prev,
         records: [...prev.records, savedRecord],
       }));
-
-      return savedRecord;
     } catch (error) {
       console.error("看護記録追加に失敗しました", error);
       setApiError("看護記録追加に失敗しました");

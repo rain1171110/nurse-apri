@@ -102,10 +102,9 @@ function App() {
     try {
       setApiError("");
 
+      const { id, ...patientData } = patientToUpdate;
 
-      const {id,...patientData} = patientToUpdate;
-
-      const updatedPatient = await updatePatientApi(id,patientData)
+      const updatedPatient = await updatePatientApi(id, patientData);
 
       setAppData((prev) => ({
         ...prev,
@@ -122,7 +121,9 @@ function App() {
     }
   };
 
-  const deletePatient = async (id:string) => {
+  const deletePatient = async (
+    id: string,
+  ): Promise<{ id: string } | undefined> => {
     try {
       setApiError("");
 
@@ -137,6 +138,7 @@ function App() {
           (record) => String(record.patientId) !== String(deletedPatient.id),
         ),
       }));
+
       return deletedPatient;
     } catch (error) {
       console.error("患者削除に失敗しました", error);

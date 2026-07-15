@@ -22,6 +22,7 @@ import NursingRecordItem from "./NursingRecordItem";
 import PatientMenu from "./PatientMenu";
 import type { AppData, NursingRecord, Patient } from "./types";
 import type { RecordOutput } from "./schema";
+import { string } from "zod";
 
 function App() {
   const [globalErrors, setGlobalErrors] = useState({});
@@ -121,9 +122,7 @@ function App() {
     }
   };
 
-  const deletePatient = async (
-    id: string,
-  ): Promise<{ id: string } | undefined> => {
+  const deletePatient = async (id: string): Promise<void> => {
     try {
       setApiError("");
 
@@ -138,8 +137,6 @@ function App() {
           (record) => String(record.patientId) !== String(deletedPatient.id),
         ),
       }));
-
-      return deletedPatient;
     } catch (error) {
       console.error("患者削除に失敗しました", error);
       setApiError("患者削除に失敗しました");
@@ -150,10 +147,9 @@ function App() {
     record: RecordOutput,
     patientId: string,
   ): Promise<void> => {
-    const recordToAdd: NursingRecord = {
+    const recordToAdd: Omit<NursingRecord, "id"> = {
       ...record,
       patientId,
-      id: crypto.randomUUID(),
     };
 
     try {
@@ -170,10 +166,15 @@ function App() {
     }
   };
 
-  const updateRecord = async (record) => {
+  const updateRecord = async (
+    recordToUpdate: NursingRecord,
+  ): Promise<NursingRecord | undefined> => {
     try {
       setApiError("");
-      const updatedRecord = await updateRecordApi(record.id, record);
+
+      const { id, ...recordData } = recordToUpdate;
+
+      const updatedRecord = await updateRecordApi(id, recordData);
 
       setAppData((prev) => ({
         ...prev,

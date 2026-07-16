@@ -1,8 +1,17 @@
 import { CircularProgress, Snackbar, Alert } from "@mui/material";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import AddPatientForm from "./AddPatientForm";
 import { useNavigate } from "react-router-dom";
+import { Patient } from "./types";
+
+type PatientListProps = {
+  patients: Patient[];
+  isLoading: boolean;
+  apiError: string;
+  onErrorsChange: React.Dispatch<React.SetStateAction<{}>>;
+  addPatient: (patient: Omit<Patient, "id">) => Promise<Patient | undefined>;
+};
 
 export default function PatientList({
   patients,
@@ -10,14 +19,17 @@ export default function PatientList({
   apiError,
   onErrorsChange,
   addPatient,
-}) {
+}: PatientListProps) {
   const [showAddForm, setShowAddForm] = useState(false);
 
   const navigate = useNavigate();
 
-  const addPatientSubmit = async (data) => {
-    const patientToAdd = { ...data, id: crypto.randomUUID() };
-    await addPatient(patientToAdd);
+  const addPatientSubmit = async (data: Omit<Patient, "id">): Promise<void> => {
+    const savedPatient = await addPatient(data);
+    if (!savedPatient) {
+      return;
+    }
+    setShowAddForm(false);
   };
 
   return (

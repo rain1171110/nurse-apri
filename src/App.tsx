@@ -22,7 +22,6 @@ import NursingRecordItem from "./NursingRecordItem";
 import PatientMenu from "./PatientMenu";
 import type { AppData, NursingRecord, Patient } from "./types";
 import type { RecordOutput } from "./schema";
-import { string } from "zod";
 
 function App() {
   const [globalErrors, setGlobalErrors] = useState({});
@@ -223,7 +222,6 @@ function App() {
             element={
               <PatientList
                 patients={appData.patients}
-                records={appData.records}
                 isLoading={loading}
                 apiError={apiError}
                 onErrorsChange={setGlobalErrors}

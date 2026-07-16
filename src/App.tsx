@@ -186,10 +186,12 @@ function App() {
     } catch (error) {
       console.error("看護記録修正に失敗しました", error);
       setApiError("看護記録修正に失敗しました");
+
+      return undefined;
     }
   };
 
-  const deleteRecord = async (id) => {
+  const deleteRecord = async (id: string): Promise<boolean> => {
     try {
       setApiError("");
       const deletedRecord = await deleteRecordApi(id);
@@ -200,10 +202,12 @@ function App() {
           (record) => String(record.id) !== String(deletedRecord.id),
         ),
       }));
-      return deletedRecord;
+
+      return true;
     } catch (error) {
       console.error("看護記録削除に失敗しました", error);
       setApiError("看護記録削除に失敗しました");
+      return false;
     }
   };
 

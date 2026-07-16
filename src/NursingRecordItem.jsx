@@ -33,13 +33,24 @@ export default function NursingRecordItem({ onErrorsChange }) {
 
   const handleRecordSubmit = async (formValues) => {
     const recordToUpdate = { ...record, ...formValues };
-    await updateRecord(recordToUpdate);
+    const updatedRecord = await updateRecord(recordToUpdate);
+    if (!updatedRecord) {
+      return;
+    }
+
+    console.log("更新成功", updateRecord);
+
     setIsEditing(false);
     navigate(`/patient/${patient.id}/records`);
   };
 
   const handleDelete = async () => {
-    await deleteRecord(record.id);
+    const isDeleted = await deleteRecord(record.id);
+
+    if (!isDeleted) {
+      return;
+    }
+
     navigate(`/patient/${patient.id}/records`);
   };
 

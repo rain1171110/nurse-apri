@@ -1,15 +1,32 @@
-import { useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { formatBpText, formatValue } from "./Utils";
 import NursingRecordForm from "./NursingRecordForm";
 import DeleteButton from "./DeleteButton";
 import { useParams, useNavigate, useOutletContext } from "react-router-dom";
+import type { NursingRecord, Patient } from "./types";
 
-export default function NursingRecordItem({ onErrorsChange }) {
+type NursingRecordItemProps = {
+  onErrorsChange: React.Dispatch<React.SetStateAction<{}>>;
+};
+
+type NursingRecordItemContext = {
+  patient: Patient | undefined | null;
+  patientRecords: NursingRecord[];
+  updateRecord: (
+    recordToUpdate: NursingRecord,
+  ) => Promise<NursingRecord | undefined>;
+  deleteRecord: (id: string) => Promise<boolean>;
+};
+
+
+export default function NursingRecordItem({
+  onErrorsChange,
+}: NursingRecordItemProps) {
   const [isEditing, setIsEditing] = useState(false);
 
   const navigate = useNavigate();
   const { patient, patientRecords, updateRecord, deleteRecord } =
-    useOutletContext();
+    useOutletContext<NursingRecordItemContext>();
   const { recordId } = useParams();
 
   const record = patientRecords.find((r) => String(r.id) === recordId);

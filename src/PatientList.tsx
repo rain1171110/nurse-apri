@@ -3,7 +3,7 @@ import { CircularProgress, Snackbar, Alert } from "@mui/material";
 import React, { useState } from "react";
 import AddPatientForm from "./AddPatientForm";
 import { useNavigate } from "react-router-dom";
-import { Patient } from "./types";
+import type { Patient } from "./types";
 
 type PatientListProps = {
   patients: Patient[];

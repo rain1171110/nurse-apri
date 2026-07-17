@@ -1,6 +1,8 @@
 import { Outlet, useParams } from "react-router-dom";
 import { extractUsedRoomNumbers } from "./Utils";
 
+import type { Patient, NursingRecord, PatientOutletContext } from "./types";
+
 export default function PatientPage({
   patients,
   records,
@@ -9,7 +11,7 @@ export default function PatientPage({
   updateRecord,
   deleteRecord,
   deletePatient,
-}) {
+}:(Patient)(PatientOutletContext) ) {
   const { id } = useParams();
   const patient = patients.find((p) => String(p.id) === id);
   const patientRecords = records.filter((r) => String(r.patientId) === id);

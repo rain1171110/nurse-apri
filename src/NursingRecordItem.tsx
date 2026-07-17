@@ -64,7 +64,7 @@ export default function NursingRecordItem({
     navigate(`/patient/${patient.id}/records`);
   };
 
-  const handleDelete = async () => {
+  const handleDelete = async (): Promise<void> => {
     const isDeleted = await deleteRecord(record.id);
 
     if (!isDeleted) {

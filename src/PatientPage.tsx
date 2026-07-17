@@ -1,7 +1,18 @@
 import { Outlet, useParams } from "react-router-dom";
 import { extractUsedRoomNumbers } from "./Utils";
-
 import type { Patient, NursingRecord, PatientOutletContext } from "./types";
+
+type PatientPageProps = {
+  patients: Patient[];
+  records: NursingRecord[];
+} & Pick<
+  PatientOutletContext,
+  | "updatePatient"
+  | "updateRecord"
+  | "deleteRecord"
+  | "deletePatient"
+  | "addRecord"
+>;
 
 export default function PatientPage({
   patients,
@@ -11,7 +22,7 @@ export default function PatientPage({
   updateRecord,
   deleteRecord,
   deletePatient,
-} ) {
+}: PatientPageProps) {
   const { id } = useParams();
   const patient = patients.find((p) => String(p.id) === id);
   const patientRecords = records.filter((r) => String(r.patientId) === id);
@@ -20,18 +31,15 @@ export default function PatientPage({
 
   const usedRoomsForEdit = extractUsedRoomNumbers(patients, patient.id);
 
-  return (
-    <Outlet
-      context={{
-        patient,
-        patientRecords,
-        updatePatient,
-        addRecord,
-        updateRecord,
-        deleteRecord,
-        deletePatient,
-        usedRoomsForEdit,
-      }}
-    />
-  );
+  const outletContext: PatientOutletContext = {
+    patient,
+    patientRecords,
+    updatePatient,
+    addRecord,
+    updateRecord,
+    deleteRecord,
+    deletePatient,
+    usedRoomsForEdit,
+  };
+  return <Outlet context={outletContext} />;
 }

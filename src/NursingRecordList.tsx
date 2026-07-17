@@ -35,7 +35,10 @@ export default function NursingRecordList({
   }
 
   const handleAddRecordSubmit = async (data: RecordOutput): Promise<void> => {
-    await addRecord(data, patient.id);
+    const savedRecord = await addRecord(data, patient.id);
+    if (!savedRecord) {
+      return;
+    }
     setIsAdding(false);
     setFormData(createEmptyRecord());
   };

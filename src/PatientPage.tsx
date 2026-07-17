@@ -11,7 +11,7 @@ export default function PatientPage({
   updateRecord,
   deleteRecord,
   deletePatient,
-}:(Patient)(PatientOutletContext) ) {
+} ) {
   const { id } = useParams();
   const patient = patients.find((p) => String(p.id) === id);
   const patientRecords = records.filter((r) => String(r.patientId) === id);

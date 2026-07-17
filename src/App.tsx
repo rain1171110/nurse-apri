@@ -93,6 +93,7 @@ function App() {
     } catch (error) {
       console.error("患者追加に失敗しました", error);
       setApiError("患者追加に失敗しました");
+      return undefined;
     }
   };
 
@@ -118,6 +119,7 @@ function App() {
     } catch (error) {
       console.error("患者情報更新に失敗しました", error);
       setApiError("患者情報更新に失敗しました");
+      return undefined;
     }
   };
 

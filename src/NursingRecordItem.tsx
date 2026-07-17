@@ -4,10 +4,11 @@ import NursingRecordForm from "./NursingRecordForm";
 import DeleteButton from "./DeleteButton";
 import { useParams, useNavigate, useOutletContext } from "react-router-dom";
 import type { NursingRecord, Patient } from "./types";
-import { string } from "zod";
+import type { RecordInput, RecordOutput } from "./schema";
+import type { FieldErrors } from "react-hook-form";
 
 type NursingRecordItemProps = {
-  onErrorsChange: React.Dispatch<React.SetStateAction<{}>>;
+  onErrorsChange?: (errors: FieldErrors<RecordInput>) => void;
 };
 
 type NursingRecordItemContext = {
@@ -31,12 +32,12 @@ export default function NursingRecordItem({
 
   const record = patientRecords.find((r) => String(r.id) === recordId);
 
-  const initialValues = useMemo(() => {
+  const initialValues = useMemo<RecordInput>(() => {
     return {
-      date: record?.date || "",
-      vitals: record?.vitals || {},
-      content: record?.content || "",
-      author: record?.author || "",
+      date: record?.date ?? "",
+      vitals: record?.vitals ?? {},
+      content: record?.content ?? "",
+      author: record?.author ?? "",
     };
   }, [record]);
 

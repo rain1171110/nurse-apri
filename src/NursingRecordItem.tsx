@@ -49,14 +49,16 @@ export default function NursingRecordItem({
   const bpText = formatBpText(SBP, DBP);
   const bpDisplay = bpText === "--" ? "--" : `${bpText}mmHg`;
 
-  const handleRecordSubmit = async (formValues) => {
-    const recordToUpdate = { ...record, ...formValues };
+  const handleRecordSubmit = async (
+    formValues: RecordOutput,
+  ): Promise<void> => {
+    const recordToUpdate: NursingRecord = { ...record, ...formValues };
     const updatedRecord = await updateRecord(recordToUpdate);
     if (!updatedRecord) {
       return;
     }
 
-    console.log("更新成功", updateRecord);
+    console.log("更新成功", updatedRecord);
 
     setIsEditing(false);
     navigate(`/patient/${patient.id}/records`);

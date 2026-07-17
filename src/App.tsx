@@ -121,7 +121,7 @@ function App() {
     }
   };
 
-  const deletePatient = async (id: string): Promise<void> => {
+  const deletePatient = async (id: string): Promise<boolean> => {
     try {
       setApiError("");
 
@@ -136,9 +136,11 @@ function App() {
           (record) => String(record.patientId) !== String(deletedPatient.id),
         ),
       }));
+      return true;
     } catch (error) {
       console.error("患者削除に失敗しました", error);
       setApiError("患者削除に失敗しました");
+      return false;
     }
   };
 

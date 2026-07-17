@@ -145,7 +145,7 @@ function App() {
   const addRecord = async (
     record: RecordOutput,
     patientId: string,
-  ): Promise<void> => {
+  ): Promise<NursingRecord | undefined> => {
     const recordToAdd: Omit<NursingRecord, "id"> = {
       ...record,
       patientId,
@@ -159,9 +159,11 @@ function App() {
         ...prev,
         records: [...prev.records, savedRecord],
       }));
+      return savedRecord;
     } catch (error) {
       console.error("看護記録追加に失敗しました", error);
       setApiError("看護記録追加に失敗しました");
+      return undefined;
     }
   };
 

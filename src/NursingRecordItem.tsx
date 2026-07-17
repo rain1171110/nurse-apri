@@ -4,6 +4,7 @@ import NursingRecordForm from "./NursingRecordForm";
 import DeleteButton from "./DeleteButton";
 import { useParams, useNavigate, useOutletContext } from "react-router-dom";
 import type { NursingRecord, Patient } from "./types";
+import { string } from "zod";
 
 type NursingRecordItemProps = {
   onErrorsChange: React.Dispatch<React.SetStateAction<{}>>;
@@ -18,7 +19,6 @@ type NursingRecordItemContext = {
   deleteRecord: (id: string) => Promise<boolean>;
 };
 
-
 export default function NursingRecordItem({
   onErrorsChange,
 }: NursingRecordItemProps) {
@@ -27,7 +27,7 @@ export default function NursingRecordItem({
   const navigate = useNavigate();
   const { patient, patientRecords, updateRecord, deleteRecord } =
     useOutletContext<NursingRecordItemContext>();
-  const { recordId } = useParams();
+  const { recordId } = useParams<{ recordId: string }>();
 
   const record = patientRecords.find((r) => String(r.id) === recordId);
 

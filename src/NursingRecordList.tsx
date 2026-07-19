@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import { createEmptyRecord, formatDate } from "./Utils";
 import NursingRecordForm from "./NursingRecordForm";
-import type { NursingRecord, Patient } from "./types";
+import type { PatientOutletContext } from "./types";
 import type { RecordInput, RecordOutput } from "./schema";
 import type { FieldErrors } from "react-hook-form";
 
@@ -10,14 +10,10 @@ type NursingRecordListProps = {
   onErrorsChange?: (errors: FieldErrors<RecordInput>) => void;
 };
 
-type NursingRecordOutletContext = {
-  patient: Patient | undefined | null;
-  patientRecords: NursingRecord[];
-  addRecord: (
-    data: RecordOutput,
-    patientId: string,
-  ) => Promise<NursingRecord | undefined>;
-};
+type NursingRecordListOutletContext = Pick<
+  PatientOutletContext,
+  "patient" | "patientRecords" | "addRecord"
+>;
 
 export default function NursingRecordList({
   onErrorsChange,
@@ -25,7 +21,7 @@ export default function NursingRecordList({
   const navigate = useNavigate();
 
   const { patient, patientRecords, addRecord } =
-    useOutletContext<NursingRecordOutletContext>();
+    useOutletContext<NursingRecordListOutletContext>();
 
   const [isAdding, setIsAdding] = useState(false);
   const [formData, setFormData] = useState(createEmptyRecord());

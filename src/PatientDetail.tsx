@@ -2,14 +2,27 @@ import { useEffect, useState, useMemo } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { makePatientSchemaPartial, runPatientValidationCases } from "./schema";
+import type { PatientInput, PatientOutput } from "./schema";
 
 import { TextField } from "@mui/material";
 import { useNavigate, useOutletContext } from "react-router-dom";
+import type { PatientOutletContext } from "./types";
+import type { FieldErrors } from "react-hook-form";
 
-export default function PatientDetail({ onErrorsChange }) {
+type PatientDetailProps = {
+  onErrorsChange?: (errors: FieldErrors<PatientInput>) => void;
+};
+
+type PatientDetailOutletContext = Pick<
+  PatientOutletContext,
+  "patient" | "updatePatient" | "usedRoomsForEdit"
+>;
+
+export default function PatientDetail({ onErrorsChange }: PatientDetailProps) {
   const [isEditing, setIsEditing] = useState(false);
   const navigate = useNavigate();
-  const { patient, updatePatient, usedRoomsForEdit } = useOutletContext();
+  const { patient, updatePatient, usedRoomsForEdit } =
+    useOutletContext<PatientDetailOutletContext>();
 
   const defaultValues = useMemo(
     () => ({
@@ -23,11 +36,15 @@ export default function PatientDetail({ onErrorsChange }) {
     [patient],
   );
 
-  const handlePatientSubmit = async (data) => {
+  const handlePatientSubmit = async (data: PatientOutput): Promise<void> => {
     const patientToUpdate = { ...patient, ...data };
 
-    await updatePatient(patientToUpdate);
-    reset(patientToUpdate);
+    const updatedPatient = await updatePatient(patientToUpdate);
+    if (!updatedPatient) {
+      return;
+    }
+
+    reset(data);
     clearErrors();
     onErrorsChange?.({});
     setIsEditing(false);
@@ -39,7 +56,7 @@ export default function PatientDetail({ onErrorsChange }) {
     formState: { errors },
     reset,
     clearErrors,
-  } = useForm({
+  } = useForm<PatientInput, unknown, PatientOutput>({
     resolver: zodResolver(makePatientSchemaPartial(usedRoomsForEdit)),
     mode: "onSubmit",
     reValidateMode: "onSubmit",

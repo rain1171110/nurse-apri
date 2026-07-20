@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { refine, z } from "zod";
 
 export const optionalNumber = (
   min: number,
@@ -27,7 +27,11 @@ export const makePatientSchemaPartial = (usedRooms: number[]) => {
         .refine((v) => !/\d/.test(v), {
           message: "氏名に数字を含めることはできません",
         }),
-      room: optionalNumber(1, 999, "部屋番号は1以上", "部屋番号は999以下"),
+      room: optionalNumber(1, 999, "部屋番号は1以上", "部屋番号は999以下")
+        .refine((value) => value !== undefined, {
+          message: "部屋番号は必須です",
+        })
+        .transform((value) => value as number),
       age: optionalNumber(0, 150, "年齢は0以上", "年齢は150以下"),
       disease: z.string().trim().optional(),
       history: z.string().trim().optional(),
@@ -44,6 +48,11 @@ export const makePatientSchemaPartial = (usedRooms: number[]) => {
       }
     });
 };
+
+export type PatientInput = z.input<ReturnType<typeof makePatientSchemaPartial>>;
+export type PatientOutput = z.output<
+  ReturnType<typeof makePatientSchemaPartial>
+>;
 
 export const recordSchema = z.object({
   date: z.string().trim().min(1, "日付は必須"),

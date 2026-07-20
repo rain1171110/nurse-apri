@@ -1,9 +1,9 @@
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { formatBpText, formatValue } from "./Utils";
 import NursingRecordForm from "./NursingRecordForm";
 import DeleteButton from "./DeleteButton";
 import { useParams, useNavigate, useOutletContext } from "react-router-dom";
-import type { NursingRecord, Patient } from "./types";
+import type { NursingRecord, PatientOutletContext } from "./types";
 import type { RecordInput, RecordOutput } from "./schema";
 import type { FieldErrors } from "react-hook-form";
 
@@ -11,14 +11,10 @@ type NursingRecordItemProps = {
   onErrorsChange?: (errors: FieldErrors<RecordInput>) => void;
 };
 
-type NursingRecordItemContext = {
-  patient: Patient | undefined | null;
-  patientRecords: NursingRecord[];
-  updateRecord: (
-    recordToUpdate: NursingRecord,
-  ) => Promise<NursingRecord | undefined>;
-  deleteRecord: (id: string) => Promise<boolean>;
-};
+type NursingRecordItemContext = Pick<
+  PatientOutletContext,
+  "patient" | "patientRecords" | "updateRecord" | "deleteRecord"
+>;
 
 export default function NursingRecordItem({
   onErrorsChange,

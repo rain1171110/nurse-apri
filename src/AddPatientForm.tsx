@@ -1,20 +1,21 @@
-import { useEffect, useRef } from "react";
-import { useForm, Controller, Field, FieldError } from "react-hook-form";
+import { useEffect, useRef, useMemo } from "react";
+import type { Dispatch, SetStateAction } from "react";
+import { useForm, Controller } from "react-hook-form";
+import type { FieldErrors } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { TextField } from "@mui/material";
-import { useMemo } from "react";
 import { makePatientSchemaPartial } from "./schema";
 import { extractUsedRoomNumbers } from "./Utils";
-import { FieldErrors } from "react-hook-form";
+
 import type { Patient } from "./types";
 import type { PatientInput, PatientOutput } from "./schema";
 
 type AddPatientFormProps = {
-  patients: Patient;
-  onSubmit: (data: PatientOutput) => void | Promise<void>;
+  patients: Patient[];
+  onSubmit: (data: PatientOutput) => void | Promise<Patient | undefined>;
   onErrorsChange?: (errors: FieldErrors<PatientInput>) => void;
   showAddForm: boolean;
-  setShowAddForm: boolean;
+  setShowAddForm: Dispatch<SetStateAction<boolean>>;
 };
 
 export default function AddPatientForm({
@@ -31,8 +32,13 @@ export default function AddPatientForm({
     [usedRooms],
   );
 
-  const handleAddPatientSubmit = async (data:PatientOutput) => {
-    await onSubmit(data);
+  const handleAddPatientSubmit = async (data: PatientOutput): Promise<void> => {
+    const savedPatient = await onSubmit(data);
+
+    if (!savedPatient) {
+      return;
+    }
+
     reset();
     setShowAddForm(false);
   };
@@ -42,7 +48,7 @@ export default function AddPatientForm({
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm({
+  } = useForm<PatientInput, unknown, PatientOutput>({
     resolver: zodResolver(schema),
     mode: "onSubmit",
     defaultValues: { name: "", room: "" },

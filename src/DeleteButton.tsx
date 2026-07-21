@@ -8,7 +8,7 @@ export default function DeleteButton({ onDelete }: DeleteButtonProps) {
 
     if (!ok) return;
 
-    onDelete();
+    await onDelete();
   };
   return (
     <button type="button" className="btn-danger" onClick={handleDelete}>

@@ -1,10 +1,21 @@
 import { useEffect, useRef } from "react";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, Controller, Field, FieldError } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { TextField } from "@mui/material";
 import { useMemo } from "react";
 import { makePatientSchemaPartial } from "./schema";
 import { extractUsedRoomNumbers } from "./Utils";
+import { FieldErrors } from "react-hook-form";
+import type { Patient } from "./types";
+import type { PatientInput, PatientOutput } from "./schema";
+
+type AddPatientFormProps = {
+  patients: Patient;
+  onSubmit: (data: PatientOutput) => void | Promise<void>;
+  onErrorsChange?: (errors: FieldErrors<PatientInput>) => void;
+  showAddForm: boolean;
+  setShowAddForm: boolean;
+};
 
 export default function AddPatientForm({
   patients,
@@ -12,7 +23,7 @@ export default function AddPatientForm({
   onErrorsChange,
   showAddForm,
   setShowAddForm,
-}) {
+}: AddPatientFormProps) {
   const prevErrorSignatureRef = useRef("");
   const usedRooms = useMemo(() => extractUsedRoomNumbers(patients), [patients]);
   const schema = useMemo(
@@ -20,7 +31,7 @@ export default function AddPatientForm({
     [usedRooms],
   );
 
-  const handleAddPatientSubmit = async (data) => {
+  const handleAddPatientSubmit = async (data:PatientOutput) => {
     await onSubmit(data);
     reset();
     setShowAddForm(false);

@@ -12,7 +12,7 @@ import type { PatientInput, PatientOutput } from "./schema";
 
 type AddPatientFormProps = {
   patients: Patient[];
-  onSubmit: (data: PatientOutput) => void | Promise<Patient | undefined>;
+  onSubmit: (data: PatientOutput) => Promise<Patient | undefined>;
   onErrorsChange?: (errors: FieldErrors<PatientInput>) => void;
   showAddForm: boolean;
   setShowAddForm: Dispatch<SetStateAction<boolean>>;

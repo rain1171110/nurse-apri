@@ -4,12 +4,14 @@ import React, { useState } from "react";
 import AddPatientForm from "./AddPatientForm";
 import { useNavigate } from "react-router-dom";
 import type { Patient } from "./types";
+import type { FieldErrors } from "react-hook-form";
+import type { PatientInput } from "./schema";
 
 type PatientListProps = {
   patients: Patient[];
   isLoading: boolean;
   apiError: string;
-  onErrorsChange: React.Dispatch<React.SetStateAction<{}>>;
+  onErrorsChange: (errors: FieldErrors<PatientInput>) => void;
   addPatient: (patient: Omit<Patient, "id">) => Promise<Patient | undefined>;
 };
 
@@ -24,12 +26,14 @@ export default function PatientList({
 
   const navigate = useNavigate();
 
-  const addPatientSubmit = async (data: Omit<Patient, "id">): Promise<void> => {
+  const addPatientSubmit = async (
+    data: Omit<Patient, "id">,
+  ): Promise<Patient | undefined> => {
     const savedPatient = await addPatient(data);
     if (!savedPatient) {
-      return;
+      return undefined;
     }
-    setShowAddForm(false);
+    return savedPatient;
   };
 
   return (

@@ -65,15 +65,8 @@ export default function PatientDetail({ onErrorsChange }: PatientDetailProps) {
 
   useEffect(() => {
     if (!patient) return;
-    reset({
-      name: patient.name ?? "",
-      room: patient.room ?? "",
-      age: patient.age ?? "",
-      disease: patient.disease ?? "",
-      history: patient.history ?? "",
-      progress: patient.progress ?? "",
-    });
-  }, [patient, reset]);
+    reset(defaultValues);
+  }, [defaultValues, reset]);
 
   useEffect(() => {
     if (!import.meta.env.DEV) return;

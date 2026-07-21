@@ -4,10 +4,13 @@ import type { Patient } from "./types";
 
 type PatientCardProps = {
   patient: Patient;
-  onDeletePatient:()=>Promise<void>;
+  onDeletePatient: () => Promise<void>;
 };
 
-export default function PatientCard({ patient, onDeletePatient }:PatientCardProps) {
+export default function PatientCard({
+  patient,
+  onDeletePatient,
+}: PatientCardProps) {
   const navigate = useNavigate();
 
   return (

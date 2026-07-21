@@ -1,7 +1,13 @@
 import { useNavigate } from "react-router-dom";
 import DeleteButton from "./DeleteButton";
+import type { Patient } from "./types";
 
-export default function PatientCard({ patient, onDeletePatient }) {
+type PatientCardProps = {
+  patient: Patient;
+  onDeletePatient:()=>Promise<void>;
+};
+
+export default function PatientCard({ patient, onDeletePatient }:PatientCardProps) {
   const navigate = useNavigate();
 
   return (

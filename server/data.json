@@ -2,7 +2,10 @@
   "patients": [
     {
       "name": "鈴木次郎",
-      "room": 108,
+      "room": 104,
+      "disease": "",
+      "history": "",
+      "progress": "",
       "id": "7b0d5172-8d2e-43d1-b99b-8e843876b7c6"
     },
     {

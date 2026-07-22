@@ -1,0 +1,46 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../server/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Patient {
+  id       String          @id @default(uuid())
+  name     String
+  room     Int             @unique
+  age      Int?
+  disease  String?
+  history  String?
+  progress String?
+  records  NursingRecord[]
+}
+
+model NursingRecord {
+  id        String      @id @default(uuid())
+  patientId String
+  date      String
+  author    String
+  content   String?
+  patient   Patient     @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  vitals    VitalSigns?
+}
+
+model VitalSigns {
+  id       String        @id @default(uuid())
+  recordId String        @unique
+  T        Float?
+  P        Int?
+  R        Int?
+  SBP      Int?
+  DBP      Int?
+  SPO2     Int?
+  record   NursingRecord @relation(fields: [recordId], references: [id], onDelete: Cascade)
+}

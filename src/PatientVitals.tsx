@@ -1,9 +1,16 @@
 import { useNavigate, useOutletContext } from "react-router-dom";
 import { formatValue, formatBpText } from "./Utils";
+import type { PatientOutletContext } from "./types";
+
+type PatientVitalsOutletContext = Pick<
+  PatientOutletContext,
+  "patient" | "patientRecords"
+>;
 
 export default function PatientVitals() {
   const navigate = useNavigate();
-  const { patient, patientRecords } = useOutletContext();
+  const { patient, patientRecords } =
+    useOutletContext<PatientVitalsOutletContext>();
 
   if (!patient) return <div>患者が見つかりません</div>;
   return (

@@ -5,6 +5,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import crypto from "node:crypto";
 import type { NursingRecord, Patient } from "./generated/prisma/client.js";
+import { prisma } from "./db.js";
 
 type AppData = {
   patients: Patient[];
@@ -30,9 +31,16 @@ const writeData = (data: AppData): void => {
   writeFileSync(dataPath, JSON.stringify(data, null, 2), "utf-8");
 };
 
-app.get("/api/data", (req, res) => {
+app.get("/api/data", async (req, res) => {
   try {
-    const data = readData();
+    const patients = await prisma.patient.findMany();
+    const records = await prisma.nursingRecord.findMany();
+
+    const data: AppData = {
+      patients,
+      records,
+    };
+
     res.json(data);
   } catch (error) {
     console.error("GET /api/data error:", error);
@@ -40,10 +48,11 @@ app.get("/api/data", (req, res) => {
   }
 });
 
-app.get("/api/patients", (req, res) => {
+app.get("/api/patients", async (req, res) => {
   try {
-    const data = readData();
-    res.json(data.patients);
+    const patients = await prisma.patient.findMany();
+
+    res.json(patients);
   } catch (error) {
     console.error("Get /api/patients error", error);
     res.status(500).json({ error: "Failed to read patients" });

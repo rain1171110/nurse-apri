@@ -4,6 +4,12 @@ import { readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import crypto from "node:crypto";
+import type { NursingRecord, Patient } from "./generated/prisma/client.js";
+
+type AppData = {
+  patients: Patient[];
+  records: NursingRecord[];
+};
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -15,12 +21,12 @@ const dataPath = path.join(__dirname, "data.json");
 app.use(cors());
 app.use(express.json());
 
-const readData = () => {
+const readData = (): AppData => {
   const raw = readFileSync(dataPath, "utf-8");
-  return JSON.parse(raw);
+  return JSON.parse(raw) as AppData;
 };
 
-const writeData = (data) => {
+const writeData = (data: AppData): void => {
   writeFileSync(dataPath, JSON.stringify(data, null, 2), "utf-8");
 };
 
@@ -162,9 +168,7 @@ app.put("/api/records/:id", (req, res) => {
       ),
     };
 
-
     writeData(next);
-
 
     res.json(recordToSave);
   } catch (error) {

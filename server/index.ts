@@ -59,7 +59,7 @@ app.get("/api/patients", async (req, res) => {
   }
 });
 
-app.post("/api/patients", (req, res) => {
+app.post("/api/patients", async(req, res) => {
   try {
     const data = readData();
 

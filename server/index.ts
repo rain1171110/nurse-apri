@@ -3,7 +3,6 @@ import cors from "cors";
 import { readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import crypto from "node:crypto";
 import type { NursingRecord, Patient } from "./generated/prisma/client.js";
 import { prisma } from "./db.js";
 
@@ -68,29 +67,30 @@ app.post("/api/patients", async (req, res) => {
     res.status(201).json(newPatient);
   } catch (error) {
     console.error("POST /api/patients error", error);
-    res.status(500).json({ error: "Failed to create patients" });
+    res.status(500).json({ error: "Failed to create patient" });
   }
 });
 
-app.post("/api/records", (req, res) => {
+app.post("/api/records", async (req, res) => {
   try {
-    const data = readData();
+    const { vitals, ...recordData } = req.body;
 
-    const newRecord = {
-      ...req.body,
-      id: crypto.randomUUID(),
-    };
+    const newRecord = await prisma.nursingRecord.create({
+      data: {
+        ...recordData,
+        vitals: {
+          create: vitals,
+        },
+      },
+      include: {
+        vitals: true,
+      },
+    });
 
-    const next = {
-      ...data,
-      records: [...data.records, newRecord],
-    };
-
-    writeData(next);
     res.status(201).json(newRecord);
   } catch (error) {
     console.error("POST /api/records error", error);
-    res.status(500).json({ error: "Failed to create records" });
+    res.status(500).json({ error: "Failed to create record" });
   }
 });
 

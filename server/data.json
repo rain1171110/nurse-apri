@@ -44,6 +44,17 @@
       },
       "patientId": "7cec9837-7dab-4ce4-aed3-01e4118f165a",
       "id": "2ed69059-c1a6-42fd-8fdc-3068436ee938"
+    },
+    {
+      "date": "2026-07-25",
+      "author": "岡崎洋子",
+      "content": "",
+      "vitals": {
+        "T": 35,
+        "P": 50
+      },
+      "patientId": "32ded91d-134b-42e2-b101-1ef0e7c6c4a0",
+      "id": "1ef70b18-6050-4dd4-8faa-c0b6ddb3a037"
     }
   ]
 }

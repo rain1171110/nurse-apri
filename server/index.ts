@@ -39,7 +39,7 @@ app.get("/api/data", async (req, res) => {
       },
     });
 
-    const data: AppData = {
+    const data = {
       patients,
       records,
     };

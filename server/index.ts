@@ -59,21 +59,12 @@ app.get("/api/patients", async (req, res) => {
   }
 });
 
-app.post("/api/patients", async(req, res) => {
+app.post("/api/patients", async (req, res) => {
   try {
-    const data = readData();
+    const newPatient = await prisma.patient.create({
+      data: req.body,
+    });
 
-    const newPatient = {
-      ...req.body,
-      id: crypto.randomUUID(),
-    };
-
-    const next = {
-      ...data,
-      patients: [...data.patients, newPatient],
-    };
-
-    writeData(next);
     res.status(201).json(newPatient);
   } catch (error) {
     console.error("POST /api/patients error", error);

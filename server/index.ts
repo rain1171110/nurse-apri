@@ -33,7 +33,11 @@ const writeData = (data: AppData): void => {
 app.get("/api/data", async (req, res) => {
   try {
     const patients = await prisma.patient.findMany();
-    const records = await prisma.nursingRecord.findMany();
+    const records = await prisma.nursingRecord.findMany({
+      include: {
+        vitals: true,
+      },
+    });
 
     const data: AppData = {
       patients,

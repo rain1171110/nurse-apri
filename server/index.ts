@@ -113,68 +113,48 @@ app.put("/api/data", (req, res) => {
   }
 });
 
-app.put("/api/patients/:id", (req, res) => {
+app.put("/api/patients/:id", async (req, res) => {
   try {
-    const data = readData();
     const { id } = req.params;
 
-    const exists = data.patients.some(
-      (patient) => String(patient.id) === String(id),
-    );
+    const updatedPatient = await prisma.patient.update({
+      where: {
+        id,
+      },
+      data: req.body,
+    });
 
-    if (!exists) {
-      return res.status(404).json({ error: "Patient not found" });
-    }
-
-    const patientToSave = {
-      ...req.body,
-      id,
-    };
-
-    const next = {
-      ...data,
-      patients: data.patients.map((patient) =>
-        String(patient.id) === String(id) ? patientToSave : patient,
-      ),
-    };
-
-    writeData(next);
-
-    res.json(patientToSave);
+    res.json(updatedPatient);
   } catch (error) {
     console.error("PUT /api/patients/:id error:", error);
     res.status(500).json({ error: "Failed to update patient" });
   }
 });
 
-app.put("/api/records/:id", (req, res) => {
+app.put("/api/records/:id", async (req, res) => {
   try {
-    const data = readData();
     const { id } = req.params;
+    const { vitals, ...recordData } = req.body;
 
-    const exists = data.records.some(
-      (record) => String(record.id) === String(id),
-    );
+    const updatedRecord = await prisma.nursingRecord.update({
+      where: {
+        id,
+      },
+      data: {
+        ...recordData,
+        vitals: {
+          upsert: {
+            create: vitals,
+            update: vitals,
+          },
+        },
+      },
+      include: {
+        vitals: true,
+      },
+    });
 
-    if (!exists) {
-      return res.status(404).json({ error: "Record not found" });
-    }
-
-    const recordToSave = {
-      ...req.body,
-      id,
-    };
-
-    const next = {
-      ...data,
-      records: data.records.map((record) =>
-        String(record.id) === String(id) ? recordToSave : record,
-      ),
-    };
-
-    writeData(next);
-
-    res.json(recordToSave);
+    res.json(updatedRecord);
   } catch (error) {
     console.error("PUT /api/records/:id error:", error);
     res.status(500).json({ error: "Failed to update record" });

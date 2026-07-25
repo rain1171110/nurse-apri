@@ -161,32 +161,17 @@ app.put("/api/records/:id", async (req, res) => {
   }
 });
 
-app.delete("/api/patients/:id", (req, res) => {
+app.delete("/api/patients/:id", async (req, res) => {
   try {
-    const data = readData();
     const { id } = req.params;
 
-    const exists = data.patients.some(
-      (patient) => String(patient.id) === String(id),
-    );
+    await prisma.patient.delete({
+      where: {
+        id,
+      },
+    });
 
-    if (!exists) {
-      return res.status(404).json({ error: "Patient not found" });
-    }
-
-    const next = {
-      ...data,
-      patients: data.patients.filter(
-        (patient) => String(patient.id) !== String(id),
-      ),
-      records: data.records.filter(
-        (record) => String(record.patientId) !== String(id),
-      ),
-    };
-
-    writeData(next);
-
-    res.json({ id });
+    res.json(id);
   } catch (error) {
     console.error("DELETE /api/patients/:id error:", error);
     res.status(500).json({ error: "Failed to delete patient" });

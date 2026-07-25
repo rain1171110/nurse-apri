@@ -1,34 +1,12 @@
 import express from "express";
 import cors from "cors";
-import { readFileSync, writeFileSync } from "node:fs";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
-import type { NursingRecord, Patient } from "./generated/prisma/client.js";
 import { prisma } from "./db.js";
-
-type AppData = {
-  patients: Patient[];
-  records: NursingRecord[];
-};
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const dataPath = path.join(__dirname, "data.json");
-
 app.use(cors());
 app.use(express.json());
-
-const readData = (): AppData => {
-  const raw = readFileSync(dataPath, "utf-8");
-  return JSON.parse(raw) as AppData;
-};
-
-const writeData = (data: AppData): void => {
-  writeFileSync(dataPath, JSON.stringify(data, null, 2), "utf-8");
-};
 
 app.get("/api/data", async (req, res) => {
   try {
@@ -98,21 +76,6 @@ app.post("/api/records", async (req, res) => {
   }
 });
 
-app.put("/api/data", (req, res) => {
-  try {
-    const { patients, records } = req.body;
-    if (!Array.isArray(patients) || !Array.isArray(records)) {
-      return res.status(400).json({ error: "invalid payload" });
-    }
-    const next = { patients, records };
-    writeData(next);
-    res.json(next);
-  } catch (error) {
-    console.error("PUT /api/data error:", error);
-    res.status(500).json({ error: "Failed to write data" });
-  }
-});
-
 app.put("/api/patients/:id", async (req, res) => {
   try {
     const { id } = req.params;
@@ -171,34 +134,21 @@ app.delete("/api/patients/:id", async (req, res) => {
       },
     });
 
-    res.json(id);
+    res.json({ id });
   } catch (error) {
     console.error("DELETE /api/patients/:id error:", error);
     res.status(500).json({ error: "Failed to delete patient" });
   }
 });
 
-app.delete("/api/records/:id", (req, res) => {
+app.delete("/api/records/:id", async (req, res) => {
   try {
-    const data = readData();
     const { id } = req.params;
-
-    const exists = data.records.some(
-      (record) => String(record.id) === String(id),
-    );
-
-    if (!exists) {
-      return res.status(404).json({ error: "Record not found" });
-    }
-
-    const next = {
-      ...data,
-      records: data.records.filter(
-        (record) => String(record.id) !== String(id),
-      ),
-    };
-
-    writeData(next);
+    await prisma.nursingRecord.delete({
+      where: {
+        id,
+      },
+    });
 
     res.json({ id });
   } catch (error) {

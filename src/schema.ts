@@ -8,7 +8,7 @@ export const optionalNumber = (
 ) =>
   z
     .union([z.string(), z.number()])
-    .optional()
+    .nullish()
     .transform((v) => (v == null ? "" : String(v).trim()))
     .transform((v) => (v === "" ? undefined : Number(v)))
     .refine((v) => v === undefined || Number.isFinite(v), {

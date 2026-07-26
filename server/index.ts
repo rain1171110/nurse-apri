@@ -123,37 +123,40 @@ app.put<{ id: string }, {}, CreatePatientBody>(
   },
 );
 
-app.put("/api/records/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { vitals, ...recordData } = req.body;
+app.put<{ id: string }, {}, CreateRecordBody>(
+  "/api/records/:id",
+  async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { vitals, ...recordData } = req.body;
 
-    const updatedRecord = await prisma.nursingRecord.update({
-      where: {
-        id,
-      },
-      data: {
-        ...recordData,
-        vitals: {
-          upsert: {
-            create: vitals,
-            update: vitals,
+      const updatedRecord = await prisma.nursingRecord.update({
+        where: {
+          id,
+        },
+        data: {
+          ...recordData,
+          vitals: {
+            upsert: {
+              create: vitals,
+              update: vitals,
+            },
           },
         },
-      },
-      include: {
-        vitals: true,
-      },
-    });
+        include: {
+          vitals: true,
+        },
+      });
 
-    res.json(updatedRecord);
-  } catch (error) {
-    console.error("PUT /api/records/:id error:", error);
-    res.status(500).json({ error: "Failed to update record" });
-  }
-});
+      res.json(updatedRecord);
+    } catch (error) {
+      console.error("PUT /api/records/:id error:", error);
+      res.status(500).json({ error: "Failed to update record" });
+    }
+  },
+);
 
-app.delete("/api/patients/:id", async (req, res) => {
+app.delete<{ id: string }>("/api/patients/:id", async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -170,7 +173,7 @@ app.delete("/api/patients/:id", async (req, res) => {
   }
 });
 
-app.delete("/api/records/:id", async (req, res) => {
+app.delete<{ id: string }>("/api/records/:id", async (req, res) => {
   try {
     const { id } = req.params;
     await prisma.nursingRecord.delete({

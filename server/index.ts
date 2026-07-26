@@ -62,9 +62,24 @@ app.post<{}, {}, CreatePatientBody>("/api/patients", async (req, res) => {
   }
 });
 
+type VitalSignsBody = {
+  T?: number;
+  P?: number;
+  R?: number;
+  SBP?: number;
+  DBP?: number;
+  SPO2?: number;
+};
 
+type CreateRecordBody = {
+  patientId: string;
+  date: string;
+  author: string;
+  content?: string;
+  vitals: VitalSignsBody;
+};
 
-app.post("/api/records", async (req, res) => {
+app.post<{}, {}, CreateRecordBody>("/api/records", async (req, res) => {
   try {
     const { vitals, ...recordData } = req.body;
 

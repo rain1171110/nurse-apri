@@ -102,23 +102,26 @@ app.post<{}, {}, CreateRecordBody>("/api/records", async (req, res) => {
   }
 });
 
-app.put("/api/patients/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
+app.put<{ id: string }, {}, CreatePatientBody>(
+  "/api/patients/:id",
+  async (req, res) => {
+    try {
+      const { id } = req.params;
 
-    const updatedPatient = await prisma.patient.update({
-      where: {
-        id,
-      },
-      data: req.body,
-    });
+      const updatedPatient = await prisma.patient.update({
+        where: {
+          id,
+        },
+        data: req.body,
+      });
 
-    res.json(updatedPatient);
-  } catch (error) {
-    console.error("PUT /api/patients/:id error:", error);
-    res.status(500).json({ error: "Failed to update patient" });
-  }
-});
+      res.json(updatedPatient);
+    } catch (error) {
+      console.error("PUT /api/patients/:id error:", error);
+      res.status(500).json({ error: "Failed to update patient" });
+    }
+  },
+);
 
 app.put("/api/records/:id", async (req, res) => {
   try {

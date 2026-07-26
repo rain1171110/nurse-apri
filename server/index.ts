@@ -40,7 +40,16 @@ app.get("/api/patients", async (req, res) => {
   }
 });
 
-app.post("/api/patients", async (req, res) => {
+type CreatePatientBody = {
+  name: string;
+  room: number;
+  age?: number;
+  disease?: string;
+  history?: string;
+  progress?: string;
+};
+
+app.post<{}, {}, CreatePatientBody>("/api/patients", async (req, res) => {
   try {
     const newPatient = await prisma.patient.create({
       data: req.body,
@@ -52,6 +61,8 @@ app.post("/api/patients", async (req, res) => {
     res.status(500).json({ error: "Failed to create patient" });
   }
 });
+
+
 
 app.post("/api/records", async (req, res) => {
   try {

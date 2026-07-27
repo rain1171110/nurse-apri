@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import { prisma } from "./db.js";
+import { type CreatePatientBody } from "./schema.js";
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -39,15 +40,6 @@ app.get("/api/patients", async (req, res) => {
     res.status(500).json({ error: "Failed to read patients" });
   }
 });
-
-type CreatePatientBody = {
-  name: string;
-  room: number;
-  age?: number;
-  disease?: string;
-  history?: string;
-  progress?: string;
-};
 
 app.post<{}, {}, CreatePatientBody>("/api/patients", async (req, res) => {
   try {

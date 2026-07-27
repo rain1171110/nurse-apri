@@ -1,7 +1,12 @@
 import express from "express";
 import cors from "cors";
 import { prisma } from "./db.js";
-import { type CreatePatientBody } from "./schema.js";
+import {
+  createPatientSchema,
+  type CreatePatientBody,
+  createRecordSchema,
+  type CreateRecordBody,
+} from "./schema.js";
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -43,8 +48,18 @@ app.get("/api/patients", async (req, res) => {
 
 app.post<{}, {}, CreatePatientBody>("/api/patients", async (req, res) => {
   try {
+    const result = createPatientSchema.safeParse(req.body);
+
+    if (!result.success) {
+      res.status(400).json({
+        error: "Invalid patient data",
+        details: result.error.flatten(),
+      });
+      return;
+    }
+
     const newPatient = await prisma.patient.create({
-      data: req.body,
+      data: result.data,
     });
 
     res.status(201).json(newPatient);
@@ -63,17 +78,17 @@ type VitalSignsBody = {
   SPO2?: number;
 };
 
-type CreateRecordBody = {
-  patientId: string;
-  date: string;
-  author: string;
-  content?: string;
-  vitals: VitalSignsBody;
-};
-
 app.post<{}, {}, CreateRecordBody>("/api/records", async (req, res) => {
   try {
-    const { vitals, ...recordData } = req.body;
+    const result = createRecordSchema.safeParse(req.body);
+    if (!result.success) {
+      res.status(400).json({
+        error: "Invalid record data",
+        details: result.error.flatten(),
+      });
+      return;
+    }
+    const { vitals, ...recordData } = result.data;
 
     const newRecord = await prisma.nursingRecord.create({
       data: {
@@ -98,13 +113,22 @@ app.put<{ id: string }, {}, CreatePatientBody>(
   "/api/patients/:id",
   async (req, res) => {
     try {
+      const result = createPatientSchema.safeParse(req.body);
+
+      if (!result.success) {
+        res.status(400).json({
+          error: "Invalid patient data",
+          details: result.error.flatten(),
+        });
+        return;
+      }
       const { id } = req.params;
 
       const updatedPatient = await prisma.patient.update({
         where: {
           id,
         },
-        data: req.body,
+        data: result.data,
       });
 
       res.json(updatedPatient);

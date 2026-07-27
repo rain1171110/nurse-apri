@@ -3,8 +3,8 @@ import cors from "cors";
 import { prisma } from "./db.js";
 import {
   createPatientSchema,
-  type CreatePatientBody,
   createRecordSchema,
+  type CreatePatientBody,
   type CreateRecordBody,
 } from "./schema.js";
 
@@ -69,14 +69,6 @@ app.post<{}, {}, CreatePatientBody>("/api/patients", async (req, res) => {
   }
 });
 
-type VitalSignsBody = {
-  T?: number;
-  P?: number;
-  R?: number;
-  SBP?: number;
-  DBP?: number;
-  SPO2?: number;
-};
 
 app.post<{}, {}, CreateRecordBody>("/api/records", async (req, res) => {
   try {
@@ -143,8 +135,17 @@ app.put<{ id: string }, {}, CreateRecordBody>(
   "/api/records/:id",
   async (req, res) => {
     try {
+      const result = createRecordSchema.safeParse(req.body);
+      if (!result.success) {
+        res.status(400).json({
+          error: "Invalid record data",
+          details: result.error.flatten(),
+        });
+        return;
+      }
+
       const { id } = req.params;
-      const { vitals, ...recordData } = req.body;
+      const { vitals, ...recordData } = result.data;
 
       const updatedRecord = await prisma.nursingRecord.update({
         where: {

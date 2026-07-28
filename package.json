@@ -10,7 +10,9 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "db:dev": "prisma dev",
+    "db:studio": "prisma studio"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",

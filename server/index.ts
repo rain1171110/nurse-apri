@@ -64,11 +64,21 @@ app.post<{}, {}, CreatePatientBody>("/api/patients", async (req, res) => {
 
     res.status(201).json(newPatient);
   } catch (error) {
+    if (
+      typeof error === "object" &&
+      error !== null &&
+      "code" in error &&
+      error.code === "P2002"
+    ) {
+      res.status(409).json({
+        error: "This room number is already in use",
+      });
+      return;
+    }
     console.error("POST /api/patients error", error);
     res.status(500).json({ error: "Failed to create patient" });
   }
 });
-
 
 app.post<{}, {}, CreateRecordBody>("/api/records", async (req, res) => {
   try {
@@ -125,6 +135,17 @@ app.put<{ id: string }, {}, CreatePatientBody>(
 
       res.json(updatedPatient);
     } catch (error) {
+      if (
+        typeof error === "object" &&
+        error !== null &&
+        "code" in error &&
+        error.code === "P2002"
+      ) {
+        res.status(409).json({
+          error: "This room number is already in use",
+        });
+        return;
+      }
       console.error("PUT /api/patients/:id error:", error);
       res.status(500).json({ error: "Failed to update patient" });
     }

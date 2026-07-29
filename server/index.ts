@@ -207,8 +207,8 @@ app.put<{ id: string }, {}, CreateRecordBody>(
         "code" in error &&
         error.code === "P2025"
       ) {
-        res.status(409).json({
-          error: "Record nof found",
+        res.status(404).json({
+          error: "Record not found",
         });
         return;
       }

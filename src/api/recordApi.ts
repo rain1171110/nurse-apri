@@ -29,7 +29,8 @@ export const updateRecordApi = async (
   });
 
   if (!response.ok) {
-    throw new Error(`API error: ${response.status}`);
+    const errorData: { error: string } = await response.json();
+    throw new Error(errorData.error);
   }
   const data: NursingRecord = await response.json();
   return data;

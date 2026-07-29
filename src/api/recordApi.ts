@@ -12,7 +12,8 @@ export const createRecordApi = async (
   });
 
   if (!response.ok) {
-    throw new Error(`API error: ${response.status}`);
+    const errorData: { error: string } = await response.json();
+    throw new Error(errorData.error);
   }
   const data: NursingRecord = await response.json();
   return data;
@@ -42,7 +43,8 @@ export const deleteRecordApi = async (id: string): Promise<{ id: string }> => {
   });
 
   if (!response.ok) {
-    throw new Error(`API error:${response.status}`);
+    const errorData: { error: string } = await response.json();
+    throw new Error(errorData.error);
   }
   const data: { id: string } = await response.json();
   return data;

@@ -7,6 +7,7 @@ import {
   type CreatePatientBody,
   type CreateRecordBody,
 } from "./schema.js";
+import { error } from "node:console";
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -124,6 +125,7 @@ app.put<{ id: string }, {}, CreatePatientBody>(
         });
         return;
       }
+
       const { id } = req.params;
 
       const updatedPatient = await prisma.patient.update({
@@ -143,6 +145,17 @@ app.put<{ id: string }, {}, CreatePatientBody>(
       ) {
         res.status(409).json({
           error: "This room number is already in use",
+        });
+        return;
+      }
+      if (
+        typeof error === "object" &&
+        error !== null &&
+        "code" in error &&
+        error.code === "P2025"
+      ) {
+        res.status(404).json({
+          error: "Patient not found",
         });
         return;
       }

@@ -223,6 +223,17 @@ app.put<{ id: string }, {}, CreateRecordBody>(
         });
         return;
       }
+      if (
+        typeof error === "object" &&
+        error !== null &&
+        "code" in error &&
+        error.code === "P2003"
+      ) {
+        res.status(404).json({
+          error: "Patient not found",
+        });
+        return;
+      }
       console.error("PUT /api/records/:id error:", error);
       res.status(500).json({ error: "Failed to update record" });
     }

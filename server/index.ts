@@ -257,6 +257,17 @@ app.delete<{ id: string }>("/api/records/:id", async (req, res) => {
 
     res.json({ id });
   } catch (error) {
+    if (
+      typeof error === "object" &&
+      error !== null &&
+      "code" in error &&
+      error.code === "P2025"
+    ) {
+      res.status(404).json({
+        error: "Record not found",
+      });
+      return;
+    }
     console.error("DELETE /api/records/:id error:", error);
     res.status(500).json({ error: "Failed to delete record" });
   }

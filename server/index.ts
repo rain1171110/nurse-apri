@@ -201,6 +201,17 @@ app.put<{ id: string }, {}, CreateRecordBody>(
 
       res.json(updatedRecord);
     } catch (error) {
+      if (
+        typeof error === "object" &&
+        error !== null &&
+        "code" in error &&
+        error.code === "P2025"
+      ) {
+        res.status(409).json({
+          error: "Record nof found",
+        });
+        return;
+      }
       console.error("PUT /api/records/:id error:", error);
       res.status(500).json({ error: "Failed to update record" });
     }

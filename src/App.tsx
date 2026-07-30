@@ -166,7 +166,11 @@ function App() {
       return savedRecord;
     } catch (error) {
       console.error("看護記録追加に失敗しました", error);
-      setApiError("看護記録追加に失敗しました");
+      if (error instanceof Error) {
+        setApiError(error.message);
+      } else {
+        setApiError("看護記録追加に失敗しました");
+      }
       return undefined;
     }
   };

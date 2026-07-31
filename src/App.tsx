@@ -92,7 +92,11 @@ function App() {
       return savedPatient;
     } catch (error) {
       console.error("患者追加に失敗しました", error);
-      setApiError("患者追加に失敗しました");
+      if (error instanceof Error) {
+        setApiError(error.message);
+      } else {
+        setApiError("患者追加に失敗しました");
+      }
       return undefined;
     }
   };

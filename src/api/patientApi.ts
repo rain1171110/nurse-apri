@@ -12,7 +12,8 @@ export const createPatientApi = async (
   });
 
   if (!response.ok) {
-    throw new Error(`API error: ${response.status}`);
+    const errorData: { error?: string } = await response.json();
+    throw new Error(errorData.error ?? `API error: ${response.status}`);
   }
   const data: Patient = await response.json();
   return data;

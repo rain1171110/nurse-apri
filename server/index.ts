@@ -83,7 +83,7 @@ app.post<{}, {}, CreatePatientBody>("/api/patients", async (req, res) => {
       return;
     }
     console.error("POST /api/patients error", error);
-    res.status(500).json({ error: "Failed to create patient" });
+    res.status(500).json({ error: "Failed to create patient / 患者情報追加に失敗しました" });
   }
 });
 
@@ -125,7 +125,7 @@ app.post<{}, {}, CreateRecordBody>("/api/records", async (req, res) => {
       return;
     }
     console.error("POST /api/records error", error);
-    res.status(500).json({ error: "Failed to create record" });
+    res.status(500).json({ error: "Failed to create record / 看護記録の追加に失敗しました" });
   }
 });
 
@@ -178,7 +178,7 @@ app.put<{ id: string }, {}, CreatePatientBody>(
         return;
       }
       console.error("PUT /api/patients/:id error:", error);
-      res.status(500).json({ error: "Failed to update patient" });
+      res.status(500).json({ error: "Failed to update patient / 患者の更新に失敗しました" });
     }
   },
 );
@@ -242,7 +242,7 @@ app.put<{ id: string }, {}, CreateRecordBody>(
         return;
       }
       console.error("PUT /api/records/:id error:", error);
-      res.status(500).json({ error: "Failed to update record" });
+      res.status(500).json({ error: "Failed to update record / 記録の更新に失敗しました" });
     }
   },
 );
@@ -271,7 +271,7 @@ app.delete<{ id: string }>("/api/patients/:id", async (req, res) => {
       return;
     }
     console.error("DELETE /api/patients/:id error:", error);
-    res.status(500).json({ error: "Failed to delete patient" });
+    res.status(500).json({ error: "Failed to delete patient / 患者削除に失敗しました" });
   }
 });
 
@@ -298,7 +298,7 @@ app.delete<{ id: string }>("/api/records/:id", async (req, res) => {
       return;
     }
     console.error("DELETE /api/records/:id error:", error);
-    res.status(500).json({ error: "Failed to delete record" });
+    res.status(500).json({ error: "Failed to delete record / 看護記録削除に失敗しました" });
   }
 });
 

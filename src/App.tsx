@@ -149,7 +149,11 @@ function App() {
       return true;
     } catch (error) {
       console.error("患者削除に失敗しました", error);
-      setApiError("患者削除に失敗しました");
+      if (error instanceof Error) {
+        setApiError(error.message);
+      } else {
+        setApiError("患者削除に失敗しました");
+      }
       return false;
     }
   };

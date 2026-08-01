@@ -206,8 +206,11 @@ function App() {
       return updatedRecord;
     } catch (error) {
       console.error("看護記録修正に失敗しました", error);
-      setApiError("看護記録修正に失敗しました");
-
+      if (error instanceof Error) {
+        setApiError(error.message);
+      } else {
+        setApiError("看護記録修正に失敗しました");
+      }
       return undefined;
     }
   };
@@ -227,7 +230,11 @@ function App() {
       return true;
     } catch (error) {
       console.error("看護記録削除に失敗しました", error);
-      setApiError("看護記録削除に失敗しました");
+      if (error instanceof Error) {
+        setApiError(error.message);
+      } else {
+        setApiError("看護記録削除に失敗しました");
+      }
       return false;
     }
   };

@@ -31,7 +31,9 @@ app.get("/api/data", async (req, res) => {
     res.json(data);
   } catch (error) {
     console.error("GET /api/data error:", error);
-    res.status(500).json({ error: "Failed to read data" });
+    res
+      .status(500)
+      .json({ error: "Failed to read data / データの読み込みに失敗しました" });
   }
 });
 
@@ -42,7 +44,11 @@ app.get("/api/patients", async (req, res) => {
     res.json(patients);
   } catch (error) {
     console.error("Get /api/patients error", error);
-    res.status(500).json({ error: "Failed to read patients" });
+    res
+      .status(500)
+      .json({
+        error: "Failed to read patients / 患者情報の読み込みに失敗しました",
+      });
   }
 });
 
@@ -52,7 +58,7 @@ app.post<{}, {}, CreatePatientBody>("/api/patients", async (req, res) => {
 
     if (!result.success) {
       res.status(400).json({
-        error: "Invalid patient data",
+        error: "Invalid patient data / 無効な患者データ",
         details: result.error.flatten(),
       });
       return;
@@ -86,7 +92,7 @@ app.post<{}, {}, CreateRecordBody>("/api/records", async (req, res) => {
     const result = createRecordSchema.safeParse(req.body);
     if (!result.success) {
       res.status(400).json({
-        error: "Invalid record data",
+        error: "Invalid record data / 無効な看護記録データ",
         details: result.error.flatten(),
       });
       return;
@@ -131,7 +137,7 @@ app.put<{ id: string }, {}, CreatePatientBody>(
 
       if (!result.success) {
         res.status(400).json({
-          error: "Invalid patient data",
+          error: "Invalid patient data / 無効な患者データ",
           details: result.error.flatten(),
         });
         return;
@@ -184,7 +190,7 @@ app.put<{ id: string }, {}, CreateRecordBody>(
       const result = createRecordSchema.safeParse(req.body);
       if (!result.success) {
         res.status(400).json({
-          error: "Invalid record data",
+          error: "Invalid record data / 無効な看護記録データ",
           details: result.error.flatten(),
         });
         return;

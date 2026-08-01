@@ -122,7 +122,11 @@ function App() {
       return updatedPatient;
     } catch (error) {
       console.error("患者情報更新に失敗しました", error);
-      setApiError("患者情報更新に失敗しました");
+      if (error instanceof Error) {
+        setApiError(error.message);
+      } else {
+        setApiError("患者情報更新に失敗しました");
+      }
       return undefined;
     }
   };

@@ -7,7 +7,6 @@ import {
   type CreatePatientBody,
   type CreateRecordBody,
 } from "./schema.js";
-import { error } from "node:console";
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -72,7 +71,8 @@ app.post<{}, {}, CreatePatientBody>("/api/patients", async (req, res) => {
       error.code === "P2002"
     ) {
       res.status(409).json({
-        error: "This room number is already in use",
+        error:
+          "This room number is already in use / この部屋番号はすでに使用されています",
       });
       return;
     }
@@ -114,7 +114,7 @@ app.post<{}, {}, CreateRecordBody>("/api/records", async (req, res) => {
       error.code === "P2003"
     ) {
       res.status(404).json({
-        error: "Patient not found",
+        error: "Patient not found / 患者が見つかりません",
       });
       return;
     }
@@ -155,7 +155,8 @@ app.put<{ id: string }, {}, CreatePatientBody>(
         error.code === "P2002"
       ) {
         res.status(409).json({
-          error: "This room number is already in use",
+          error:
+            "This room number is already in use / この部屋番号はすでに使用されています",
         });
         return;
       }
@@ -166,7 +167,7 @@ app.put<{ id: string }, {}, CreatePatientBody>(
         error.code === "P2025"
       ) {
         res.status(404).json({
-          error: "Patient not found",
+          error: "Patient not found / 患者が見つかりません",
         });
         return;
       }
@@ -219,7 +220,7 @@ app.put<{ id: string }, {}, CreateRecordBody>(
         error.code === "P2025"
       ) {
         res.status(404).json({
-          error: "Record not found",
+          error: "Record not found / 看護記録が見つかりません",
         });
         return;
       }
@@ -230,7 +231,7 @@ app.put<{ id: string }, {}, CreateRecordBody>(
         error.code === "P2003"
       ) {
         res.status(404).json({
-          error: "Patient not found",
+          error: "Patient not found / 患者が見つかりません",
         });
         return;
       }
@@ -259,7 +260,7 @@ app.delete<{ id: string }>("/api/patients/:id", async (req, res) => {
       error.code === "P2025"
     ) {
       res.status(404).json({
-        error: "Patient not found",
+        error: "Patient not found / 患者が見つかりません",
       });
       return;
     }
@@ -286,7 +287,7 @@ app.delete<{ id: string }>("/api/records/:id", async (req, res) => {
       error.code === "P2025"
     ) {
       res.status(404).json({
-        error: "Record not found",
+        error: "Record not found / 看護記録が見つかりません",
       });
       return;
     }

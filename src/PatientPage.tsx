@@ -5,6 +5,7 @@ import type { Patient, NursingRecord, PatientOutletContext } from "./types";
 type PatientPageProps = {
   patients: Patient[];
   records: NursingRecord[];
+  apiError: string;
 } & Pick<
   PatientOutletContext,
   | "updatePatient"
@@ -17,6 +18,7 @@ type PatientPageProps = {
 export default function PatientPage({
   patients,
   records,
+  apiError,
   updatePatient,
   addRecord,
   updateRecord,
@@ -41,5 +43,10 @@ export default function PatientPage({
     deletePatient,
     usedRoomsForEdit,
   };
-  return <Outlet context={outletContext} />;
+  return (
+    <>
+      {apiError && <p className="api-error">{apiError}</p>}
+      <Outlet context={outletContext} />
+    </>
+  );
 }

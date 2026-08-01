@@ -264,6 +264,7 @@ function App() {
               <PatientPage
                 patients={appData.patients}
                 records={appData.records}
+                apiError={apiError}
                 updatePatient={updatePatient}
                 addRecord={addRecord}
                 updateRecord={updateRecord}

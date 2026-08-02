@@ -11,6 +11,17 @@ import {
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+type PrismaErrorCode = "P2002" | "P2003" | "P2025";
+
+const isPrismaError = (error: unknown, code: PrismaErrorCode): boolean => {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    error.code === code
+  );
+};
+
 app.use(cors());
 app.use(express.json());
 
@@ -44,11 +55,9 @@ app.get("/api/patients", async (req, res) => {
     res.json(patients);
   } catch (error) {
     console.error("Get /api/patients error", error);
-    res
-      .status(500)
-      .json({
-        error: "Failed to read patients / 患者情報の読み込みに失敗しました",
-      });
+    res.status(500).json({
+      error: "Failed to read patients / 患者情報の読み込みに失敗しました",
+    });
   }
 });
 
@@ -70,12 +79,7 @@ app.post<{}, {}, CreatePatientBody>("/api/patients", async (req, res) => {
 
     res.status(201).json(newPatient);
   } catch (error) {
-    if (
-      typeof error === "object" &&
-      error !== null &&
-      "code" in error &&
-      error.code === "P2002"
-    ) {
+    if (isPrismaError(error, "P2002")) {
       res.status(409).json({
         error:
           "This room number is already in use / この部屋番号はすでに使用されています",
@@ -83,7 +87,9 @@ app.post<{}, {}, CreatePatientBody>("/api/patients", async (req, res) => {
       return;
     }
     console.error("POST /api/patients error", error);
-    res.status(500).json({ error: "Failed to create patient / 患者情報追加に失敗しました" });
+    res
+      .status(500)
+      .json({ error: "Failed to create patient / 患者情報追加に失敗しました" });
   }
 });
 
@@ -113,19 +119,16 @@ app.post<{}, {}, CreateRecordBody>("/api/records", async (req, res) => {
 
     res.status(201).json(newRecord);
   } catch (error) {
-    if (
-      typeof error === "object" &&
-      error !== null &&
-      "code" in error &&
-      error.code === "P2003"
-    ) {
+    if (isPrismaError(error, "P2003")) {
       res.status(404).json({
         error: "Patient not found / 患者が見つかりません",
       });
       return;
     }
     console.error("POST /api/records error", error);
-    res.status(500).json({ error: "Failed to create record / 看護記録の追加に失敗しました" });
+    res.status(500).json({
+      error: "Failed to create record / 看護記録の追加に失敗しました",
+    });
   }
 });
 
@@ -154,31 +157,23 @@ app.put<{ id: string }, {}, CreatePatientBody>(
 
       res.json(updatedPatient);
     } catch (error) {
-      if (
-        typeof error === "object" &&
-        error !== null &&
-        "code" in error &&
-        error.code === "P2002"
-      ) {
+      if (isPrismaError(error, "P2002")) {
         res.status(409).json({
           error:
             "This room number is already in use / この部屋番号はすでに使用されています",
         });
         return;
       }
-      if (
-        typeof error === "object" &&
-        error !== null &&
-        "code" in error &&
-        error.code === "P2025"
-      ) {
+      if (isPrismaError(error, "P2025")) {
         res.status(404).json({
           error: "Patient not found / 患者が見つかりません",
         });
         return;
       }
       console.error("PUT /api/patients/:id error:", error);
-      res.status(500).json({ error: "Failed to update patient / 患者の更新に失敗しました" });
+      res
+        .status(500)
+        .json({ error: "Failed to update patient / 患者の更新に失敗しました" });
     }
   },
 );
@@ -219,30 +214,22 @@ app.put<{ id: string }, {}, CreateRecordBody>(
 
       res.json(updatedRecord);
     } catch (error) {
-      if (
-        typeof error === "object" &&
-        error !== null &&
-        "code" in error &&
-        error.code === "P2025"
-      ) {
+      if (isPrismaError(error, "P2025")) {
         res.status(404).json({
           error: "Record not found / 看護記録が見つかりません",
         });
         return;
       }
-      if (
-        typeof error === "object" &&
-        error !== null &&
-        "code" in error &&
-        error.code === "P2003"
-      ) {
+      if (isPrismaError(error, "P2003")) {
         res.status(404).json({
           error: "Patient not found / 患者が見つかりません",
         });
         return;
       }
       console.error("PUT /api/records/:id error:", error);
-      res.status(500).json({ error: "Failed to update record / 記録の更新に失敗しました" });
+      res
+        .status(500)
+        .json({ error: "Failed to update record / 記録の更新に失敗しました" });
     }
   },
 );
@@ -259,19 +246,16 @@ app.delete<{ id: string }>("/api/patients/:id", async (req, res) => {
 
     res.json({ id });
   } catch (error) {
-    if (
-      typeof error === "object" &&
-      error !== null &&
-      "code" in error &&
-      error.code === "P2025"
-    ) {
+    if (isPrismaError(error, "P2025")) {
       res.status(404).json({
         error: "Patient not found / 患者が見つかりません",
       });
       return;
     }
     console.error("DELETE /api/patients/:id error:", error);
-    res.status(500).json({ error: "Failed to delete patient / 患者削除に失敗しました" });
+    res
+      .status(500)
+      .json({ error: "Failed to delete patient / 患者削除に失敗しました" });
   }
 });
 
@@ -286,19 +270,16 @@ app.delete<{ id: string }>("/api/records/:id", async (req, res) => {
 
     res.json({ id });
   } catch (error) {
-    if (
-      typeof error === "object" &&
-      error !== null &&
-      "code" in error &&
-      error.code === "P2025"
-    ) {
+    if (isPrismaError(error, "P2025")) {
       res.status(404).json({
         error: "Record not found / 看護記録が見つかりません",
       });
       return;
     }
     console.error("DELETE /api/records/:id error:", error);
-    res.status(500).json({ error: "Failed to delete record / 看護記録削除に失敗しました" });
+    res
+      .status(500)
+      .json({ error: "Failed to delete record / 看護記録削除に失敗しました" });
   }
 });
 

@@ -13,7 +13,7 @@ export const createRecordApi = async (
 
   if (!response.ok) {
     const errorData: { error?: string } = await response.json();
-    throw new Error(errorData.error ?? `API error:${response.status}`);
+    throw new Error(errorData.error ?? `API error: ${response.status}`);
   }
   const data: NursingRecord = await response.json();
   return data;
@@ -31,7 +31,7 @@ export const updateRecordApi = async (
 
   if (!response.ok) {
     const errorData: { error?: string } = await response.json();
-    throw new Error(errorData.error ?? `API error:${response.status}`);
+    throw new Error(errorData.error ?? `API error: ${response.status}`);
   }
   const data: NursingRecord = await response.json();
   return data;
@@ -44,7 +44,7 @@ export const deleteRecordApi = async (id: string): Promise<{ id: string }> => {
 
   if (!response.ok) {
     const errorData: { error?: string } = await response.json();
-    throw new Error(errorData.error ?? `API error:${response.status}`);
+    throw new Error(errorData.error ?? `API error: ${response.status}`);
   }
   const data: { id: string } = await response.json();
   return data;

@@ -1,6 +1,6 @@
 import { CircularProgress, Snackbar, Alert } from "@mui/material";
 
-import React, { useState } from "react";
+import  { useState } from "react";
 import AddPatientForm from "./AddPatientForm";
 import { useNavigate } from "react-router-dom";
 import type { Patient } from "./types";
@@ -55,7 +55,7 @@ export default function PatientList({
         </Snackbar>
       )}
 
-      {!isLoading && !apiError && (
+      {!isLoading && (
         <section className="section">
           <div className="section-header">
             <h1 className="section-title">患者一覧</h1>

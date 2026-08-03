@@ -516,10 +516,6 @@ button:disabled {
   }
 
   /* Snackbar / Alert 対応 */
-  .MuiAlert-root {
-    background-color: var(--color-bg-secondary) !important;
-    color: var(--color-text-primary) !important;
-  }
 
   .MuiAlert-standardSuccess {
     background-color: rgba(16, 185, 129, 0.2) !important;
@@ -531,9 +527,6 @@ button:disabled {
     color: var(--color-error) !important;
   }
 
-  .MuiAlert-icon {
-    color: inherit !important;
-  }
 
   /* DatePicker対応 */
   .MuiTextField-root input {

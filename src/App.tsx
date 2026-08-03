@@ -55,6 +55,7 @@ function App() {
       // 10秒後に表示をクリア
       timerRef.current = setTimeout(() => {
         setDisplayErrors({});
+        setGlobalErrors({});
       }, 10000);
     }
     return () => {

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useMemo } from "react";
+import { useMemo } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import { useForm, Controller } from "react-hook-form";
 import type { FieldErrors } from "react-hook-form";
@@ -25,12 +25,15 @@ export default function AddPatientForm({
   showAddForm,
   setShowAddForm,
 }: AddPatientFormProps) {
-  const prevErrorSignatureRef = useRef("");
   const usedRooms = useMemo(() => extractUsedRoomNumbers(patients), [patients]);
   const schema = useMemo(
     () => makePatientSchemaPartial(usedRooms),
     [usedRooms],
   );
+
+  const handleInvalidSubmit = (formErrors: FieldErrors<PatientInput>): void => {
+    onErrorsChange?.(formErrors);
+  };
 
   const handleAddPatientSubmit = async (data: PatientOutput): Promise<void> => {
     const savedPatient = await onSubmit(data);
@@ -54,13 +57,6 @@ export default function AddPatientForm({
     defaultValues: { name: "", room: "" },
   });
 
-  useEffect(() => {
-    const signature = JSON.stringify(errors);
-    if (signature === prevErrorSignatureRef.current) return;
-    prevErrorSignatureRef.current = signature;
-    if (onErrorsChange) onErrorsChange(errors);
-  }, [errors, onErrorsChange]);
-
   if (!showAddForm) return null;
 
   return (
@@ -68,7 +64,9 @@ export default function AddPatientForm({
       <div className="card-header">
         <h3 className="card-title">患者を追加</h3>
       </div>
-      <form onSubmit={handleSubmit(handleAddPatientSubmit)}>
+      <form
+        onSubmit={handleSubmit(handleAddPatientSubmit, handleInvalidSubmit)}
+      >
         <div className="card-body">
           <div className="form-group">
             <Controller

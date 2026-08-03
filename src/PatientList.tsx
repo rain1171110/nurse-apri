@@ -1,6 +1,6 @@
-import { CircularProgress, Snackbar, Alert } from "@mui/material";
+import { CircularProgress } from "@mui/material";
 
-import  { useState } from "react";
+import { useState } from "react";
 import AddPatientForm from "./AddPatientForm";
 import { useNavigate } from "react-router-dom";
 import type { Patient } from "./types";
@@ -10,7 +10,6 @@ import type { PatientInput } from "./schema";
 type PatientListProps = {
   patients: Patient[];
   isLoading: boolean;
-  apiError: string;
   onErrorsChange: (errors: FieldErrors<PatientInput>) => void;
   addPatient: (patient: Omit<Patient, "id">) => Promise<Patient | undefined>;
 };
@@ -18,7 +17,6 @@ type PatientListProps = {
 export default function PatientList({
   patients,
   isLoading,
-  apiError,
   onErrorsChange,
   addPatient,
 }: PatientListProps) {
@@ -43,16 +41,6 @@ export default function PatientList({
           <CircularProgress size={24} />
           <span className="loading-text">読み込み中...</span>
         </div>
-      )}
-
-      {!isLoading && apiError && (
-        <Snackbar
-          anchorOrigin={{ vertical: "top", horizontal: "center" }}
-          open={true}
-          autoHideDuration={5000}
-        >
-          <Alert severity="error">{apiError}</Alert>
-        </Snackbar>
       )}
 
       {!isLoading && (

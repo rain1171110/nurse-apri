@@ -20,6 +20,7 @@ import PatientVitals from "./PatientVitals";
 import NursingRecordList from "./NursingRecordList";
 import NursingRecordItem from "./NursingRecordItem";
 import PatientMenu from "./PatientMenu";
+import { Alert, Snackbar } from "@mui/material";
 import type { AppData, NursingRecord, Patient } from "./types";
 import type { RecordOutput } from "./schema";
 
@@ -34,6 +35,10 @@ function App() {
   });
   const [loading, setLoading] = useState(true);
   const [apiError, setApiError] = useState("");
+
+  const onClearApiError = (): void => {
+    setApiError("");
+  };
 
   // 開発時にエラー内容が分かるように
   useEffect(() => {
@@ -244,6 +249,24 @@ function App() {
       <header className="app-header">
         <h1>看護記録システム</h1>
       </header>
+      <Snackbar
+        open={Boolean(apiError)}
+        autoHideDuration={5000}
+        onClose={onClearApiError}
+        anchorOrigin={{
+          vertical: "top",
+          horizontal: "center",
+        }}
+      >
+        <Alert
+          severity="error"
+          onClose={onClearApiError}
+          variant="filled"
+          sx={{ width: "100%" }}
+        >
+          {apiError}
+        </Alert>
+      </Snackbar>
       <main className="app-main">
         <Routes>
           <Route
@@ -252,7 +275,6 @@ function App() {
               <PatientList
                 patients={appData.patients}
                 isLoading={loading}
-                apiError={apiError}
                 onErrorsChange={setGlobalErrors}
                 addPatient={addPatient}
               />
@@ -264,8 +286,6 @@ function App() {
               <PatientPage
                 patients={appData.patients}
                 records={appData.records}
-                apiError={apiError}
-                onClearApiError={() => setApiError("")}
                 updatePatient={updatePatient}
                 addRecord={addRecord}
                 updateRecord={updateRecord}

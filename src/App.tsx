@@ -265,6 +265,7 @@ function App() {
                 patients={appData.patients}
                 records={appData.records}
                 apiError={apiError}
+                onClearApiError={() => setApiError("")}
                 updatePatient={updatePatient}
                 addRecord={addRecord}
                 updateRecord={updateRecord}

@@ -1,11 +1,13 @@
 import { Outlet, useParams } from "react-router-dom";
 import { extractUsedRoomNumbers } from "./Utils";
+import { Alert } from "@mui/material";
 import type { Patient, NursingRecord, PatientOutletContext } from "./types";
 
 type PatientPageProps = {
   patients: Patient[];
   records: NursingRecord[];
   apiError: string;
+  onClearApiError: () => void;
 } & Pick<
   PatientOutletContext,
   | "updatePatient"
@@ -19,6 +21,7 @@ export default function PatientPage({
   patients,
   records,
   apiError,
+  onClearApiError,
   updatePatient,
   addRecord,
   updateRecord,
@@ -45,7 +48,12 @@ export default function PatientPage({
   };
   return (
     <>
-      {apiError && <p className="api-error">{apiError}</p>}
+      {apiError && (
+        <Alert severity="error" onClose={onClearApiError}>
+          {apiError}
+        </Alert>
+      )}
+
       <Outlet context={outletContext} />
     </>
   );

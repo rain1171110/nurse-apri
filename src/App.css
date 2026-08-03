@@ -510,6 +510,15 @@ button:disabled {
   .MuiFormHelperText-root {
     color: var(--color-text-secondary) !important;
   }
+  .MuiFormHelperText-root.Mui-error {
+    color: var(--color-error) !important;
+  }
+  .MuiFormLabel-root.Mui-error {
+    color: var(--color-error) !important;
+  }
+  .MuiOutlinedInput-input-root.Mui-error.MuiOutlinedInput-input-notchedOutline {
+    border-color: var(--color-error) !important;
+  }
 
   .MuiFormLabel-root {
     color: var(--color-text-secondary) !important;
@@ -526,7 +535,6 @@ button:disabled {
     background-color: rgba(239, 68, 68, 0.2) !important;
     color: var(--color-error) !important;
   }
-
 
   /* DatePicker対応 */
   .MuiTextField-root input {

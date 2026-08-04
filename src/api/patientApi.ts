@@ -1,4 +1,5 @@
 import type { Patient } from "../types";
+import { throwApiError } from "./apiError";
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? "http://localhost:3001/api";
 
@@ -12,8 +13,7 @@ export const createPatientApi = async (
   });
 
   if (!response.ok) {
-    const errorData: { error?: string } = await response.json();
-    throw new Error(errorData.error ?? `API error: ${response.status}`);
+    await throwApiError(response);
   }
   const data: Patient = await response.json();
   return data;
@@ -30,8 +30,7 @@ export const updatePatientApi = async (
   });
 
   if (!response.ok) {
-    const errorData: { error?: string } = await response.json();
-    throw new Error(errorData.error ?? `API error: ${response.status}`);
+    await throwApiError(response);
   }
   const data: Patient = await response.json();
   return data;
@@ -43,8 +42,7 @@ export const deletePatientApi = async (id: string): Promise<{ id: string }> => {
   });
 
   if (!response.ok) {
-    const errorData: { error?: string } = await response.json();
-    throw new Error(errorData.error ?? `API error: ${response.status}`);
+    await throwApiError(response);
   }
 
   const data: { id: string } = await response.json();

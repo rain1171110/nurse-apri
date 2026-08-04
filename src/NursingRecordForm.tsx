@@ -47,12 +47,9 @@ export default function NursingRecordForm({
     reset(initialValues);
   }, [initialValues, reset]);
 
-  const handleInvalidSubmit = (formErrors: FieldErrors<RecordInput>): void => {
-    onErrorsChange?.(formErrors);
-  };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit, handleInvalidSubmit)}>
+    <form onSubmit={handleSubmit(onSubmit, onErrorsChange)}>
       {showDate && (
         <Controller
           name="date"

@@ -250,6 +250,7 @@ function App() {
       <header className="app-header">
         <h1>看護記録システム</h1>
       </header>
+
       <Snackbar
         open={Boolean(apiError)}
         autoHideDuration={5000}
@@ -268,6 +269,7 @@ function App() {
           {apiError}
         </Alert>
       </Snackbar>
+
       <main className="app-main">
         <Routes>
           <Route

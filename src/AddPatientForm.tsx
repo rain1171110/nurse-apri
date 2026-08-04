@@ -31,10 +31,6 @@ export default function AddPatientForm({
     [usedRooms],
   );
 
-  const handleInvalidSubmit = (formErrors: FieldErrors<PatientInput>): void => {
-    onErrorsChange?.(formErrors);
-  };
-
   const handleAddPatientSubmit = async (data: PatientOutput): Promise<void> => {
     const savedPatient = await onSubmit(data);
 
@@ -64,9 +60,7 @@ export default function AddPatientForm({
       <div className="card-header">
         <h3 className="card-title">患者を追加</h3>
       </div>
-      <form
-        onSubmit={handleSubmit(handleAddPatientSubmit, handleInvalidSubmit)}
-      >
+      <form onSubmit={handleSubmit(handleAddPatientSubmit, onErrorsChange)}>
         <div className="card-body">
           <div className="form-group">
             <Controller

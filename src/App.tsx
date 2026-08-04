@@ -180,11 +180,7 @@ function App() {
       return savedRecord;
     } catch (error) {
       console.error("看護記録追加に失敗しました", error);
-      if (error instanceof Error) {
-        setApiError(error.message);
-      } else {
-        setApiError("看護記録追加に失敗しました");
-      }
+      setApiError(getErrorMessage(error, "看護記録追加に失敗しました"));
       return undefined;
     }
   };
@@ -208,11 +204,7 @@ function App() {
       return updatedRecord;
     } catch (error) {
       console.error("看護記録修正に失敗しました", error);
-      if (error instanceof Error) {
-        setApiError(error.message);
-      } else {
-        setApiError("看護記録修正に失敗しました");
-      }
+      setApiError(getErrorMessage(error, "看護記録修正に失敗しました"));
       return undefined;
     }
   };
@@ -228,15 +220,10 @@ function App() {
           (record) => String(record.id) !== String(deletedRecord.id),
         ),
       }));
-
       return true;
     } catch (error) {
       console.error("看護記録削除に失敗しました", error);
-      if (error instanceof Error) {
-        setApiError(error.message);
-      } else {
-        setApiError("看護記録削除に失敗しました");
-      }
+      setApiError(getErrorMessage(error, "看護記録削除に失敗しました"));
       return false;
     }
   };

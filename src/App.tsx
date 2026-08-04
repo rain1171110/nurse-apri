@@ -155,11 +155,7 @@ function App() {
       return true;
     } catch (error) {
       console.error("患者削除に失敗しました", error);
-      if (error instanceof Error) {
-        setApiError(error.message);
-      } else {
-        setApiError("患者削除に失敗しました");
-      }
+      setApiError(getErrorMessage(error, "患者削除に失敗しました"));
       return false;
     }
   };

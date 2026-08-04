@@ -24,6 +24,14 @@ import { Alert, Snackbar } from "@mui/material";
 import type { AppData, NursingRecord, Patient } from "./types";
 import type { RecordOutput } from "./schema";
 
+const getErrorMessage = (error: unknown, fallbackMessage: string): string => {
+  if (error instanceof Error) {
+    return error.message;
+  } else {
+    return fallbackMessage;
+  }
+};
+
 function App() {
   const [globalErrors, setGlobalErrors] = useState({});
   const [displayErrors, setDisplayErrors] = useState({});
@@ -98,11 +106,7 @@ function App() {
       return savedPatient;
     } catch (error) {
       console.error("患者追加に失敗しました", error);
-      if (error instanceof Error) {
-        setApiError(error.message);
-      } else {
-        setApiError("患者追加に失敗しました");
-      }
+      setApiError(getErrorMessage(error, "患者追加に失敗しました"));
       return undefined;
     }
   };

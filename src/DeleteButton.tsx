@@ -3,7 +3,10 @@ type DeleteButtonProps = {
   alertMessage: string;
 };
 
-export default function DeleteButton({ onDelete,alertMessage }: DeleteButtonProps) {
+export default function DeleteButton({
+  onDelete,
+  alertMessage,
+}: DeleteButtonProps) {
   const handleDelete = async (): Promise<void> => {
     const ok = window.confirm(alertMessage);
 

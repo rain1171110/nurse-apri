@@ -26,6 +26,9 @@ import type { RecordOutput } from "./schema";
 
 const getErrorMessage = (error: unknown, fallbackMessage: string): string => {
   if (error instanceof Error) {
+    if (error.message === "Failed to fetch") {
+      return "サーバーへ接続できません";
+    }
     return error.message;
   } else {
     return fallbackMessage;

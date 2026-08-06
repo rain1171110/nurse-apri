@@ -229,7 +229,9 @@ app.put<{ id: string }, {}, CreateRecordBody>(
       console.error("PUT /api/records/:id error:", error);
       res
         .status(500)
-        .json({ error: "Failed to update record / 記録の更新に失敗しました" });
+        .json({
+          error: "Failed to update record / 看護記録の更新に失敗しました",
+        });
     }
   },
 );
@@ -279,7 +281,7 @@ app.delete<{ id: string }>("/api/records/:id", async (req, res) => {
     console.error("DELETE /api/records/:id error:", error);
     res
       .status(500)
-      .json({ error: "Failed to delete record / 看護記録削除に失敗しました" });
+      .json({ error: "Failed to delete record / 看護記録の削除に失敗しました" });
   }
 });
 

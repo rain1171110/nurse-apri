@@ -1,10 +1,11 @@
 type DeleteButtonProps = {
   onDelete: () => Promise<void>;
+  alertMessage: string;
 };
 
-export default function DeleteButton({ onDelete }: DeleteButtonProps) {
+export default function DeleteButton({ onDelete,alertMessage }: DeleteButtonProps) {
   const handleDelete = async (): Promise<void> => {
-    const ok = window.confirm("この患者を削除しますか？");
+    const ok = window.confirm(alertMessage);
 
     if (!ok) return;
 

@@ -136,7 +136,10 @@ export default function NursingRecordItem({
           >
             戻る
           </button>
-          <DeleteButton onDelete={handleDelete} />
+          <DeleteButton
+            onDelete={handleDelete}
+            alertMessage="この看護記録を削除しますか"
+          />
         </div>
       )}
     </div>

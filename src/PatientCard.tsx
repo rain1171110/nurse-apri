@@ -53,7 +53,10 @@ export default function PatientCard({
         >
           一覧に戻る
         </button>
-        <DeleteButton onDelete={onDeletePatient} />
+        <DeleteButton
+          onDelete={onDeletePatient}
+          alertMessage="この患者を削除しますか？"
+        />
       </div>
     </div>
   );

@@ -8,7 +8,6 @@ import {
   type CreateRecordBody,
 } from "./schema.js";
 
-
 export const app = express();
 const PORT = process.env.PORT || 3001;
 
@@ -284,6 +283,8 @@ app.delete<{ id: string }>("/api/records/:id", async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`API server running on http://localhost:${PORT}`);
-});
+if (process.env.NODE_ENV !== "test") {
+  app.listen(PORT, () => {
+    console.log(`API server running on http://localhost:${PORT}`);
+  });
+}

@@ -23,17 +23,7 @@ import PatientMenu from "./PatientMenu";
 import { Alert, Snackbar } from "@mui/material";
 import type { AppData, NursingRecord, Patient } from "./types";
 import type { RecordOutput } from "./schema";
-
-const getErrorMessage = (error: unknown, fallbackMessage: string): string => {
-  if (error instanceof Error) {
-    if (error.message === "Failed to fetch") {
-      return "サーバーへ接続できません";
-    }
-    return error.message;
-  } else {
-    return fallbackMessage;
-  }
-};
+import { getErrorMessage } from "./api/apiError";
 
 function App() {
   const [globalErrors, setGlobalErrors] = useState({});

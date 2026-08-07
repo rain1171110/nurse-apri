@@ -8,7 +8,8 @@ import {
   type CreateRecordBody,
 } from "./schema.js";
 
-const app = express();
+
+export const app = express();
 const PORT = process.env.PORT || 3001;
 
 type PrismaErrorCode = "P2002" | "P2003" | "P2025";
@@ -227,11 +228,9 @@ app.put<{ id: string }, {}, CreateRecordBody>(
         return;
       }
       console.error("PUT /api/records/:id error:", error);
-      res
-        .status(500)
-        .json({
-          error: "Failed to update record / 看護記録の更新に失敗しました",
-        });
+      res.status(500).json({
+        error: "Failed to update record / 看護記録の更新に失敗しました",
+      });
     }
   },
 );
@@ -279,9 +278,9 @@ app.delete<{ id: string }>("/api/records/:id", async (req, res) => {
       return;
     }
     console.error("DELETE /api/records/:id error:", error);
-    res
-      .status(500)
-      .json({ error: "Failed to delete record / 看護記録の削除に失敗しました" });
+    res.status(500).json({
+      error: "Failed to delete record / 看護記録の削除に失敗しました",
+    });
   }
 });
 

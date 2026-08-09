@@ -75,15 +75,24 @@ describe("PUT /api/records/:id", () => {
     const response = await request(app)
       .put("/api/records/00000000-0000-0000-0000-000000000000")
       .send({
-        patientId:"00000000-0000-0000-0000-000000000000",
+        patientId: "00000000-0000-0000-0000-000000000000",
         date: "3000-12-19",
         author: "test author",
-        vitals:{},
+        vitals: {},
       });
 
     expect(response.status).toBe(404);
     expect(response.body.error).toBe(
       "Record not found / 看護記録が見つかりません",
     );
+  });
+});
+
+describe("GET /api/data", () => {
+  it("患者と看護記録のデータを取得すると200を返す", async () => {
+    const response = await request(app).get("/api/data");
+    expect(response.status).toBe(200);
+    expect(Array.isArray(response.body.patients)).toBe(true);
+    expect(Array.isArray(response.body.records)).toBe(true);
   });
 });

@@ -69,3 +69,19 @@ describe("DELETE /api/records/:id", () => {
     );
   });
 });
+
+describe("PUT /api/records/:id", () => {
+  it("存在しない看護記録を更新設楽404を返す", async () => {
+    const response = await request(app)
+      .put("/api/records/00000000-0000-0000-0000-000000000000")
+      .send({
+        name: "テスト患者",
+        room: 999,
+      });
+
+    expect(response.status).toBe(404);
+    expect(response.body.error).toBe(
+      "Record not found / 看護記録が見つかりません",
+    );
+  });
+});

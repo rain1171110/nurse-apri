@@ -113,3 +113,14 @@ describe("PUT /api/records/:id", () => {
     );
   });
 });
+
+describe("PUT /api/patients/:id", () => {
+  it("不正な患者データなら400を返す", async () => {
+    const response = await request(app).put("/api/patients/00000000-0000-0000-0000-000000000000").send({
+      name: "",
+      room: "",
+    });
+    expect(response.status).toBe(400);
+    expect(response.body.error).toBe("Invalid patient data / 無効な患者データ")
+  });
+});

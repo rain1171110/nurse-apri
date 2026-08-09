@@ -71,12 +71,14 @@ describe("DELETE /api/records/:id", () => {
 });
 
 describe("PUT /api/records/:id", () => {
-  it("存在しない看護記録を更新設楽404を返す", async () => {
+  it("存在しない看護記録を更新したら404を返す", async () => {
     const response = await request(app)
       .put("/api/records/00000000-0000-0000-0000-000000000000")
       .send({
-        name: "テスト患者",
-        room: 999,
+        patientId:"00000000-0000-0000-0000-000000000000",
+        date: "3000-12-19",
+        author: "test author",
+        vitals:{},
       });
 
     expect(response.status).toBe(404);

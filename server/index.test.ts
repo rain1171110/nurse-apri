@@ -96,3 +96,20 @@ describe("GET /api/data", () => {
     expect(Array.isArray(response.body.records)).toBe(true);
   });
 });
+
+describe("PUT /api/records/:id", () => {
+  it("不正な看護記録データなら400を返す", async () => {
+    const response = await request(app)
+      .put("/api/records/00000000-0000-0000-0000-000000000000")
+      .send({
+        patientId: "00000000-0000-0000-0000-000000000000",
+        date: "",
+        author: "",
+        vitals: {},
+      });
+    expect(response.status).toBe(400);
+    expect(response.body.error).toBe(
+      "Invalid record data / 無効な看護記録データ",
+    );
+  });
+});

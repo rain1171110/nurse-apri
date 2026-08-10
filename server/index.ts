@@ -1,11 +1,14 @@
 import express from "express";
 import cors from "cors";
+import bcrypt from "bcryptjs";
 import { prisma } from "./db.js";
 import {
   createPatientSchema,
   createRecordSchema,
+  registerSchema,
   type CreatePatientBody,
   type CreateRecordBody,
+  type RegisterBody,
 } from "./schema.js";
 
 export const app = express();
@@ -280,6 +283,45 @@ app.delete<{ id: string }>("/api/records/:id", async (req, res) => {
     res.status(500).json({
       error: "Failed to delete record / 看護記録の削除に失敗しました",
     });
+  }
+});
+
+app.post<{}, {}, RegisterBody>("/api/auth/register", async (req, res) => {
+  try {
+    const result = registerSchema.safeParse(req.body);
+    if (!result.success) {
+      res.status(400).json({
+        error: "Invalid registration data / 無効な登録データ",
+        details: result.error.flatten(),
+      });
+      return;
+    }
+    const { email, password } = result.data;
+
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    const newUser = await prisma.user.create({
+      data: {
+        email,
+        passwordHash,
+      },
+    });
+    res.status(201).json({
+      id: newUser.id,
+      email: newUser.email,
+      createdAt: newUser.createdAt,
+    });
+  } catch (error) {
+    if (isPrismaError(error, "P2002")) {
+      res.status(409).json({
+        error: "Email is already registered / このメールアドレスは登録済みです",
+      });
+      return;
+    }
+    console.error("POST /api/auth/register", error);
+    res
+      .status(500)
+      .json({ error: "Failed to register user / ユーザー登録に失敗しました" });
   }
 });
 

@@ -44,3 +44,10 @@ model VitalSigns {
   SPO2     Int?
   record   NursingRecord @relation(fields: [recordId], references: [id], onDelete: Cascade)
 }
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+}

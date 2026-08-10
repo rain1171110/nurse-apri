@@ -27,3 +27,10 @@ export const createRecordSchema = z.object({
 });
 
 export type CreateRecordBody = z.infer<typeof createRecordSchema>;
+
+export const registerSchema = z.object({
+  email: z.string().trim().email("メールアドレスの形式が正しくありません"),
+  password: z.string().min(8, "パスワードは8文字以上必要です"),
+});
+
+export type RegisterBody = z.infer<typeof registerSchema>;

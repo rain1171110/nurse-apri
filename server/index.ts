@@ -6,13 +6,18 @@ import {
   createPatientSchema,
   createRecordSchema,
   registerSchema,
+  loginSchema,
   type CreatePatientBody,
   type CreateRecordBody,
   type RegisterBody,
+  type LoginBody,
 } from "./schema.js";
+import cookieParser from "cookie-parser";
+import jwt from "jsonwebtoken";
 
 export const app = express();
 const PORT = process.env.PORT || 3001;
+const JWT_SECRET = process.env.JWT_SECRET;
 
 type PrismaErrorCode = "P2002" | "P2003" | "P2025";
 
@@ -27,6 +32,7 @@ const isPrismaError = (error: unknown, code: PrismaErrorCode): boolean => {
 
 app.use(cors());
 app.use(express.json());
+app.use(cookieParser());
 
 app.get("/api/data", async (req, res) => {
   try {
@@ -322,6 +328,45 @@ app.post<{}, {}, RegisterBody>("/api/auth/register", async (req, res) => {
     res
       .status(500)
       .json({ error: "Failed to register user / ユーザー登録に失敗しました" });
+  }
+});
+
+app.post<{}, {}, LoginBody>("/api/auth/login", async (req, res) => {
+  try {
+    const result = loginSchema.safeParse(req.body);
+    if (!result.success) {
+      res.status(400).json({
+        error: "Invalid login data / 無効なログインデータ",
+        details: result.error.flatten(),
+      });
+      return;
+    }
+    const { email, password } = result.data;
+    const user = await prisma.user.findUnique({
+      where: {
+        email,
+      },
+    });
+    if (!user) {
+      res.status(401).json({
+        error:
+          "Invalid email or password / メールアドレスまたはパスワードが正しくありません",
+      });
+      return;
+    }
+    const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
+    if (!isPasswordValid) {
+      res.status(401).json({
+        error:
+          "Invalid email or password / メールアドレスまたはパスワードが正しくありません",
+      });
+      return;
+    }
+  } catch (error) {
+    console.error("POST /api/auth/login", error);
+    res
+      .status(500)
+      .json({ error: "Failed to login user / ユーザーログインに失敗しました" });
   }
 });
 

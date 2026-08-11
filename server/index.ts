@@ -18,6 +18,9 @@ import jwt from "jsonwebtoken";
 export const app = express();
 const PORT = process.env.PORT || 3001;
 const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  throw new Error("JWT_SECRET is not defined");
+}
 
 type PrismaErrorCode = "P2002" | "P2003" | "P2025";
 
@@ -362,6 +365,19 @@ app.post<{}, {}, LoginBody>("/api/auth/login", async (req, res) => {
       });
       return;
     }
+    const token = jwt.sign({ userId: user.id }, JWT_SECRET, {
+      expiresIn: "1h",
+    });
+    res.cookie("token", token, {
+      secure: process.env.NODE_ENV === "production",
+      httpOnly: true,
+      sameSite: "strict",
+    });
+    res.json({
+      success: true,
+      message: "ログイン成功",
+      user: { id: user.id, email: user.email },
+    });
   } catch (error) {
     console.error("POST /api/auth/login", error);
     res

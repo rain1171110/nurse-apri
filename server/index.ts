@@ -14,6 +14,7 @@ import {
 } from "./schema.js";
 import cookieParser from "cookie-parser";
 import jwt from "jsonwebtoken";
+import { requireAuth } from "./auth.js";
 
 export const app = express();
 const PORT = process.env.PORT || 3001;
@@ -37,7 +38,7 @@ app.use(cors({ origin: "http://" + "localhost:5173", credentials: true }));
 app.use(express.json());
 app.use(cookieParser());
 
-app.get("/api/data", async (req, res) => {
+app.get("/api/data", requireAuth, async (req, res) => {
   try {
     const patients = await prisma.patient.findMany();
     const records = await prisma.nursingRecord.findMany({
@@ -60,7 +61,7 @@ app.get("/api/data", async (req, res) => {
   }
 });
 
-app.get("/api/patients", async (req, res) => {
+app.get("/api/patients", requireAuth, async (req, res) => {
   try {
     const patients = await prisma.patient.findMany();
 
@@ -73,79 +74,88 @@ app.get("/api/patients", async (req, res) => {
   }
 });
 
-app.post<{}, {}, CreatePatientBody>("/api/patients", async (req, res) => {
-  try {
-    const result = createPatientSchema.safeParse(req.body);
+app.post<{}, {}, CreatePatientBody>(
+  "/api/patients",
+  requireAuth,
+  async (req, res) => {
+    try {
+      const result = createPatientSchema.safeParse(req.body);
 
-    if (!result.success) {
-      res.status(400).json({
-        error: "Invalid patient data / 無効な患者データ",
-        details: result.error.flatten(),
+      if (!result.success) {
+        res.status(400).json({
+          error: "Invalid patient data / 無効な患者データ",
+          details: result.error.flatten(),
+        });
+        return;
+      }
+
+      const newPatient = await prisma.patient.create({
+        data: result.data,
       });
-      return;
-    }
 
-    const newPatient = await prisma.patient.create({
-      data: result.data,
-    });
-
-    res.status(201).json(newPatient);
-  } catch (error) {
-    if (isPrismaError(error, "P2002")) {
-      res.status(409).json({
-        error:
-          "This room number is already in use / この部屋番号はすでに使用されています",
+      res.status(201).json(newPatient);
+    } catch (error) {
+      if (isPrismaError(error, "P2002")) {
+        res.status(409).json({
+          error:
+            "This room number is already in use / この部屋番号はすでに使用されています",
+        });
+        return;
+      }
+      console.error("POST /api/patients error", error);
+      res.status(500).json({
+        error: "Failed to create patient / 患者情報追加に失敗しました",
       });
-      return;
     }
-    console.error("POST /api/patients error", error);
-    res
-      .status(500)
-      .json({ error: "Failed to create patient / 患者情報追加に失敗しました" });
-  }
-});
+  },
+);
 
-app.post<{}, {}, CreateRecordBody>("/api/records", async (req, res) => {
-  try {
-    const result = createRecordSchema.safeParse(req.body);
-    if (!result.success) {
-      res.status(400).json({
-        error: "Invalid record data / 無効な看護記録データ",
-        details: result.error.flatten(),
-      });
-      return;
-    }
-    const { vitals, ...recordData } = result.data;
+app.post<{}, {}, CreateRecordBody>(
+  "/api/records",
+  requireAuth,
+  async (req, res) => {
+    try {
+      const result = createRecordSchema.safeParse(req.body);
+      if (!result.success) {
+        res.status(400).json({
+          error: "Invalid record data / 無効な看護記録データ",
+          details: result.error.flatten(),
+        });
+        return;
+      }
+      const { vitals, ...recordData } = result.data;
 
-    const newRecord = await prisma.nursingRecord.create({
-      data: {
-        ...recordData,
-        vitals: {
-          create: vitals,
+      const newRecord = await prisma.nursingRecord.create({
+        data: {
+          ...recordData,
+          vitals: {
+            create: vitals,
+          },
         },
-      },
-      include: {
-        vitals: true,
-      },
-    });
-
-    res.status(201).json(newRecord);
-  } catch (error) {
-    if (isPrismaError(error, "P2003")) {
-      res.status(404).json({
-        error: "Patient not found / 患者が見つかりません",
+        include: {
+          vitals: true,
+        },
       });
-      return;
+
+      res.status(201).json(newRecord);
+    } catch (error) {
+      if (isPrismaError(error, "P2003")) {
+        res.status(404).json({
+          error: "Patient not found / 患者が見つかりません",
+        });
+        return;
+      }
+      console.error("POST /api/records error", error);
+      res.status(500).json({
+        error: "Failed to create record / 看護記録の追加に失敗しました",
+      });
     }
-    console.error("POST /api/records error", error);
-    res.status(500).json({
-      error: "Failed to create record / 看護記録の追加に失敗しました",
-    });
-  }
-});
+  },
+);
 
 app.put<{ id: string }, {}, CreatePatientBody>(
   "/api/patients/:id",
+  requireAuth,
   async (req, res) => {
     try {
       const result = createPatientSchema.safeParse(req.body);
@@ -192,6 +202,7 @@ app.put<{ id: string }, {}, CreatePatientBody>(
 
 app.put<{ id: string }, {}, CreateRecordBody>(
   "/api/records/:id",
+  requireAuth,
   async (req, res) => {
     try {
       const result = createRecordSchema.safeParse(req.body);
@@ -246,54 +257,62 @@ app.put<{ id: string }, {}, CreateRecordBody>(
   },
 );
 
-app.delete<{ id: string }>("/api/patients/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
+app.delete<{ id: string }>(
+  "/api/patients/:id",
+  requireAuth,
+  async (req, res) => {
+    try {
+      const { id } = req.params;
 
-    await prisma.patient.delete({
-      where: {
-        id,
-      },
-    });
-
-    res.json({ id });
-  } catch (error) {
-    if (isPrismaError(error, "P2025")) {
-      res.status(404).json({
-        error: "Patient not found / 患者が見つかりません",
+      await prisma.patient.delete({
+        where: {
+          id,
+        },
       });
-      return;
+
+      res.json({ id });
+    } catch (error) {
+      if (isPrismaError(error, "P2025")) {
+        res.status(404).json({
+          error: "Patient not found / 患者が見つかりません",
+        });
+        return;
+      }
+      console.error("DELETE /api/patients/:id error:", error);
+      res
+        .status(500)
+        .json({ error: "Failed to delete patient / 患者削除に失敗しました" });
     }
-    console.error("DELETE /api/patients/:id error:", error);
-    res
-      .status(500)
-      .json({ error: "Failed to delete patient / 患者削除に失敗しました" });
-  }
-});
+  },
+);
 
-app.delete<{ id: string }>("/api/records/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
-    await prisma.nursingRecord.delete({
-      where: {
-        id,
-      },
-    });
-
-    res.json({ id });
-  } catch (error) {
-    if (isPrismaError(error, "P2025")) {
-      res.status(404).json({
-        error: "Record not found / 看護記録が見つかりません",
+app.delete<{ id: string }>(
+  "/api/records/:id",
+  requireAuth,
+  async (req, res) => {
+    try {
+      const { id } = req.params;
+      await prisma.nursingRecord.delete({
+        where: {
+          id,
+        },
       });
-      return;
+
+      res.json({ id });
+    } catch (error) {
+      if (isPrismaError(error, "P2025")) {
+        res.status(404).json({
+          error: "Record not found / 看護記録が見つかりません",
+        });
+        return;
+      }
+      console.error("DELETE /api/records/:id error:", error);
+      res.status(500).json({
+        error: "Failed to delete record / 看護記録の削除に失敗しました",
+      });
     }
-    console.error("DELETE /api/records/:id error:", error);
-    res.status(500).json({
-      error: "Failed to delete record / 看護記録の削除に失敗しました",
-    });
-  }
-});
+  },
+);
 
 app.post<{}, {}, RegisterBody>("/api/auth/register", async (req, res) => {
   try {

@@ -399,9 +399,9 @@ app.post<{}, {}, LoginBody>("/api/auth/login", async (req, res) => {
     });
   } catch (error) {
     console.error("POST /api/auth/login", error);
-    res
-      .status(500)
-      .json({ error: "Failed to login user / ユーザーログインに失敗しました" });
+    res.status(500).json({
+      error: "Failed to login user / ユーザーログインに失敗しました",
+    });
   }
 });
 

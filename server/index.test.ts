@@ -10,9 +10,15 @@ const testUser = {
 };
 
 beforeAll(async () => {
-  await agent.post("/api/auth/register").send(testUser);
+  const registerResponse = await agent
+    .post("/api/auth/register")
+    .send(testUser);
 
-  await agent.post("/api/auth/login").send(testUser);
+  expect(registerResponse.status).toBe(201);
+
+  const loginResponse = await agent.post("/api/auth/login").send(testUser);
+
+  expect(loginResponse.status).toBe(200);
 });
 
 describe("POST /api/patients", () => {

@@ -10,6 +10,7 @@ export const createPatientApi = async (
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(patient),
+    credentials: "include",
   });
 
   if (!response.ok) {
@@ -27,6 +28,7 @@ export const updatePatientApi = async (
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(patient),
+      credentials: "include",
   });
 
   if (!response.ok) {
@@ -39,6 +41,7 @@ export const updatePatientApi = async (
 export const deletePatientApi = async (id: string): Promise<{ id: string }> => {
   const response = await fetch(`${API_BASE}/patients/${id}`, {
     method: "DELETE",
+      credentials: "include",
   });
 
   if (!response.ok) {

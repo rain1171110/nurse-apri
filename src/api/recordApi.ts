@@ -10,6 +10,7 @@ export const createRecordApi = async (
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(record),
+    credentials: "include",
   });
 
   if (!response.ok) {
@@ -27,6 +28,7 @@ export const updateRecordApi = async (
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(record),
+    credentials: "include",
   });
 
   if (!response.ok) {
@@ -39,6 +41,7 @@ export const updateRecordApi = async (
 export const deleteRecordApi = async (id: string): Promise<{ id: string }> => {
   const response = await fetch(`${API_BASE}/records/${id}`, {
     method: "DELETE",
+    credentials: "include",
   });
 
   if (!response.ok) {

@@ -24,6 +24,7 @@ import { Alert, Snackbar } from "@mui/material";
 import type { AppData, NursingRecord, Patient } from "./types";
 import type { RecordOutput } from "./schema";
 import { getErrorMessage } from "./api/apiError";
+import LoginPage from "./LoginPage";
 
 function App() {
   const [globalErrors, setGlobalErrors] = useState({});
@@ -289,6 +290,7 @@ function App() {
             />
           </Route>
           <Route path="/test" element={<div>テスト画面</div>} />
+          <Route path="/login" element={<LoginPage />} />
         </Routes>
 
         {import.meta.env.DEV && Object.keys(displayErrors).length > 0 && (

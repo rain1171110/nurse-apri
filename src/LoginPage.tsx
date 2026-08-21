@@ -2,7 +2,11 @@ import { useState, type FormEvent } from "react";
 import { loginApi } from "./api/authApi";
 import { useNavigate } from "react-router-dom";
 
-export default function LoginPage() {
+type LoginPageProps = {
+  onLoginSuccess: () => void;
+};
+
+export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
   const navigate = useNavigate();
   const [apiError, setApiError] = useState("");
 
@@ -19,6 +23,7 @@ export default function LoginPage() {
     try {
       setApiError("");
       await loginApi(loginData);
+      onLoginSuccess();
       navigate("/");
     } catch (error) {
       console.error("ログインに失敗しました", error);

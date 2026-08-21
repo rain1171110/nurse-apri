@@ -38,6 +38,8 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [apiError, setApiError] = useState("");
 
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
   const onClearApiError = (): void => {
     setApiError("");
   };
@@ -65,12 +67,17 @@ function App() {
     };
   }, [globalErrors]);
 
+  const handleLoginSuccess = () => {
+    setIsLoggedIn(true);
+  };
+
   useEffect(() => {
     const run = async () => {
       setLoading(true);
       setApiError("");
       try {
         const data = await fetchAppData();
+        setIsLoggedIn(true);
         setAppData({
           patients: Array.isArray(data.patients) ? data.patients : [],
           records: Array.isArray(data.records) ? data.records : [],
@@ -83,7 +90,7 @@ function App() {
       }
     };
     run();
-  }, []);
+  }, [isLoggedIn]);
 
   const addPatient = async (
     patient: Omit<Patient, "id">,
@@ -290,7 +297,10 @@ function App() {
             />
           </Route>
           <Route path="/test" element={<div>テスト画面</div>} />
-          <Route path="/login" element={<LoginPage />} />
+          <Route
+            path="/login"
+            element={<LoginPage onLoginSuccess={handleLoginSuccess} />}
+          />
         </Routes>
 
         {import.meta.env.DEV && Object.keys(displayErrors).length > 0 && (

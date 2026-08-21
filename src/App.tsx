@@ -13,7 +13,7 @@ import {
   updateRecordApi,
   deleteRecordApi,
 } from "./api/recordApi";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate, Outlet } from "react-router-dom";
 import PatientPage from "./PatientPage";
 import PatientDetail from "./PatientDetail";
 import PatientVitals from "./PatientVitals";
@@ -257,46 +257,59 @@ function App() {
       <main className="app-main">
         <Routes>
           <Route
-            path="/"
             element={
-              <PatientList
-                patients={appData.patients}
-                isLoading={loading}
-                onErrorsChange={setGlobalErrors}
-                addPatient={addPatient}
-              />
-            }
-          />
-          <Route
-            path="/patient/:id"
-            element={
-              <PatientPage
-                patients={appData.patients}
-                records={appData.records}
-                updatePatient={updatePatient}
-                addRecord={addRecord}
-                updateRecord={updateRecord}
-                deleteRecord={deleteRecord}
-                deletePatient={deletePatient}
-              />
+              loading ? (
+                <div>読み込み中…</div>
+              ) : isLoggedIn ? (
+                <Outlet />
+              ) : (
+                <Navigate to="/login" replace />
+              )
             }
           >
-            <Route index element={<PatientMenu />} />
             <Route
-              path="detail"
-              element={<PatientDetail onErrorsChange={setGlobalErrors} />}
+              path="/"
+              element={
+                <PatientList
+                  patients={appData.patients}
+                  isLoading={loading}
+                  onErrorsChange={setGlobalErrors}
+                  addPatient={addPatient}
+                />
+              }
             />
-            <Route path="vitals" element={<PatientVitals />} />
             <Route
-              path="records"
-              element={<NursingRecordList onErrorsChange={setGlobalErrors} />}
-            />
-            <Route
-              path="records/:recordId"
-              element={<NursingRecordItem onErrorsChange={setGlobalErrors} />}
-            />
+              path="/patient/:id"
+              element={
+                <PatientPage
+                  patients={appData.patients}
+                  records={appData.records}
+                  updatePatient={updatePatient}
+                  addRecord={addRecord}
+                  updateRecord={updateRecord}
+                  deleteRecord={deleteRecord}
+                  deletePatient={deletePatient}
+                />
+              }
+            >
+              <Route index element={<PatientMenu />} />
+              <Route
+                path="detail"
+                element={<PatientDetail onErrorsChange={setGlobalErrors} />}
+              />
+              <Route path="vitals" element={<PatientVitals />} />
+              <Route
+                path="records"
+                element={<NursingRecordList onErrorsChange={setGlobalErrors} />}
+              />
+              <Route
+                path="records/:recordId"
+                element={<NursingRecordItem onErrorsChange={setGlobalErrors} />}
+              />
+            </Route>
+            <Route path="/test" element={<div>テスト画面</div>} />
           </Route>
-          <Route path="/test" element={<div>テスト画面</div>} />
+
           <Route
             path="/login"
             element={<LoginPage onLoginSuccess={handleLoginSuccess} />}

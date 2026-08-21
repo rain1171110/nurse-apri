@@ -1,5 +1,7 @@
 // // 実装とは関係なく、練習用のコンポーネント
 
+import { Route } from "react-router-dom";
+
 // import { useState } from "react";
 // import { useParams } from "react-router-dom";
 // import { record } from "zod";
@@ -46,7 +48,6 @@
 //   </div>
 // ));
 
-
 // //問題
 // export default function RecordItem({ record }) {
 //   return (
@@ -61,7 +62,6 @@
 // patientRecords.map((r) => (
 //   <RecordItem key={r.id} record={r}/>
 // ));
-
 
 // //問題⑤ に削除ボタン追加
 // import { useState } from "react";
@@ -78,7 +78,6 @@
 // ))}
 // </>
 // )
-
 
 // export default function RecordItem ({record,onDelete}) {
 //   return (
@@ -176,3 +175,6 @@
 
 // 空欄を書いてみてください。
 
+<Route element={<Outlet />}>
+  <Route path="/" element={<PatientList />} />
+</Route>;

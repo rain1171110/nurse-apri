@@ -25,6 +25,7 @@ import type { AppData, NursingRecord, Patient } from "./types";
 import type { RecordOutput } from "./schema";
 import { getErrorMessage } from "./api/apiError";
 import LoginPage from "./LoginPage";
+import { logoutApi } from "./api/authApi";
 
 function App() {
   const [globalErrors, setGlobalErrors] = useState({});
@@ -67,30 +68,48 @@ function App() {
     };
   }, [globalErrors]);
 
-  const handleLoginSuccess = () => {
-    setIsLoggedIn(true);
+  const loadAppData = async () => {
+    setLoading(true);
+    setApiError("");
+    try {
+      const data = await fetchAppData();
+      setIsLoggedIn(true);
+      setAppData({
+        patients: Array.isArray(data.patients) ? data.patients : [],
+        records: Array.isArray(data.records) ? data.records : [],
+      });
+    } catch (error) {
+      console.error(error);
+      setApiError("APIから読み込めませんでした");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLoginSuccess = async (): Promise<void> => {
+    await loadAppData();
+  };
+
+  const handleLogout = async (): Promise<void> => {
+    try {
+      setApiError("");
+
+      await logoutApi();
+
+      setIsLoggedIn(false);
+      setAppData({
+        patients: [],
+        records: [],
+      });
+    } catch (error) {
+      console.error("ログアウトに失敗しました", error);
+      setApiError(getErrorMessage(error, "ログアウトに失敗しました"));
+    }
   };
 
   useEffect(() => {
-    const run = async () => {
-      setLoading(true);
-      setApiError("");
-      try {
-        const data = await fetchAppData();
-        setIsLoggedIn(true);
-        setAppData({
-          patients: Array.isArray(data.patients) ? data.patients : [],
-          records: Array.isArray(data.records) ? data.records : [],
-        });
-      } catch (error) {
-        console.error(error);
-        setApiError("APIから読み込めませんでした");
-      } finally {
-        setLoading(false);
-      }
-    };
-    run();
-  }, [isLoggedIn]);
+    loadAppData();
+  }, []);
 
   const addPatient = async (
     patient: Omit<Patient, "id">,
@@ -315,6 +334,12 @@ function App() {
             element={<LoginPage onLoginSuccess={handleLoginSuccess} />}
           />
         </Routes>
+
+        {isLoggedIn && (
+          <button type="button" className="btn-primary" onClick={handleLogout}>
+            ログアウトボタン
+          </button>
+        )}
 
         {import.meta.env.DEV && Object.keys(displayErrors).length > 0 && (
           <div className="dev-error-panel">

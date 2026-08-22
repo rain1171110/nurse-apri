@@ -15,6 +15,7 @@ import {
 import cookieParser from "cookie-parser";
 import jwt from "jsonwebtoken";
 import { requireAuth } from "./auth.js";
+import { string } from "zod";
 
 export const app = express();
 const PORT = process.env.PORT || 3001;
@@ -403,6 +404,17 @@ app.post<{}, {}, LoginBody>("/api/auth/login", async (req, res) => {
       error: "Failed to login user / ユーザーログインに失敗しました",
     });
   }
+});
+
+app.post("/api/auth/logout",  (req, res) => {
+  res.clearCookie("token", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+  });
+  res.status(200).json({
+    message: "ログアウト成功",
+  });
 });
 
 if (process.env.NODE_ENV !== "test") {

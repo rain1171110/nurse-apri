@@ -19,3 +19,14 @@ export const loginApi = async (receiveLogin: LoginData): Promise<void> => {
     await throwApiError(response);
   }
 };
+
+export const logoutApi = async (): Promise<void> => {
+  const response = await fetch(`${API_BASE}/auth/logout`, {
+    method: "POST",
+    credentials: "include",
+  });
+
+  if (!response.ok) {
+    await throwApiError(response);
+  }
+};

@@ -21,6 +21,23 @@ beforeAll(async () => {
   expect(loginResponse.status).toBe(200);
 });
 
+describe("POST /api/auth/logout", () => {
+  it("ログアウト後は保護されたAPIへアクセスできない", async () => {
+    const logoutAgent = request.agent(app);
+
+    const loginResponse = await logoutAgent
+      .post("/api/auth/login")
+      .send(testUser);
+    expect(loginResponse.status).toBe(200);
+
+    const logoutResponse = await logoutAgent.post("/api/auth/logout");
+    expect(logoutResponse.status).toBe(200);
+
+    const protectedResponse = await logoutAgent.get("/api/data");
+    expect(protectedResponse.status).toBe(401);
+  });
+});
+
 describe("POST /api/patients", () => {
   it("不正な患者データなら400を返す", async () => {
     const response = await agent.post("/api/patients").send({

@@ -68,7 +68,7 @@ function App() {
     };
   }, [globalErrors]);
 
-  const loadAppData = async () => {
+  const loadAppData = async (): Promise<void> => {
     setLoading(true);
     setApiError("");
     try {
@@ -79,8 +79,16 @@ function App() {
         records: Array.isArray(data.records) ? data.records : [],
       });
     } catch (error) {
-      console.error(error);
-      setApiError("APIから読み込めませんでした");
+      if (error instanceof Error && error.message === "API error:401") {
+        setIsLoggedIn(false);
+        setAppData({
+          patients: [],
+          records: [],
+        });
+      } else {
+        console.error(error);
+        setApiError("APIから読み込めませんでした");
+      }
     } finally {
       setLoading(false);
     }

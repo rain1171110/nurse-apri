@@ -3,16 +3,15 @@ import { loginApi } from "./api/authApi";
 import { useNavigate } from "react-router-dom";
 
 type LoginPageProps = {
-  onLoginSuccess: () => void;
+  onLoginSuccess: () => Promise<void>;
 };
 
 export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
   const navigate = useNavigate();
   const [apiError, setApiError] = useState("");
 
-  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
     const formData = new FormData(e.currentTarget);
     const email = String(formData.get("email"));
     const password = String(formData.get("password"));
@@ -23,7 +22,7 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
     try {
       setApiError("");
       await loginApi(loginData);
-      onLoginSuccess();
+      await onLoginSuccess();
       navigate("/");
     } catch (error) {
       console.error("ログインに失敗しました", error);
@@ -34,10 +33,11 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
         setApiError("ログインに失敗しました");
       }
     }
-  }
+  };
+
   return (
     <form onSubmit={handleSubmit}>
-      {apiError && <p>ログインに失敗しました</p>}
+      {apiError && <p>{apiError}</p>}
       <label htmlFor="email">メールアドレス</label>
       <input id="email" name="email" type="email" />
 

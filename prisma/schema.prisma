@@ -21,6 +21,7 @@ model Patient {
   history  String?
   progress String?
   records  NursingRecord[]
+  userId   String
 }
 
 model NursingRecord {
@@ -50,4 +51,5 @@ model User {
   email        String   @unique
   passwordHash String
   createdAt    DateTime @default(now())
+  patients     Patient[]
 }

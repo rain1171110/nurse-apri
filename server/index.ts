@@ -15,6 +15,8 @@ import {
 import cookieParser from "cookie-parser";
 import jwt from "jsonwebtoken";
 import { requireAuth } from "./auth.js";
+import { id } from "zod/v4/locales";
+import { string } from "zod";
 
 export const app = express();
 const PORT = process.env.PORT || 3001;
@@ -40,7 +42,12 @@ app.use(cookieParser());
 
 app.get("/api/data", requireAuth, async (req, res) => {
   try {
-    const patients = await prisma.patient.findMany();
+    const patients = await prisma.patient.findMany({
+      where: {
+        userId: req.userId,
+      },
+    });
+
     const records = await prisma.nursingRecord.findMany({
       include: {
         vitals: true,
@@ -405,7 +412,7 @@ app.post<{}, {}, LoginBody>("/api/auth/login", async (req, res) => {
   }
 });
 
-app.post("/api/auth/logout",  (req, res) => {
+app.post("/api/auth/logout", (req, res) => {
   res.clearCookie("token", {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",

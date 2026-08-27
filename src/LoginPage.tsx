@@ -37,7 +37,7 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
 
   return (
     <form onSubmit={handleSubmit}>
-      {apiError && <p>{apiError}</p>}
+      {apiError && <p className="text-error">{apiError}</p>}
       <label htmlFor="email">メールアドレス</label>
       <input id="email" name="email" type="email" />
 

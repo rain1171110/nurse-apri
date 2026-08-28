@@ -1,8 +1,6 @@
 import type { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
-import { prisma } from "./db.js";
-import { Result } from "pg";
-import { error } from "node:console";
+
 
 const JWT_SECRET = process.env.JWT_SECRET;
 

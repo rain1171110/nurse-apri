@@ -15,8 +15,7 @@ import {
 import cookieParser from "cookie-parser";
 import jwt from "jsonwebtoken";
 import { requireAuth } from "./auth.js";
-import { id } from "zod/v4/locales";
-import { string } from "zod";
+
 
 export const app = express();
 const PORT = process.env.PORT || 3001;
@@ -49,6 +48,11 @@ app.get("/api/data", requireAuth, async (req, res) => {
     });
 
     const records = await prisma.nursingRecord.findMany({
+      where: {
+        patient: {
+          userId: req.userId,
+        },
+      },
       include: {
         vitals: true,
       },
@@ -86,6 +90,13 @@ app.post<{}, {}, CreatePatientBody>(
   requireAuth,
   async (req, res) => {
     try {
+      const userId = req.userId;
+      if (!userId) {
+        res.status(401).json({
+          error: "Unauthorized / 認証が必要です",
+        });
+        return;
+      }
       const result = createPatientSchema.safeParse(req.body);
 
       if (!result.success) {
@@ -97,7 +108,10 @@ app.post<{}, {}, CreatePatientBody>(
       }
 
       const newPatient = await prisma.patient.create({
-        data: result.data,
+        data: {
+          ...result.data,
+          userId,
+        },
       });
 
       res.status(201).json(newPatient);

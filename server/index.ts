@@ -15,7 +15,7 @@ import {
 import cookieParser from "cookie-parser";
 import jwt from "jsonwebtoken";
 import { requireAuth } from "./auth.js";
-
+import { record } from "zod";
 
 export const app = express();
 const PORT = process.env.PORT || 3001;
@@ -135,6 +135,14 @@ app.post<{}, {}, CreateRecordBody>(
   "/api/records",
   requireAuth,
   async (req, res) => {
+    const userId = req.userId;
+    if (!userId) {
+      res.status(401).json({
+        error: "Unauthorized / 認証が必要です",
+      });
+      return;
+    }
+
     try {
       const result = createRecordSchema.safeParse(req.body);
       if (!result.success) {
@@ -145,6 +153,19 @@ app.post<{}, {}, CreateRecordBody>(
         return;
       }
       const { vitals, ...recordData } = result.data;
+
+      const patient = await prisma.patient.findFirst({
+        where: {
+          id: recordData.patientId,
+          userId,
+        },
+      });
+      if (!patient) {
+        res.status(404).json({
+          error: "Patient not found / 患者が見つかりません",
+        });
+        return;
+      }
 
       const newRecord = await prisma.nursingRecord.create({
         data: {
@@ -179,6 +200,15 @@ app.put<{ id: string }, {}, CreatePatientBody>(
   requireAuth,
   async (req, res) => {
     try {
+      const userId = req.userId;
+
+      if (!userId) {
+        res.status(401).json({
+          error: "Unauthorized / 認証が必要です",
+        });
+        return;
+      }
+
       const result = createPatientSchema.safeParse(req.body);
 
       if (!result.success) {
@@ -194,6 +224,7 @@ app.put<{ id: string }, {}, CreatePatientBody>(
       const updatedPatient = await prisma.patient.update({
         where: {
           id,
+          userId,
         },
         data: result.data,
       });
@@ -226,6 +257,13 @@ app.put<{ id: string }, {}, CreateRecordBody>(
   requireAuth,
   async (req, res) => {
     try {
+      const userId = req.userId;
+      if (!userId) {
+        res.status(401).json({
+          error: "Unauthorized / 認証が必要です",
+        });
+        return;
+      }
       const result = createRecordSchema.safeParse(req.body);
       if (!result.success) {
         res.status(400).json({
@@ -238,9 +276,24 @@ app.put<{ id: string }, {}, CreateRecordBody>(
       const { id } = req.params;
       const { vitals, ...recordData } = result.data;
 
+      const patient = await prisma.patient.findFirst({
+        where: {
+          id: recordData.patientId,
+          userId,
+        },
+      });
+
+      if (!patient) {
+        res.status(404).json({
+          error: "Patient not found / 患者が見つかりません",
+        });
+        return;
+      }
+
       const updatedRecord = await prisma.nursingRecord.update({
         where: {
           id,
+          patient: { userId },
         },
         data: {
           ...recordData,
@@ -283,11 +336,19 @@ app.delete<{ id: string }>(
   requireAuth,
   async (req, res) => {
     try {
+      const userId = req.userId;
+      if (!userId) {
+        res.status(401).json({
+          error: "Unauthorized / 認証が必要です",
+        });
+        return;
+      }
       const { id } = req.params;
 
       await prisma.patient.delete({
         where: {
           id,
+          userId,
         },
       });
 

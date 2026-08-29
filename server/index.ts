@@ -15,7 +15,6 @@ import {
 import cookieParser from "cookie-parser";
 import jwt from "jsonwebtoken";
 import { requireAuth } from "./auth.js";
-import { record } from "zod";
 
 export const app = express();
 const PORT = process.env.PORT || 3001;

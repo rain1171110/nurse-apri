@@ -39,17 +39,24 @@ app.use(express.json());
 app.use(cookieParser());
 
 app.get("/api/data", requireAuth, async (req, res) => {
+  const userId = req.userId;
+  if (!userId) {
+    res.status(401).json({
+      error: "Unauthorized / 認証が必要です",
+    });
+    return;
+  }
   try {
     const patients = await prisma.patient.findMany({
       where: {
-        userId: req.userId,
+        userId,
       },
     });
 
     const records = await prisma.nursingRecord.findMany({
       where: {
         patient: {
-          userId: req.userId,
+          userId,
         },
       },
       include: {
@@ -72,8 +79,19 @@ app.get("/api/data", requireAuth, async (req, res) => {
 });
 
 app.get("/api/patients", requireAuth, async (req, res) => {
+  const userId = req.userId;
+  if (!userId) {
+    res.status(401).json({
+      error: "Unauthorized / 認証が必要です",
+    });
+    return;
+  }
   try {
-    const patients = await prisma.patient.findMany();
+    const patients = await prisma.patient.findMany({
+      where: {
+        userId,
+      },
+    });
 
     res.json(patients);
   } catch (error) {
@@ -372,10 +390,20 @@ app.delete<{ id: string }>(
   requireAuth,
   async (req, res) => {
     try {
+      const userId = req.userId;
+      if (!userId) {
+        res.status(401).json({
+          error: "Unauthorized / 認証が必要です",
+        });
+        return;
+      }
       const { id } = req.params;
       await prisma.nursingRecord.delete({
         where: {
           id,
+          patient: {
+            userId,
+          },
         },
       });
 

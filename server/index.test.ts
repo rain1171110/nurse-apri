@@ -3,7 +3,6 @@ import request from "supertest";
 import { app } from "./index.js";
 
 const agent = request.agent(app);
-
 const testUser = {
   email: `test-${Date.now()}@example.com`,
   password: "test-password",
@@ -35,6 +34,42 @@ describe("POST /api/auth/logout", () => {
 
     const protectedResponse = await logoutAgent.get("/api/data");
     expect(protectedResponse.status).toBe(401);
+  });
+});
+
+describe("GET /api/patients", () => {
+  it("他のユーザーの患者は取得できない", async () => {
+    const otherAgent = request.agent(app);
+
+    const testUserB = {
+      email: `test-b-${Date.now()}@example.com`,
+      password: "test-password",
+    };
+
+    const registerResponse = await otherAgent
+      .post("/api/auth/register")
+      .send(testUserB);
+
+    expect(registerResponse.status).toBe(201);
+
+    const loginResponse = await otherAgent
+      .post("/api/auth/login")
+      .send(testUserB);
+    expect(loginResponse.status).toBe(200);
+
+    const createPatientResponse = await agent.post("/api/patients").send({
+      name: "テスト患者",
+      room: 999,
+    });
+    expect(createPatientResponse.status).toBe(201);
+
+    const getPatientResponse = await otherAgent.get("/api/patients");
+    expect(getPatientResponse.status).toBe(200);
+
+    const patientIds = getPatientResponse.body.map(
+      (patient: { id: string }) => patient.id,
+    );
+    expect(patientIds).not.toContain(createPatientResponse.body.id)
   });
 });
 

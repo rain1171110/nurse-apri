@@ -69,7 +69,7 @@ describe("GET /api/patients", () => {
     const patientIds = getPatientResponse.body.map(
       (patient: { id: string }) => patient.id,
     );
-    expect(patientIds).not.toContain(createPatientResponse.body.id)
+    expect(patientIds).not.toContain(createPatientResponse.body.id);
   });
 });
 
@@ -143,15 +143,20 @@ describe("DELETE /api/records/:id", () => {
 
 describe("PUT /api/records/:id", () => {
   it("存在しない看護記録を更新したら404を返す", async () => {
+    const createPatientResponse = await agent.post("/api/patients").send({
+      name: "更新テスト用患者",
+      room: 998,
+    });
+
     const response = await agent
       .put("/api/records/00000000-0000-0000-0000-000000000000")
       .send({
-        patientId: "00000000-0000-0000-0000-000000000000",
+        patientId: createPatientResponse.body.id,
         date: "3000-12-19",
         author: "test author",
         vitals: {},
       });
-
+    expect(createPatientResponse.status).toBe(201);
     expect(response.status).toBe(404);
     expect(response.body.error).toBe(
       "Record not found / 看護記録が見つかりません",

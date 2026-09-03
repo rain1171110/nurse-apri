@@ -1,10 +1,17 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { beforeAll, afterAll, describe, expect, it } from "vitest";
 import request from "supertest";
 import { app } from "./index.js";
+import { prisma } from "./db.js";
 
 const agent = request.agent(app);
+const otherAgent = request.agent(app);
+
 const testUser = {
   email: `test-${Date.now()}@example.com`,
+  password: "test-password",
+};
+const testUserB = {
+  email: `test-b-${Date.now()}@example.com`,
   password: "test-password",
 };
 
@@ -18,6 +25,23 @@ beforeAll(async () => {
   const loginResponse = await agent.post("/api/auth/login").send(testUser);
 
   expect(loginResponse.status).toBe(200);
+});
+
+afterAll(async () => {
+  await prisma.patient.deleteMany({
+    where: {
+      user: {
+        email: testUser.email,
+      },
+    },
+  });
+  await prisma.user.deleteMany({
+    where: {
+      email: {
+        in: [testUser.email, testUserB.email],
+      },
+    },
+  });
 });
 
 describe("POST /api/auth/logout", () => {
@@ -39,13 +63,6 @@ describe("POST /api/auth/logout", () => {
 
 describe("GET /api/patients", () => {
   it("他のユーザーの患者は取得できない", async () => {
-    const otherAgent = request.agent(app);
-
-    const testUserB = {
-      email: `test-b-${Date.now()}@example.com`,
-      password: "test-password",
-    };
-
     const registerResponse = await otherAgent
       .post("/api/auth/register")
       .send(testUserB);
@@ -56,10 +73,10 @@ describe("GET /api/patients", () => {
       .post("/api/auth/login")
       .send(testUserB);
     expect(loginResponse.status).toBe(200);
-
+    const uniqueRoom = Math.floor(Math.random() * 999) + 1;
     const createPatientResponse = await agent.post("/api/patients").send({
       name: "テスト患者",
-      room: 999,
+      room: uniqueRoom,
     });
     expect(createPatientResponse.status).toBe(201);
 
@@ -143,10 +160,12 @@ describe("DELETE /api/records/:id", () => {
 
 describe("PUT /api/records/:id", () => {
   it("存在しない看護記録を更新したら404を返す", async () => {
+    const uniqueRoom = Math.floor(Math.random() * 999) + 1;
     const createPatientResponse = await agent.post("/api/patients").send({
       name: "更新テスト用患者",
-      room: 998,
+      room: uniqueRoom,
     });
+    expect(createPatientResponse.status).toBe(201);
 
     const response = await agent
       .put("/api/records/00000000-0000-0000-0000-000000000000")
@@ -156,7 +175,6 @@ describe("PUT /api/records/:id", () => {
         author: "test author",
         vitals: {},
       });
-    expect(createPatientResponse.status).toBe(201);
     expect(response.status).toBe(404);
     expect(response.body.error).toBe(
       "Record not found / 看護記録が見つかりません",

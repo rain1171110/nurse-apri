@@ -19,12 +19,17 @@ beforeAll(async () => {
   const registerResponse = await agent
     .post("/api/auth/register")
     .send(testUser);
-
   expect(registerResponse.status).toBe(201);
+  const registerResponseB = await otherAgent
+    .post("/api/auth/register")
+    .send(testUserB);
+  expect(registerResponseB.status).toBe(201);
 
   const loginResponse = await agent.post("/api/auth/login").send(testUser);
-
   expect(loginResponse.status).toBe(200);
+
+  const loginResponseB = await otherAgent.post("/api/auth/login").send(testUserB);
+  expect(loginResponseB.status).toBe(200);
 });
 
 afterAll(async () => {
@@ -102,6 +107,7 @@ describe("POST /api/patients", () => {
 });
 
 describe("PUT /api/patients/:id", () => {
+  it("他のユーザーの患者は更新できない", async () => {});
   it("存在しない患者を更新すると404を返す", async () => {
     const response = await agent
       .put("/api/patients/00000000-0000-0000-0000-000000000000")

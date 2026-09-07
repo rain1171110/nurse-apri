@@ -1,17 +1,7 @@
-import {
-  beforeAll,
-  afterAll,
-  describe,
-  expect,
-  it,
-  Experimental,
-} from "vitest";
+import { beforeAll, afterAll, describe, expect, it } from "vitest";
 import request from "supertest";
 import { app } from "./index.js";
 import { prisma } from "./db.js";
-import { NursingRecordScalarFieldEnum } from "./generated/prisma/internal/prismaNamespace.js";
-import { record } from "zod";
-import { response } from "express";
 
 const agent = request.agent(app);
 const otherAgent = request.agent(app);
@@ -82,17 +72,8 @@ describe("POST /api/auth/logout", () => {
 
 describe("GET /api/patients", () => {
   it("他のユーザーの患者は取得できない", async () => {
-    const registerResponse = await otherAgent
-      .post("/api/auth/register")
-      .send(testUserB);
-
-    expect(registerResponse.status).toBe(201);
-
-    const loginResponse = await otherAgent
-      .post("/api/auth/login")
-      .send(testUserB);
-    expect(loginResponse.status).toBe(200);
     const uniqueRoom = Math.floor(Math.random() * 999) + 1;
+
     const createPatientResponse = await agent.post("/api/patients").send({
       name: "テスト患者",
       room: uniqueRoom,
@@ -189,6 +170,7 @@ describe("GET /api/patients", () => {
 
 describe("POST /api/records", () => {
   const uniqueRoom = Math.floor(Math.random() * 999) + 1;
+
   it("他のユーザーの患者には看護記録を追加できない", async () => {
     const createPatientResponse = await otherAgent.post("/api/patients").send({
       name: "他ユーザの患者",
@@ -227,8 +209,34 @@ describe("DELETE /api/records/:id", () => {
 });
 
 describe("PUT /api/records/:id", () => {
+  const uniqueRoom = Math.floor(Math.random() * 999) + 1;
+
+  it("他のユーザーの看護記録は更新できない", async () => {
+    const createPatientResponse = await otherAgent.post("/api/patients").send({
+      name: "更新テスト患者",
+      room: uniqueRoom,
+    });
+    expect(createPatientResponse.status).toBe(201);
+    const createRecordResponse = await otherAgent.post("/api/records").send({
+      patientId: createPatientResponse.body.id,
+      date: "2026-09-05",
+      author: "test author",
+      vitals: {},
+    });
+    expect(createRecordResponse.status).toBe(201);
+
+    const updateRecordResponse = await agent
+      .put(`/api/records/${createRecordResponse.body.id}`)
+      .send({
+        patientId: createPatientResponse.body.id,
+        date: "2026-09-05",
+        author: "test author",
+        vitals: {},
+      });
+    expect(updateRecordResponse.status).toBe(404);
+  });
+
   it("存在しない看護記録を更新したら404を返す", async () => {
-    const uniqueRoom = Math.floor(Math.random() * 999) + 1;
     const createPatientResponse = await agent.post("/api/patients").send({
       name: "更新テスト用患者",
       room: uniqueRoom,
@@ -248,18 +256,6 @@ describe("PUT /api/records/:id", () => {
       "Record not found / 看護記録が見つかりません",
     );
   });
-});
-
-describe("GET /api/data", () => {
-  it("患者と看護記録のデータを取得すると200を返す", async () => {
-    const response = await agent.get("/api/data");
-    expect(response.status).toBe(200);
-    expect(Array.isArray(response.body.patients)).toBe(true);
-    expect(Array.isArray(response.body.records)).toBe(true);
-  });
-});
-
-describe("PUT /api/records/:id", () => {
   it("不正な看護記録データなら400を返す", async () => {
     const response = await agent
       .put("/api/records/00000000-0000-0000-0000-000000000000")
@@ -273,6 +269,15 @@ describe("PUT /api/records/:id", () => {
     expect(response.body.error).toBe(
       "Invalid record data / 無効な看護記録データ",
     );
+  });
+});
+
+describe("GET /api/data", () => {
+  it("患者と看護記録のデータを取得すると200を返す", async () => {
+    const response = await agent.get("/api/data");
+    expect(response.status).toBe(200);
+    expect(Array.isArray(response.body.patients)).toBe(true);
+    expect(Array.isArray(response.body.records)).toBe(true);
   });
 });
 

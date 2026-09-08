@@ -15,6 +15,11 @@ const testUserB = {
   password: "test-password",
 };
 
+let nextRoom = 900;
+const createUniqueRoom = (): number => {
+  return nextRoom++;
+};
+
 beforeAll(async () => {
   const registerResponse = await agent
     .post("/api/auth/register")
@@ -72,7 +77,7 @@ describe("POST /api/auth/logout", () => {
 
 describe("GET /api/patients", () => {
   it("他のユーザーの患者は取得できない", async () => {
-    const uniqueRoom = Math.floor(Math.random() * 999) + 1;
+    const uniqueRoom = createUniqueRoom();
 
     const createPatientResponse = await agent.post("/api/patients").send({
       name: "テスト患者",
@@ -102,9 +107,9 @@ describe("POST /api/patients", () => {
 });
 
 describe("PUT /api/patients/:id", () => {
-  const uniqueRoom = Math.floor(Math.random() * 999) + 1;
-
   it("他のユーザーの患者は更新できない", async () => {
+    const uniqueRoom = createUniqueRoom();
+
     const createPatientResponse = await otherAgent.post("/api/patients").send({
       name: "他ユーザーの患者",
       room: uniqueRoom,
@@ -121,6 +126,8 @@ describe("PUT /api/patients/:id", () => {
   });
 
   it("存在しない患者を更新すると404を返す", async () => {
+    const uniqueRoom = createUniqueRoom();
+
     const response = await agent
       .put("/api/patients/00000000-0000-0000-0000-000000000000")
       .send({
@@ -135,8 +142,9 @@ describe("PUT /api/patients/:id", () => {
 });
 
 describe("DELETE /api/patients/:id", () => {
-  const uniqueRoom = Math.floor(Math.random() * 999) + 1;
   it("他のユーザーの患者は削除できない", async () => {
+    const uniqueRoom = createUniqueRoom();
+
     const createPatientResponse = await otherAgent.post("/api/patients").send({
       name: "他ユーザーの患者",
       room: uniqueRoom,
@@ -169,9 +177,9 @@ describe("GET /api/patients", () => {
 });
 
 describe("POST /api/records", () => {
-  const uniqueRoom = Math.floor(Math.random() * 999) + 1;
-
   it("他のユーザーの患者には看護記録を追加できない", async () => {
+    const uniqueRoom = createUniqueRoom();
+
     const createPatientResponse = await otherAgent.post("/api/patients").send({
       name: "他ユーザの患者",
       room: uniqueRoom,
@@ -197,6 +205,30 @@ describe("POST /api/records", () => {
 });
 
 describe("DELETE /api/records/:id", () => {
+  it("他のユーザーの看護記録は削除できない", async () => {
+    const uniqueRoom = createUniqueRoom();
+
+    const createPatientResponse = await otherAgent.post("/api/patients").send({
+      name: "他ユーザの患者",
+      room: uniqueRoom,
+    });
+    expect(createPatientResponse.status).toBe(201);
+    const createRecordResponse = await otherAgent.post("/api/records").send({
+      patientId: createPatientResponse.body.id,
+      date: "2026-09-05",
+      author: "test author",
+      vitals: {},
+    });
+    expect(createRecordResponse.status).toBe(201);
+    const deleteResponse = await agent.delete(
+      `/api/records/${createRecordResponse.body.id}`,
+    );
+    expect(deleteResponse.status).toBe(404);
+    expect(deleteResponse.body.error).toBe(
+      "Record not found / 看護記録が見つかりません",
+    );
+  });
+
   it("存在しない看護記録を削除すると404を返す", async () => {
     const response = await agent.delete(
       "/api/records/00000000-0000-0000-0000-000000000000",
@@ -209,9 +241,9 @@ describe("DELETE /api/records/:id", () => {
 });
 
 describe("PUT /api/records/:id", () => {
-  const uniqueRoom = Math.floor(Math.random() * 999) + 1;
-
   it("他のユーザーの看護記録は更新できない", async () => {
+    const uniqueRoom = createUniqueRoom();
+
     const createPatientResponse = await otherAgent.post("/api/patients").send({
       name: "更新テスト患者",
       room: uniqueRoom,
@@ -237,6 +269,8 @@ describe("PUT /api/records/:id", () => {
   });
 
   it("存在しない看護記録を更新したら404を返す", async () => {
+    const uniqueRoom = createUniqueRoom();
+
     const createPatientResponse = await agent.post("/api/patients").send({
       name: "更新テスト用患者",
       room: uniqueRoom,

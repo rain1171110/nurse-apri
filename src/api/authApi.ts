@@ -30,3 +30,18 @@ export const logoutApi = async (): Promise<void> => {
     await throwApiError(response);
   }
 };
+
+export const registerApi = async (
+  receiveRegister: LoginData,
+): Promise<void> => {
+  const response = await fetch(`${API_BASE}/auth/register`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(receiveRegister),
+    credentials: "include",
+  });
+
+  if (!response.ok) {
+    await throwApiError(response);
+  }
+};

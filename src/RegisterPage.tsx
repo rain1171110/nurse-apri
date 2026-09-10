@@ -1,12 +1,8 @@
 import { useState, type FormEvent } from "react";
-import { loginApi } from "./api/authApi";
-import { Link, useNavigate } from "react-router-dom";
+import { registerApi } from "./api/authApi";
+import { useNavigate, Link } from "react-router-dom";
 
-type LoginPageProps = {
-  onLoginSuccess: () => Promise<void>;
-};
-
-export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
+export default function RegisterPage() {
   const navigate = useNavigate();
   const [apiError, setApiError] = useState("");
 
@@ -15,43 +11,43 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
     const formData = new FormData(e.currentTarget);
     const email = String(formData.get("email"));
     const password = String(formData.get("password"));
-    const loginData = {
+    const registerData = {
       email,
       password,
     };
     try {
       setApiError("");
-      await loginApi(loginData);
-      await onLoginSuccess();
-      navigate("/");
+      await registerApi(registerData);
+      navigate("/login");
     } catch (error) {
-      console.error("ログインに失敗しました", error);
+      console.error("登録に失敗しました", error);
 
       if (error instanceof Error) {
         setApiError(error.message);
       } else {
-        setApiError("ログインに失敗しました");
+        setApiError("登録に失敗しました");
       }
     }
   };
-
   return (
     <form onSubmit={handleSubmit}>
       {apiError && <p className="text-error">{apiError}</p>}
-      <label htmlFor="email">メールアドレス</label>
+
+      <label htmlFor="email">新規メールアドレス</label>
       <input id="email" name="email" type="email" required />
       <br />
 
-      <label htmlFor="password">パスワード</label>
+      <label htmlFor="password">新規パスワード</label>
       <input id="password" name="password" type="password" required />
       <br />
 
       <button type="submit" className="btn-primary">
-        ログインボタン
+        登録ボタン
       </button>
       <br />
-      <Link to="/register" className="register-link">
-        新規登録はこちら
+
+      <Link to="/login" className="login-link">
+        戻る
       </Link>
     </form>
   );

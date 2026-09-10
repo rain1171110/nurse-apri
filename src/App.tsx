@@ -25,6 +25,7 @@ import type { AppData, NursingRecord, Patient } from "./types";
 import type { RecordOutput } from "./schema";
 import { getErrorMessage } from "./api/apiError";
 import LoginPage from "./LoginPage";
+import RegisterPage from "./RegisterPage";
 import { logoutApi } from "./api/authApi";
 
 function App() {
@@ -341,6 +342,7 @@ function App() {
             path="/login"
             element={<LoginPage onLoginSuccess={handleLoginSuccess} />}
           />
+          <Route path="/register" element={<RegisterPage />} />
         </Routes>
 
         {isLoggedIn && (

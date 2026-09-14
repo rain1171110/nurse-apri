@@ -1,11 +1,11 @@
 // @vitest-environment jsdom
+import "@testing-library/jest-dom/vitest";
 import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import RegisterPage from "./RegisterPage";
-import { loginApi, registerApi } from "./api/authApi";
+import { registerApi } from "./api/authApi";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
-import LoginPage from "./LoginPage";
 
 vi.mock("./api/authApi", () => ({
   registerApi: vi.fn(),
@@ -91,6 +91,7 @@ describe("RegisterPage", () => {
     const registerButton = screen.getByRole("button", { name: "登録ボタン" });
     await user.click(registerButton);
 
-    expect(await screen.findByText("登録に失敗しました")).toBeTruthy();
+    const message = await screen.findByText("登録に失敗しました");
+    expect(message).toBeInTheDocument();
   });
 });

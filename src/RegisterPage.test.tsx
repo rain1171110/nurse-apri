@@ -3,9 +3,9 @@ import "@testing-library/jest-dom/vitest";
 import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { MemoryRouter, Route, Routes } from "react-router-dom";
 import RegisterPage from "./RegisterPage";
 import { registerApi } from "./api/authApi";
-import { MemoryRouter, Route, Routes } from "react-router-dom";
 
 vi.mock("./api/authApi", () => ({
   registerApi: vi.fn(),
@@ -22,6 +22,12 @@ describe("RegisterPage", () => {
 
   it("入力した登録情報でregisterApiが呼ばれる", async () => {
     const user = userEvent.setup();
+
+    vi.mocked(registerApi).mockResolvedValue({
+      id: "test-user-id",
+      email: "test@example.com",
+      createdAt: "2026-09-14T00:00:00.000Z",
+    });
 
     render(
       <MemoryRouter initialEntries={["/register"]}>
@@ -70,7 +76,8 @@ describe("RegisterPage", () => {
     const registerButton = screen.getByRole("button", { name: "登録ボタン" });
     await user.click(registerButton);
 
-    expect(await screen.findByText("ログイン画面")).toBeTruthy();
+    const message = await screen.findByText("ログイン画面");
+    expect(message).toBeInTheDocument();
   });
 
   it("登録に失敗したらエラーメッセージを表示する", async () => {

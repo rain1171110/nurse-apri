@@ -6,7 +6,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import LoginPage from "./LoginPage";
 import { loginApi } from "./api/authApi";
-import { email } from "zod";
 
 vi.mock("./api/authApi", () => ({
   loginApi: vi.fn(),
@@ -80,6 +79,34 @@ describe("LoginPage", () => {
     await user.click(loginButton);
 
     const message = await screen.findByText("患者一覧");
+    expect(message).toBeInTheDocument();
+  });
+
+  it("ログインに失敗したらエラーメッセージを表示する", async () => {
+    const onLoginSuccess = vi.fn();
+    vi.mocked(loginApi).mockRejectedValue(new Error("ログインに失敗しました"));
+
+    const user = userEvent.setup();
+    render(
+      <MemoryRouter initialEntries={["/login"]}>
+        <Routes>
+          <Route
+            path="/login"
+            element={<LoginPage onLoginSuccess={onLoginSuccess} />}
+          />
+        </Routes>
+      </MemoryRouter>,
+    );
+    const emailInput = screen.getByLabelText("メールアドレス");
+    const passwordInput = screen.getByLabelText("パスワード");
+
+    await user.type(emailInput, "test@example.com");
+    await user.type(passwordInput, "password123");
+
+    const loginButton = screen.getByRole("button", { name: "ログインボタン" });
+    await user.click(loginButton);
+
+    const message = await screen.findByText("ログインに失敗しました");
     expect(message).toBeInTheDocument();
   });
 });

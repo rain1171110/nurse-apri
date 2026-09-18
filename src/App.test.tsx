@@ -19,6 +19,18 @@ describe("App", () => {
     cleanup();
   });
 
+  it("データ取得中は読み込み中の表示をする", () => {
+    vi.mocked(fetchAppData).mockImplementation(() => new Promise(() => {}));
+
+    render(
+      <MemoryRouter initialEntries={["/"]}>
+        <App />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByText("読み込み中…")).toBeInTheDocument();
+  });
+
   it("データ取得に失敗したらエラーメッセージを表示する", async () => {
     vi.mocked(fetchAppData).mockRejectedValue(new Error("Network Error"));
     render(
@@ -34,7 +46,7 @@ describe("App", () => {
   it("未ログインならログイン画面を表示する", async () => {
     vi.mocked(fetchAppData).mockRejectedValue(new Error("API error:401"));
     render(
-      <MemoryRouter>
+      <MemoryRouter initialEntries={["/"]}>
         <App />
       </MemoryRouter>,
     );

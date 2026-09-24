@@ -68,4 +68,31 @@ describe("AddPatientForm", () => {
     expect(setShowAddForm).toHaveBeenCalledWith(false);
   });
 
+
+  it("「保存」を押すと、onSubmitに入力値が渡されるか", async () => {
+    const onSubmit = vi.fn();
+    const user = userEvent.setup();
+
+    render(
+      <AddPatientForm
+        patients={[]}
+        onSubmit={onSubmit}
+        showAddForm={true}
+        setShowAddForm={vi.fn()}
+      />,
+    );
+
+    const nameInput = await screen.findByLabelText("氏名");
+    const roomInput = await screen.findByLabelText("部屋番号");
+    await user.type(nameInput, "testName");
+    await user.type(roomInput, "999");
+
+    const saveButton = screen.getByRole("button", {
+      name: "保存",
+    });
+    await user.click(saveButton);
+
+    expect(onSubmit).toHaveBeenCalledWith({ name: "testName", room: 999 });
+  });
+
 });

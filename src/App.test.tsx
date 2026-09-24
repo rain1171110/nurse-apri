@@ -138,7 +138,6 @@ describe("App", () => {
 
     const emailInput = await screen.findByLabelText("メールアドレス");
     const passwordInput = screen.getByLabelText("パスワード");
-
     await user.type(emailInput, "test@example.com");
     await user.type(passwordInput, "password123");
 

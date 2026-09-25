@@ -68,7 +68,6 @@ describe("AddPatientForm", () => {
     expect(setShowAddForm).toHaveBeenCalledWith(false);
   });
 
-
   it("「保存」を押すと、onSubmitに入力値が渡されるか", async () => {
     const onSubmit = vi.fn();
     const user = userEvent.setup();
@@ -95,4 +94,107 @@ describe("AddPatientForm", () => {
     expect(onSubmit).toHaveBeenCalledWith({ name: "testName", room: 999 });
   });
 
+  it("氏名は空欄、部屋番号は入力済み", async () => {
+    const onSubmit = vi.fn();
+    const onErrorsChange = vi.fn();
+    const user = userEvent.setup();
+
+    render(
+      <AddPatientForm
+        patients={[]}
+        onSubmit={onSubmit}
+        showAddForm={true}
+        setShowAddForm={vi.fn()}
+        onErrorsChange={onErrorsChange}
+      />,
+    );
+
+    const roomInput = screen.getByLabelText("部屋番号");
+    await user.type(roomInput, "999");
+
+    const saveButton = screen.getByRole("button", { name: "保存" });
+    await user.click(saveButton);
+
+    expect(onSubmit).not.toHaveBeenCalled();
+    expect(onErrorsChange).toHaveBeenCalled();
+    expect(await screen.findByText("氏名は必須です")).toBeInTheDocument();
+  });
+
+  it("氏名は入力済み、部屋番号は空欄", async () => {
+    const onSubmit = vi.fn();
+    const onErrorsChange = vi.fn();
+    const user = userEvent.setup();
+
+    render(
+      <AddPatientForm
+        patients={[]}
+        onSubmit={onSubmit}
+        showAddForm={true}
+        setShowAddForm={vi.fn()}
+        onErrorsChange={onErrorsChange}
+      />,
+    );
+
+    const nameInput = screen.getByLabelText("氏名");
+    await user.type(nameInput, "testName");
+
+    const saveButton = screen.getByRole("button", { name: "保存" });
+    await user.click(saveButton);
+
+    expect(onSubmit).not.toHaveBeenCalled();
+    expect(onErrorsChange).toHaveBeenCalled();
+    expect(await screen.findByText("部屋番号は必須です")).toBeInTheDocument();
+  });
+
+  it("氏名は入力済み、部屋番号が重複している", async () => {
+    const onSubmit = vi.fn();
+    const onErrorsChange = vi.fn();
+    const user = userEvent.setup();
+
+    render(
+      <AddPatientForm
+        patients={[{ id: "testId", name: "testName", room: 101 }]}
+        onSubmit={onSubmit}
+        showAddForm={true}
+        setShowAddForm={vi.fn()}
+        onErrorsChange={onErrorsChange}
+      />,
+    );
+
+    const nameInput = screen.getByLabelText("氏名");
+    await user.type(nameInput, "testName");
+
+    const roomInput = await screen.findByLabelText("部屋番号");
+    await user.type(roomInput, "101");
+
+    const saveButton = screen.getByRole("button", { name: "保存" });
+    await user.click(saveButton);
+
+    expect(onSubmit).not.toHaveBeenCalled();
+    expect(onErrorsChange).toHaveBeenCalled();
+    expect(
+      screen.getByText("この部屋番号は既に使用されています"),
+    ).toBeInTheDocument();
+  });
+
+  it("保存成功したら、フォーム内容リセットする", async () => {
+    const onSubmit = vi.fn().mockResolvedValue({
+      id: "testId",
+      name: "testName",
+      room: 101,
+    });
+    const onErrorsChange = vi.fn();
+    const setShowAddForm = vi.fn();
+    const user = userEvent.setup();
+
+    render(
+      <AddPatientForm
+        patients={[{ id: "", name: "", room: 0 }]}
+        onSubmit={onSubmit}
+        showAddForm={true}
+        setShowAddForm={setShowAddForm}
+        onErrorsChange={onErrorsChange}
+      />,
+    );
+  });
 });

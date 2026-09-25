@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import "@testing-library/jest-dom/vitest";
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, afterEach, describe, expect, it, vi } from "vitest";
 import AddPatientForm from "./AddPatientForm";
 import userEvent from "@testing-library/user-event";
@@ -115,9 +115,9 @@ describe("AddPatientForm", () => {
     const saveButton = screen.getByRole("button", { name: "保存" });
     await user.click(saveButton);
 
-    expect(onSubmit).not.toHaveBeenCalled();
     expect(onErrorsChange).toHaveBeenCalled();
     expect(await screen.findByText("氏名は必須です")).toBeInTheDocument();
+    expect(onSubmit).not.toHaveBeenCalled();
   });
 
   it("氏名は入力済み、部屋番号は空欄", async () => {
@@ -141,9 +141,9 @@ describe("AddPatientForm", () => {
     const saveButton = screen.getByRole("button", { name: "保存" });
     await user.click(saveButton);
 
-    expect(onSubmit).not.toHaveBeenCalled();
     expect(onErrorsChange).toHaveBeenCalled();
     expect(await screen.findByText("部屋番号は必須です")).toBeInTheDocument();
+    expect(onSubmit).not.toHaveBeenCalled();
   });
 
   it("氏名は入力済み、部屋番号が重複している", async () => {
@@ -196,5 +196,21 @@ describe("AddPatientForm", () => {
         onErrorsChange={onErrorsChange}
       />,
     );
+    const nameInput = await screen.findByLabelText("氏名");
+    const roomInput = await screen.findByLabelText("部屋番号");
+    await user.type(nameInput, "testName");
+    await user.type(roomInput, "999");
+
+    const saveButton = screen.getByRole("button", {
+      name: "保存",
+    });
+
+    expect(onSubmit).toHaveBeenCalledWith({ name: "testName", room: 999 });
+
+    await user.click(saveButton);
+    await waitFor(() => {
+      expect(nameInput).toHaveValue("");
+      expect(roomInput).toHaveValue("");
+    });
   });
 });

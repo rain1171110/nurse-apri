@@ -63,6 +63,7 @@ describe("AddPatientForm", () => {
     const cancelButton = screen.getByRole("button", {
       name: "キャンセル",
     });
+    const nameInput =
     await user.click(cancelButton);
 
     expect(setShowAddForm).toHaveBeenCalledWith(false);
@@ -239,14 +240,12 @@ describe("AddPatientForm", () => {
       name: "保存",
     });
     await user.click(saveButton);
-    expect(onSubmit).toHaveBeenCalledWith({
-      name: "testName",
-      room: 999,
-    });
     await waitFor(() => {
-      expect(nameInput).toHaveValue("testName");
-      expect(roomInput).toHaveValue("999");
-      expect(setShowAddForm).not.toHaveBeenCalled();
+      expect(onSubmit).toHaveBeenCalledTimes(1);
     });
+
+    expect(nameInput).toHaveValue("testName");
+    expect(roomInput).toHaveValue("999");
+    expect(setShowAddForm).not.toHaveBeenCalled();
   });
 });

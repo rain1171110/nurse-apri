@@ -205,12 +205,48 @@ describe("AddPatientForm", () => {
       name: "保存",
     });
 
+    await user.click(saveButton);
     expect(onSubmit).toHaveBeenCalledWith({ name: "testName", room: 999 });
 
-    await user.click(saveButton);
     await waitFor(() => {
+      expect(setShowAddForm).toHaveBeenCalledWith(false);
       expect(nameInput).toHaveValue("");
       expect(roomInput).toHaveValue("");
+    });
+  });
+
+  it("保存が undefined を返した場合に入力内容を残す", async () => {
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+    const onErrorsChange = vi.fn();
+    const setShowAddForm = vi.fn();
+    const user = userEvent.setup();
+
+    render(
+      <AddPatientForm
+        patients={[]}
+        onSubmit={onSubmit}
+        showAddForm={true}
+        setShowAddForm={setShowAddForm}
+        onErrorsChange={onErrorsChange}
+      />,
+    );
+    const nameInput = await screen.findByLabelText("氏名");
+    const roomInput = await screen.findByLabelText("部屋番号");
+    await user.type(nameInput, "testName");
+    await user.type(roomInput, "999");
+
+    const saveButton = screen.getByRole("button", {
+      name: "保存",
+    });
+    await user.click(saveButton);
+    expect(onSubmit).toHaveBeenCalledWith({
+      name: "testName",
+      room: 999,
+    });
+    await waitFor(() => {
+      expect(nameInput).toHaveValue("testName");
+      expect(roomInput).toHaveValue("999");
+      expect(setShowAddForm).not.toHaveBeenCalled();
     });
   });
 });

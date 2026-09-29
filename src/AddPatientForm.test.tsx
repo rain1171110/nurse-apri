@@ -49,6 +49,7 @@ describe("AddPatientForm", () => {
   it("「キャンセル」を押すとフォームを閉じる処理のテスト", async () => {
     const onSubmit = vi.fn();
     const setShowAddForm = vi.fn();
+    const onErrorsChange = vi.fn();
 
     const user = userEvent.setup();
 
@@ -58,15 +59,20 @@ describe("AddPatientForm", () => {
         onSubmit={onSubmit}
         showAddForm={true}
         setShowAddForm={setShowAddForm}
+        onErrorsChange={onErrorsChange}
       />,
     );
     const cancelButton = screen.getByRole("button", {
       name: "キャンセル",
     });
-    const nameInput =
+    const nameInput = screen.getByLabelText("氏名");
+    await user.type(nameInput, "testName");
+    expect(nameInput).toHaveValue("testName");
     await user.click(cancelButton);
 
     expect(setShowAddForm).toHaveBeenCalledWith(false);
+    expect(nameInput).toHaveValue("");
+    expect(onErrorsChange).toHaveBeenCalledWith({});
   });
 
   it("「保存」を押すと、onSubmitに入力値が渡されるか", async () => {
@@ -190,7 +196,7 @@ describe("AddPatientForm", () => {
 
     render(
       <AddPatientForm
-        patients={[{ id: "", name: "", room: 0 }]}
+        patients={[]}
         onSubmit={onSubmit}
         showAddForm={true}
         setShowAddForm={setShowAddForm}
@@ -242,10 +248,41 @@ describe("AddPatientForm", () => {
     await user.click(saveButton);
     await waitFor(() => {
       expect(onSubmit).toHaveBeenCalledTimes(1);
+      expect(onSubmit).toHaveBeenCalledWith({ name: "testName", room: 999 });
     });
 
     expect(nameInput).toHaveValue("testName");
     expect(roomInput).toHaveValue("999");
     expect(setShowAddForm).not.toHaveBeenCalled();
+  });
+
+  it("部屋番号は999以下", async () => {
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+    const onErrorsChange = vi.fn();
+    const setShowAddForm = vi.fn();
+    const user = userEvent.setup();
+
+    render(
+      <AddPatientForm
+        patients={[]}
+        onSubmit={onSubmit}
+        showAddForm={true}
+        setShowAddForm={setShowAddForm}
+        onErrorsChange={onErrorsChange}
+      />,
+    );
+
+    const nameInput = await screen.findByLabelText("氏名");
+    const roomInput = await screen.findByLabelText("部屋番号");
+    await user.type(nameInput, "testName");
+    await user.type(roomInput, "1000");
+
+    const saveButton = screen.getByRole("button", {
+      name: "保存",
+    });
+    await user.click(saveButton);
+   expect(
+      screen.getByText("部屋番号は999以下"),
+    ).toBeInTheDocument();
   });
 });

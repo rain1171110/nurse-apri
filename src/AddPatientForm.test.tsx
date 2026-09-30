@@ -281,8 +281,69 @@ describe("AddPatientForm", () => {
       name: "保存",
     });
     await user.click(saveButton);
-   expect(
-      screen.getByText("部屋番号は999以下"),
-    ).toBeInTheDocument();
+
+    expect(onSubmit).not.toHaveBeenCalled();
+    expect(onErrorsChange).toHaveBeenCalled();
+    expect(screen.getByText("部屋番号は999以下")).toBeInTheDocument();
+  });
+
+  it("部屋番号が0なら保存されず、エラーを表示する", async () => {
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+    const onErrorsChange = vi.fn();
+    const setShowAddForm = vi.fn();
+    const user = userEvent.setup();
+
+    render(
+      <AddPatientForm
+        patients={[]}
+        onSubmit={onSubmit}
+        showAddForm={true}
+        setShowAddForm={setShowAddForm}
+        onErrorsChange={onErrorsChange}
+      />,
+    );
+
+    const nameInput = await screen.findByLabelText("氏名");
+    const roomInput = await screen.findByLabelText("部屋番号");
+    await user.type(nameInput, "testName");
+    await user.type(roomInput, "0");
+
+    const saveButton = screen.getByRole("button", {
+      name: "保存",
+    });
+    await user.click(saveButton);
+
+    expect(onSubmit).not.toHaveBeenCalled();
+    expect(onErrorsChange).toHaveBeenCalled();
+    expect(screen.getByText("部屋番号は1以上")).toBeInTheDocument();
+  });
+
+  it("部屋番号が1なら保存処理に渡される", async () => {
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+    const onErrorsChange = vi.fn();
+    const setShowAddForm = vi.fn();
+    const user = userEvent.setup();
+
+    render(
+      <AddPatientForm
+        patients={[]}
+        onSubmit={onSubmit}
+        showAddForm={true}
+        setShowAddForm={setShowAddForm}
+        onErrorsChange={onErrorsChange}
+      />,
+    );
+
+    const nameInput = await screen.findByLabelText("氏名");
+    const roomInput = await screen.findByLabelText("部屋番号");
+    await user.type(nameInput, "testName");
+    await user.type(roomInput, "1");
+
+    const saveButton = screen.getByRole("button", {
+      name: "保存",
+    });
+    await user.click(saveButton);
+
+    expect(onSubmit).toHaveBeenCalledWith({ name: "testName", room: 1 });
   });
 });

@@ -13,7 +13,7 @@ export type Patient = {
   id: string;
   name: string;
   room: number;
-  age?: number;
+  age?: number | null;
   disease?: string;
   history?: string;
   progress?: string;

@@ -37,8 +37,7 @@ export default function PatientDetail({ onErrorsChange }: PatientDetailProps) {
   );
 
   const handlePatientSubmit = async (data: PatientOutput): Promise<void> => {
-    const patientToUpdate = { ...patient, ...data };
-
+    const patientToUpdate = { ...patient, ...data, age: data.age ?? null };
     const updatedPatient = await updatePatient(patientToUpdate);
     if (!updatedPatient) {
       return;
@@ -100,7 +99,9 @@ export default function PatientDetail({ onErrorsChange }: PatientDetailProps) {
 
             <div className="mb-md">
               <small className="text-secondary">年齢</small>
-              <p className="font-medium text-lg">{patient.age}歳</p>
+              <p className="font-medium text-lg">
+                {patient.age == null ? "未登録" : `${patient.age}歳`}
+              </p>
             </div>
 
             <div>
@@ -129,13 +130,19 @@ export default function PatientDetail({ onErrorsChange }: PatientDetailProps) {
           <form onSubmit={handleSubmit(handlePatientSubmit)}>
             <div className="card-body">
               <div className="form-group">
-                <label className="form-label form-required">氏名</label>
+                <label
+                  htmlFor="patient-name"
+                  className="form-label form-required"
+                >
+                  氏名
+                </label>
                 <Controller
                   name="name"
                   control={control}
                   render={({ field }) => (
                     <TextField
                       {...field}
+                      id="patient-name"
                       fullWidth
                       error={!!errors.name}
                       helperText={errors.name?.message}
@@ -145,13 +152,19 @@ export default function PatientDetail({ onErrorsChange }: PatientDetailProps) {
               </div>
 
               <div className="form-group">
-                <label className="form-label form-required">病室</label>
+                <label
+                  htmlFor="patient-room"
+                  className="form-label form-required"
+                >
+                  病室
+                </label>
                 <Controller
                   name="room"
                   control={control}
                   render={({ field }) => (
                     <TextField
                       {...field}
+                      id="patient-room"
                       type="number"
                       fullWidth
                       error={!!errors.room}
@@ -162,13 +175,16 @@ export default function PatientDetail({ onErrorsChange }: PatientDetailProps) {
               </div>
 
               <div className="form-group">
-                <label className="form-label">年齢</label>
+                <label htmlFor="patient-age" className="form-label">
+                  年齢
+                </label>
                 <Controller
                   name="age"
                   control={control}
                   render={({ field }) => (
                     <TextField
                       {...field}
+                      id="patient-age"
                       type="number"
                       fullWidth
                       error={!!errors.age}
@@ -179,13 +195,16 @@ export default function PatientDetail({ onErrorsChange }: PatientDetailProps) {
               </div>
 
               <div className="form-group">
-                <label className="form-label">病名</label>
+                <label htmlFor="patient-disease" className="form-label">
+                  病名
+                </label>
                 <Controller
                   name="disease"
                   control={control}
                   render={({ field }) => (
                     <TextField
                       {...field}
+                      id="patient-disease"
                       fullWidth
                       error={!!errors.disease}
                       helperText={errors.disease?.message}
@@ -194,13 +213,16 @@ export default function PatientDetail({ onErrorsChange }: PatientDetailProps) {
                 />
               </div>
               <div className="form-group">
-                <label className="form-label">既往歴</label>
+                <label htmlFor="patient-history" className="form-label">
+                  既往歴
+                </label>
                 <Controller
                   name="history"
                   control={control}
                   render={({ field }) => (
                     <TextField
                       {...field}
+                      id="patient-history"
                       fullWidth
                       error={!!errors.history}
                       helperText={errors.history?.message}
@@ -209,13 +231,16 @@ export default function PatientDetail({ onErrorsChange }: PatientDetailProps) {
                 />
               </div>
               <div className="form-group">
-                <label className="form-label">これまでの経過</label>
+                <label htmlFor="patient-progress" className="form-label">
+                  これまでの経過
+                </label>
                 <Controller
                   name="progress"
                   control={control}
                   render={({ field }) => (
                     <TextField
                       {...field}
+                      id="patient-progress"
                       fullWidth
                       error={!!errors.progress}
                       helperText={errors.progress?.message}
@@ -230,6 +255,7 @@ export default function PatientDetail({ onErrorsChange }: PatientDetailProps) {
                 type="button"
                 className="btn-secondary"
                 onClick={() => {
+                  reset(defaultValues);
                   clearErrors();
                   if (onErrorsChange) {
                     onErrorsChange({});

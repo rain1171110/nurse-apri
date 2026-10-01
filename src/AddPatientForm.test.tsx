@@ -127,6 +127,38 @@ describe("AddPatientForm", () => {
     expect(onSubmit).not.toHaveBeenCalled();
   });
 
+  it("氏名に数字が含まれる場合はエラーを表示", async () => {
+    const onSubmit = vi.fn();
+    const onErrorsChange = vi.fn();
+    const user = userEvent.setup();
+
+    render(
+      <AddPatientForm
+        patients={[]}
+        onSubmit={onSubmit}
+        showAddForm={true}
+        setShowAddForm={vi.fn()}
+        onErrorsChange={onErrorsChange}
+      />,
+    );
+
+    const nameInput = await screen.findByLabelText("氏名");
+    const roomInput = await screen.findByLabelText("部屋番号");
+    await user.type(nameInput, "test123");
+    await user.type(roomInput, "999");
+
+    const saveButton = screen.getByRole("button", {
+      name: "保存",
+    });
+    await user.click(saveButton);
+
+    expect(
+      await screen.findByText("氏名に数字を含めることはできません"),
+    ).toBeInTheDocument();
+    expect(onSubmit).not.toHaveBeenCalled();
+    expect(onErrorsChange).toHaveBeenCalled();
+  });
+
   it("氏名は入力済み、部屋番号は空欄", async () => {
     const onSubmit = vi.fn();
     const onErrorsChange = vi.fn();
@@ -177,18 +209,18 @@ describe("AddPatientForm", () => {
     const saveButton = screen.getByRole("button", { name: "保存" });
     await user.click(saveButton);
 
+    expect(
+      await screen.findByText("この部屋番号は既に使用されています"),
+    ).toBeInTheDocument();
     expect(onSubmit).not.toHaveBeenCalled();
     expect(onErrorsChange).toHaveBeenCalled();
-    expect(
-      screen.getByText("この部屋番号は既に使用されています"),
-    ).toBeInTheDocument();
   });
 
   it("保存成功したら、フォーム内容リセットする", async () => {
     const onSubmit = vi.fn().mockResolvedValue({
       id: "testId",
       name: "testName",
-      room: 101,
+      room: 999,
     });
     const onErrorsChange = vi.fn();
     const setShowAddForm = vi.fn();
@@ -282,9 +314,9 @@ describe("AddPatientForm", () => {
     });
     await user.click(saveButton);
 
+    expect(await screen.findByText("部屋番号は999以下")).toBeInTheDocument();
     expect(onSubmit).not.toHaveBeenCalled();
     expect(onErrorsChange).toHaveBeenCalled();
-    expect(screen.getByText("部屋番号は999以下")).toBeInTheDocument();
   });
 
   it("部屋番号が0なら保存されず、エラーを表示する", async () => {
@@ -313,9 +345,9 @@ describe("AddPatientForm", () => {
     });
     await user.click(saveButton);
 
+    expect(await screen.findByText("部屋番号は1以上")).toBeInTheDocument();
     expect(onSubmit).not.toHaveBeenCalled();
     expect(onErrorsChange).toHaveBeenCalled();
-    expect(screen.getByText("部屋番号は1以上")).toBeInTheDocument();
   });
 
   it("部屋番号が1なら保存処理に渡される", async () => {

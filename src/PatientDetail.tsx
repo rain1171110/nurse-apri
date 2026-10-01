@@ -52,7 +52,7 @@ export default function PatientDetail({ onErrorsChange }: PatientDetailProps) {
   const {
     control,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitting },
     reset,
     clearErrors,
   } = useForm<PatientInput, unknown, PatientOutput>({
@@ -254,19 +254,22 @@ export default function PatientDetail({ onErrorsChange }: PatientDetailProps) {
               <button
                 type="button"
                 className="btn-secondary"
+                disabled={isSubmitting}
                 onClick={() => {
                   reset(defaultValues);
                   clearErrors();
-                  if (onErrorsChange) {
-                    onErrorsChange({});
-                  }
+                  onErrorsChange?.({});
                   setIsEditing(false);
                 }}
               >
                 キャンセル
               </button>
-              <button type="submit" className="btn-primary">
-                保存
+              <button
+                type="submit"
+                className="btn-primary"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? "保存中..." : "保存"}
               </button>
             </div>
           </form>

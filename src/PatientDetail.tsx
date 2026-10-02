@@ -110,11 +110,15 @@ export default function PatientDetail({ onErrorsChange }: PatientDetailProps) {
             </div>
             <div>
               <small className="text-secondary">既往歴</small>
-              <p className="font-medium">{patient.history}</p>
+              <p className="font-medium" style={{ whiteSpace: "pre-wrap" }}>
+                {patient.history}
+              </p>
             </div>
             <div>
               <small className="text-secondary">これまでの経過</small>
-              <p className="font-medium">{patient.progress}</p>
+              <p className="font-medium" style={{ whiteSpace: "pre-wrap" }}>
+                {patient.progress}
+              </p>
             </div>
           </div>
         </div>
@@ -223,6 +227,8 @@ export default function PatientDetail({ onErrorsChange }: PatientDetailProps) {
                     <TextField
                       {...field}
                       id="patient-history"
+                      multiline
+                      minRows={3}
                       fullWidth
                       error={!!errors.history}
                       helperText={errors.history?.message}
@@ -241,6 +247,8 @@ export default function PatientDetail({ onErrorsChange }: PatientDetailProps) {
                     <TextField
                       {...field}
                       id="patient-progress"
+                      multiline
+                      minRows={3}
                       fullWidth
                       error={!!errors.progress}
                       helperText={errors.progress?.message}

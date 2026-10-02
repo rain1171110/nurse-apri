@@ -75,6 +75,7 @@ export default function PatientList({
             onChange={(event) => setSearchText(event.target.value)}
           />
           <div className="item-list">
+            {filteredPatients.length === 0 && <p>該当する患者がいません</p>}
             {filteredPatients.map((patient) => (
               <div
                 className="card"

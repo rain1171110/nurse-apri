@@ -21,6 +21,7 @@ export default function PatientList({
   addPatient,
 }: PatientListProps) {
   const [showAddForm, setShowAddForm] = useState(false);
+  const [searchText, setSearchText] = useState("");
 
   const navigate = useNavigate();
 
@@ -33,6 +34,12 @@ export default function PatientList({
     }
     return savedPatient;
   };
+
+  const filteredPatients = patients.filter(
+    (patient) =>
+      patient.name.includes(searchText) ||
+      String(patient.room).includes(searchText),
+  );
 
   return (
     <div className="container">
@@ -60,8 +67,15 @@ export default function PatientList({
             </div>
           </div>
 
+          <input
+            type="text"
+            aria-label="患者検索"
+            placeholder="氏名・部屋番号で検索"
+            value={searchText}
+            onChange={(event) => setSearchText(event.target.value)}
+          />
           <div className="item-list">
-            {patients.map((patient) => (
+            {filteredPatients.map((patient) => (
               <div
                 className="card"
                 key={patient.id}

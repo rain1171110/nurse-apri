@@ -1,9 +1,9 @@
 // @vitest-environment jsdom
 import "@testing-library/jest-dom/vitest";
 import { beforeEach, afterEach, describe, expect, it, vi } from "vitest";
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter, Routes, Route } from "react-router-dom";
 import PatientList from "./PatientList";
 
 describe("PatientList", () => {
@@ -168,6 +168,43 @@ describe("PatientList", () => {
     ).toBeInTheDocument();
     expect(
       screen.getByRole("heading", { name: "303号室 山田" }),
+    ).toBeInTheDocument();
+  });
+
+  it("患者のカードをクリックすると詳細画面へ移動する", async () => {
+    const user = userEvent.setup();
+
+    const patients = [
+      { id: "patient1", name: "田中", room: 101 },
+      { id: "patient3", name: "山田", room: 303 },
+      { id: "patient2", name: "山本", room: 202 },
+    ];
+
+    render(
+      <MemoryRouter initialEntries={["/"]}>
+        <Routes>
+          <Route
+            path="/"
+            element={
+              <PatientList
+                patients={patients}
+                isLoading={false}
+                onErrorsChange={vi.fn()}
+                addPatient={vi.fn().mockResolvedValue(undefined)}
+              />
+            }
+          />
+          <Route path="/patient/patient1" element={<h1>田中の詳細画面</h1>} />
+        </Routes>
+      </MemoryRouter>,
+    );
+    const patientHeading = screen.getByRole("heading", {
+      name: "101号室 田中",
+    });
+    await user.click(patientHeading);
+
+    expect(
+      await screen.findByRole("heading", { name: "田中の詳細画面" }),
     ).toBeInTheDocument();
   });
 });

@@ -3,8 +3,13 @@ import "@testing-library/jest-dom/vitest";
 import { beforeEach, afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { MemoryRouter, Routes, Route } from "react-router-dom";
+import { MemoryRouter, Routes, Route, useParams } from "react-router-dom";
 import PatientList from "./PatientList";
+
+function PatientDetailForTest() {
+  const { id } = useParams();
+  return <h1>患者ID:{id}</h1>;
+}
 
 describe("PatientList", () => {
   beforeEach(() => {
@@ -194,7 +199,7 @@ describe("PatientList", () => {
               />
             }
           />
-          <Route path="/patient/patient1" element={<h1>田中の詳細画面</h1>} />
+          <Route path="/patient/:id" element={<PatientDetailForTest />} />
         </Routes>
       </MemoryRouter>,
     );
@@ -204,7 +209,44 @@ describe("PatientList", () => {
     await user.click(patientHeading);
 
     expect(
-      await screen.findByRole("heading", { name: "田中の詳細画面" }),
+      await screen.findByRole("heading", { name: "患者ID:patient1" }),
+    ).toBeInTheDocument();
+  });
+
+  it("山本のカードをクリックすると山本の詳細画面へ移動する", async () => {
+    const user = userEvent.setup();
+
+    const patients = [
+      { id: "patient1", name: "田中", room: 101 },
+      { id: "patient3", name: "山田", room: 303 },
+      { id: "patient2", name: "山本", room: 202 },
+    ];
+
+    render(
+      <MemoryRouter initialEntries={["/"]}>
+        <Routes>
+          <Route
+            path="/"
+            element={
+              <PatientList
+                patients={patients}
+                isLoading={false}
+                onErrorsChange={vi.fn()}
+                addPatient={vi.fn().mockResolvedValue(undefined)}
+              />
+            }
+          />
+          <Route path="/patient/:id" element={<PatientDetailForTest />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+    const patientHeading = screen.getByRole("heading", {
+      name: "202号室 山本",
+    });
+    await user.click(patientHeading);
+
+    expect(
+      await screen.findByRole("heading", { name: "患者ID:patient2" }),
     ).toBeInTheDocument();
   });
 });

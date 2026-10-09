@@ -98,7 +98,7 @@ describe("PatientDetail", () => {
     expect(roomInput).toHaveValue(101);
   });
 
-  it("キャンセルをオスと編集フォームが閉じる", async () => {
+  it("キャンセルを押すと編集フォームが閉じる", async () => {
     const user = userEvent.setup();
 
     const patient = {
@@ -148,7 +148,7 @@ describe("PatientDetail", () => {
     expect(updatePatient).not.toHaveBeenCalled();
   });
 
-    it("編集フォームを開いた後、氏名を田中から山田に変更", async () => {
+  it("編集フォームを開いた後、氏名を田中から山田に変更", async () => {
     const user = userEvent.setup();
 
     const patient = {
@@ -185,11 +185,198 @@ describe("PatientDetail", () => {
       await screen.findByRole("heading", { name: "患者情報を編集" }),
     ).toBeInTheDocument();
 
-    
-    expect(
-      screen.queryByRole("heading", { name: "患者情報を編集" }),
-    ).not.toBeInTheDocument();
+    const nameInput = screen.getByLabelText("氏名");
+    expect(nameInput).toHaveValue("田中");
+    await user.clear(nameInput);
+    expect(nameInput).toHaveValue("");
 
-    expect(updatePatient).not.toHaveBeenCalled();
+    await user.type(nameInput, "山田");
+    expect(nameInput).toHaveValue("山田");
+  });
+
+  it("変更した氏名がupdatePatientに渡る", async () => {
+    const user = userEvent.setup();
+
+    const patient = {
+      id: "patient1",
+      name: "田中",
+      room: 101,
+    };
+
+    const updatePatient = vi.fn();
+    const usedRoomsForEdit: number[] = [];
+
+    render(
+      <MemoryRouter initialEntries={["/detail"]}>
+        <Routes>
+          <Route
+            element={
+              <Outlet context={{ patient, updatePatient, usedRoomsForEdit }} />
+            }
+          >
+            <Route
+              path="/detail"
+              element={<PatientDetail onErrorsChange={vi.fn()} />}
+            />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    const editButton = screen.getByRole("button", {
+      name: "編集",
+    });
+    await user.click(editButton);
+    expect(
+      await screen.findByRole("heading", { name: "患者情報を編集" }),
+    ).toBeInTheDocument();
+
+    const nameInput = screen.getByLabelText("氏名");
+    expect(nameInput).toHaveValue("田中");
+    await user.clear(nameInput);
+    expect(nameInput).toHaveValue("");
+
+    await user.type(nameInput, "山田");
+    expect(nameInput).toHaveValue("山田");
+
+    const saveButton = screen.getByRole("button", { name: "保存" });
+    await user.click(saveButton);
+
+    await waitFor(() => {
+      expect(updatePatient).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: "山田",
+        }),
+      );
+    });
+  });
+
+  it("保存成功後に編集フォームが閉じる", async () => {
+    const user = userEvent.setup();
+
+    const patient = {
+      id: "patient1",
+      name: "田中",
+      room: 101,
+    };
+
+    const updatePatient = vi.fn().mockResolvedValue({
+      ...patient,
+      name: "山田",
+    });
+
+    const usedRoomsForEdit: number[] = [];
+
+    render(
+      <MemoryRouter initialEntries={["/detail"]}>
+        <Routes>
+          <Route
+            element={
+              <Outlet context={{ patient, updatePatient, usedRoomsForEdit }} />
+            }
+          >
+            <Route
+              path="/detail"
+              element={<PatientDetail onErrorsChange={vi.fn()} />}
+            />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    const editButton = screen.getByRole("button", {
+      name: "編集",
+    });
+    await user.click(editButton);
+    expect(
+      await screen.findByRole("heading", { name: "患者情報を編集" }),
+    ).toBeInTheDocument();
+
+    const nameInput = screen.getByLabelText("氏名");
+    expect(nameInput).toHaveValue("田中");
+    await user.clear(nameInput);
+    expect(nameInput).toHaveValue("");
+
+    await user.type(nameInput, "山田");
+    expect(nameInput).toHaveValue("山田");
+
+    const saveButton = screen.getByRole("button", { name: "保存" });
+    await user.click(saveButton);
+
+    await waitFor(() => {
+      expect(updatePatient).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: "山田",
+        }),
+      );
+      expect(
+        screen.queryByRole("heading", { name: "患者情報を編集" }),
+      ).not.toBeInTheDocument();
+    });
+  });
+
+  it("保存がundefinedを返した場合、編集フォームと入力した山田が残ることを確認", async () => {
+    const user = userEvent.setup();
+
+    const patient = {
+      id: "patient1",
+      name: "田中",
+      room: 101,
+    };
+
+    const updatePatient = vi.fn().mockResolvedValue(undefined);
+
+    const usedRoomsForEdit: number[] = [];
+
+    render(
+      <MemoryRouter initialEntries={["/detail"]}>
+        <Routes>
+          <Route
+            element={
+              <Outlet context={{ patient, updatePatient, usedRoomsForEdit }} />
+            }
+          >
+            <Route
+              path="/detail"
+              element={<PatientDetail onErrorsChange={vi.fn()} />}
+            />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    const editButton = screen.getByRole("button", {
+      name: "編集",
+    });
+    await user.click(editButton);
+    expect(
+      await screen.findByRole("heading", { name: "患者情報を編集" }),
+    ).toBeInTheDocument();
+
+    const nameInput = screen.getByLabelText("氏名");
+    expect(nameInput).toHaveValue("田中");
+    await user.clear(nameInput);
+    expect(nameInput).toHaveValue("");
+
+    await user.type(nameInput, "山田");
+    expect(nameInput).toHaveValue("山田");
+
+    const saveButton = screen.getByRole("button", { name: "保存" });
+    await user.click(saveButton);
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("氏名")).toHaveValue("山田");
+
+      expect(updatePatient).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: "山田",
+        }),
+      );
+      expect(
+        screen.queryByRole("heading", { name: "患者情報を編集" }),
+      ).toBeInTheDocument();
+
+      expect(screen.getByRole("button",{name:"保存"})).toBeEnabled();
+    });
   });
 });

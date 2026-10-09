@@ -34,7 +34,15 @@ const isPrismaError = (error: unknown, code: PrismaErrorCode): boolean => {
   );
 };
 
-app.use(cors({ origin: "http://" + "localhost:5173", credentials: true }));
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5173",
+     "https://nurse-apri-6sl74mkfa-okazaki-yohei-s-projects.vercel.app"
+    ],
+    credentials: true,
+  }),
+);
 app.use(express.json());
 app.use(cookieParser());
 

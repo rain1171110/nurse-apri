@@ -36,10 +36,7 @@ const isPrismaError = (error: unknown, code: PrismaErrorCode): boolean => {
 
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173",
-      "https://nurse-apri.vercel.app",
-    ],
+    origin: ["http://localhost:5173", "https://nurse-apri.vercel.app"],
     credentials: true,
   }),
 );
@@ -507,7 +504,7 @@ app.post<{}, {}, LoginBody>("/api/auth/login", async (req, res) => {
     res.cookie("token", token, {
       secure: process.env.NODE_ENV === "production",
       httpOnly: true,
-      sameSite: "strict",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
     });
     res.json({
       success: true,
@@ -526,7 +523,7 @@ app.post("/api/auth/logout", (req, res) => {
   res.clearCookie("token", {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
   });
   res.status(200).json({
     message: "ログアウト成功",

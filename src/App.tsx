@@ -13,7 +13,7 @@ import {
   updateRecordApi,
   deleteRecordApi,
 } from "./api/recordApi";
-import { Routes, Route, Navigate, Outlet } from "react-router-dom";
+import { Routes, Route, Navigate, Outlet, useLocation } from "react-router-dom";
 import PatientPage from "./PatientPage";
 import PatientDetail from "./PatientDetail";
 import PatientVitals from "./PatientVitals";
@@ -29,6 +29,7 @@ import RegisterPage from "./RegisterPage";
 import { logoutApi } from "./api/authApi";
 
 function App() {
+  const location = useLocation();
   const [globalErrors, setGlobalErrors] = useState({});
   const [displayErrors, setDisplayErrors] = useState({});
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -345,7 +346,7 @@ function App() {
           <Route path="/register" element={<RegisterPage />} />
         </Routes>
 
-        {isLoggedIn && (
+        {isLoggedIn && location.pathname === "/" && (
           <button type="button" className="btn-primary" onClick={handleLogout}>
             ログアウトボタン
           </button>

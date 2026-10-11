@@ -300,6 +300,14 @@ React Routerのページへ直接アクセス・再読み込みできるよう�
 
 ## 画面イメージ
 
+### ログイン画面（/login）
+
+![ログイン画面（/login）](./screenshots/login.png)
+
+### 新規登録画面（/register）
+
+![新規登録画面（/register）](./screenshots/register.png)
+
 ### 患者一覧画面
 
 ![患者一覧画面](./screenshots/patient-list.png)
@@ -319,6 +327,16 @@ React Routerのページへ直接アクセス・再読み込みできるよう�
 ### 看護記録追加画面
 
 ![看護記録追加画面](./screenshots/record-add.png)
+
+### バイタルサイン一覧画面
+
+![バイタルサイン一覧画面](./screenshots/patient-vitals.png)
+
+### 看護記録詳細画面
+
+![看護記録詳細画面](./screenshots/record-detail.png)
+
+
 
 ## 今後の予定
 

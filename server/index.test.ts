@@ -95,6 +95,45 @@ describe("GET /api/patients", () => {
   });
 });
 
+describe("GET /api/data", () => {
+  it("患者と看護記録データを取得すると200を返す", async () => {
+    const uniqueRoom = createUniqueRoom();
+
+    const createPatientResponse = await agent.post("/api/patients").send({
+      name: "テスト患者",
+      room: uniqueRoom,
+    });
+    expect(createPatientResponse.status).toBe(201);
+
+    const otherUniqueRoom = createUniqueRoom();
+    const createOtherPatientResponse = await otherAgent
+      .post("/api/patients")
+      .send({
+        name: "他ユーザーの患者",
+        room: otherUniqueRoom,
+      });
+    expect(createOtherPatientResponse.status).toBe(201);
+
+    const getDataResponse = await agent.get("/api/data");
+    expect(getDataResponse.status).toBe(200);
+
+    const patientIds = getDataResponse.body.patients.map(
+      (patient: { id: string }) => patient.id,
+    );
+    expect(patientIds).toContain(createPatientResponse.body.id);
+    expect(patientIds).not.toContain(createOtherPatientResponse.body.id);
+
+    const getOtherDataResponse = await otherAgent.get("/api/data");
+    expect(getOtherDataResponse.status).toBe(200);
+
+    const otherPatientIds = getOtherDataResponse.body.patients.map(
+      (patient: { id: string }) => patient.id,
+    );
+    expect(otherPatientIds).toContain(createOtherPatientResponse.body.id);
+    expect(otherPatientIds).not.toContain(createPatientResponse.body.id);
+  });
+});
+
 describe("POST /api/patients", () => {
   it("不正な患者データなら400を返す", async () => {
     const response = await agent.post("/api/patients").send({

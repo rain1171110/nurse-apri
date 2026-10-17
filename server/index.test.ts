@@ -216,6 +216,63 @@ describe("GET /api/patients", () => {
 });
 
 describe("POST /api/records", () => {
+  it("ログインユーザーごとのデータ分離", async () => {
+    const uniqueRoom = createUniqueRoom();
+
+    const createPatientResponse = await agent.post("/api/patients").send({
+      name: "テスト患者",
+      room: uniqueRoom,
+    });
+    expect(createPatientResponse.status).toBe(201);
+
+    const otherUniqueRoom = createUniqueRoom();
+
+    const createOtherPatientResponse = await otherAgent
+      .post("/api/patients")
+      .send({
+        name: "他のテスト患者",
+        room: otherUniqueRoom,
+      });
+    expect(createOtherPatientResponse.status).toBe(201);
+
+    const createRecordResponse = await agent.post("/api/records").send({
+      patientId: createPatientResponse.body.id,
+      date: "2026-09-05",
+      author: "test author",
+      vitals: {},
+    });
+    expect(createRecordResponse.status).toBe(201);
+
+    const createOtherRecordResponse = await otherAgent
+      .post("/api/records")
+      .send({
+        patientId: createOtherPatientResponse.body.id,
+        date: "2026-09-05",
+        author: "other test author",
+        vitals: {},
+      });
+    expect(createOtherRecordResponse.status).toBe(201);
+
+    const agentDataResponse = await agent.get("/api/data");
+    const otherAgentDataResponse = await otherAgent.get("/api/data");
+
+    const agentRecordIds = agentDataResponse.body.records.map(
+      (record: { id: string }) => record.id,
+    );
+
+    const otherAgentRecordIds = otherAgentDataResponse.body.records.map(
+      (record: { id: string }) => record.id,
+    );
+
+    expect(agentRecordIds).toContain(createRecordResponse.body.id);
+    expect(agentRecordIds).not.toContain(createOtherRecordResponse.body.id);
+
+    expect(otherAgentRecordIds).toContain(createOtherRecordResponse.body.id);
+    expect(otherAgentRecordIds).not.toContain(createRecordResponse.body.id);
+  });
+});
+
+describe("POST /api/records", () => {
   it("他のユーザーの患者には看護記録を追加できない", async () => {
     const uniqueRoom = createUniqueRoom();
 

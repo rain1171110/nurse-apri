@@ -98,19 +98,19 @@
 
 ## API一覧
 
-| メソッド | URL | 内容 |
-| --- | --- | --- |
-| POST | /api/auth/register | ユーザー登録 |
-| POST | /api/auth/login | ログイン |
-| POST | /api/auth/logout | ログアウト |
-| GET | /api/data | ログインユーザーの患者・看護記録取得 |
-| GET | /api/patients | ログインユーザーの患者一覧取得 |
-| POST | /api/patients | 患者追加 |
-| PUT | /api/patients/:id | 患者更新 |
-| DELETE | /api/patients/:id | 患者削除 |
-| POST | /api/records | 看護記録追加 |
-| PUT | /api/records/:id | 看護記録更新 |
-| DELETE | /api/records/:id | 看護記録削除 |
+| メソッド | URL                | 内容                                 |
+| -------- | ------------------ | ------------------------------------ |
+| POST     | /api/auth/register | ユーザー登録                         |
+| POST     | /api/auth/login    | ログイン                             |
+| POST     | /api/auth/logout   | ログアウト                           |
+| GET      | /api/data          | ログインユーザーの患者・看護記録取得 |
+| GET      | /api/patients      | ログインユーザーの患者一覧取得       |
+| POST     | /api/patients      | 患者追加                             |
+| PUT      | /api/patients/:id  | 患者更新                             |
+| DELETE   | /api/patients/:id  | 患者削除                             |
+| POST     | /api/records       | 看護記録追加                         |
+| PUT      | /api/records/:id   | 看護記録更新                         |
+| DELETE   | /api/records/:id   | 看護記録削除                         |
 
 患者・看護記録のAPIには認証が必要です。他のユーザーのデータへの操作を制限しています。
 
@@ -145,7 +145,7 @@
 
 Supertestのagentで2人のユーザーのCookieを保持し、認証と所有者の制限を検証しています。
 
-`server/index.test.ts`は2026年10月20日に20件すべて成功しています。
+`server/index.test.ts`は2026年10月21日に20件すべて成功しています。
 
 - ログアウト後の保護APIへのアクセス拒否
 - 他ユーザーの患者の取得・更新・削除制限
@@ -158,22 +158,25 @@ Supertestのagentで2人のユーザーのCookieを保持し、認証と所有�
 
 ### 実行コマンド
 
+DBを使用するテストは、`.env.test`に設定したテスト用DBで実行します。
+Git Bashでは、各テストコマンドの先頭に`DOTENV_CONFIG_PATH=.env.test`を付けてください。
+
 テストを一括実行します。
 
 ```bash
-npm test
+DOTENV_CONFIG_PATH=.env.test npm test
 ```
 
 監視モードで実行します。
 
 ```bash
-npm run test:watch
+DOTENV_CONFIG_PATH=.env.test npm run test:watch
 ```
 
 APIテストだけ実行します。
 
 ```bash
-npx vitest run server/index.test.ts
+DOTENV_CONFIG_PATH=.env.test npx vitest run server/index.test.ts
 ```
 
 型チェックを実行します。
@@ -188,7 +191,7 @@ Prisma Client生成・型チェック・フロントエンドの本番用ビル�
 npm run build
 ```
 
-> APIテストはDBにテストデータを作成・削除します。開発用・テスト用DBで実行してください。
+> APIテストはDBにテストデータを作成・削除します。テスト用DBで実行してください。
 
 ## セットアップ方法
 
@@ -200,17 +203,25 @@ npm install
 
 ### 2. 環境変数の設定
 
-プロジェクト直下の`.env`に、利用するPostgreSQLの接続URLと認証用の秘密鍵を設定します。
+プロジェクト直下の`.env`に、PostgreSQLの接続URLと認証用の秘密鍵を設定します。
 
 ```dotenv
 DATABASE_URL=YOUR_POSTGRESQL_CONNECTION_URL
+SHADOW_DATABASE_URL=YOUR_SHADOW_POSTGRESQL_CONNECTION_URL
 JWT_SECRET=YOUR_RANDOM_SECRET
 VITE_API_BASE=http://localhost:3001/api
 ```
 
 `DATABASE_URL`と`JWT_SECRET`の実際の値はGitに登録しないでください。
-
 `VITE_`で始まる変数はフロントエンドに公開されるため、秘密情報を設定しません。
+
+APIテスト用に`.env.test`を作成し、`.env`をコピーした後、`.env.test`の`DATABASE_URL`をテスト用DBの接続先に変更します。
+
+```bash
+cp .env .env.test
+```
+
+`.env.test`は`.gitignore`で無視されるため、Gitに登録しないでください。
 
 秘密鍵は次のコマンドで生成できます。
 
@@ -273,16 +284,16 @@ React Routerのページへ直接アクセス・再読み込みできるよう�
 
 架空の情報を使って本番環境を確認しています。動作確認には実際の患者情報を使用しないでください。
 
-| 確認日 | 確認項目 | 結果 |
-| --- | --- | --- |
+| 確認日         | 確認項目                                             | 結果 |
+| -------------- | ---------------------------------------------------- | ---- |
 | 2026年10月13日 | ログイン後の患者一覧表示・再読み込み後のログイン維持 | 成功 |
 | 2026年10月13日 | ログアウト後のログイン画面表示・`/login`の再読み込み | 成功 |
-| 2026年10月13日 | 患者メニューでログアウトボタンが非表示になること | 成功 |
-| 2026年10月13日 | 患者詳細・バイタル・看護記録一覧・詳細の表示 | 成功 |
-| 2026年10月13日 | 患者名・部屋番号検索と検索クリア | 成功 |
-| 2026年10月13日 | 患者の追加・編集・削除 | 成功 |
-| 2026年10月13日 | 看護記録の追加・編集・削除 | 成功 |
-| 2026年10月10日 | 新規登録、アカウントA・Bの患者データ分離 | 成功 |
+| 2026年10月13日 | 患者メニューでログアウトボタンが非表示になること     | 成功 |
+| 2026年10月13日 | 患者詳細・バイタル・看護記録一覧・詳細の表示         | 成功 |
+| 2026年10月13日 | 患者名・部屋番号検索と検索クリア                     | 成功 |
+| 2026年10月13日 | 患者の追加・編集・削除                               | 成功 |
+| 2026年10月13日 | 看護記録の追加・編集・削除                           | 成功 |
+| 2026年10月10日 | 新規登録、アカウントA・Bの患者データ分離             | 成功 |
 
 ## 画面イメージ
 

@@ -32,7 +32,6 @@ beforeAll(async () => {
 
   const loginResponse = await agent.post("/api/auth/login").send(testUser);
   expect(loginResponse.status).toBe(200);
-
   const loginResponseB = await otherAgent
     .post("/api/auth/login")
     .send(testUserB);
@@ -96,7 +95,15 @@ describe("GET /api/patients", () => {
 });
 
 describe("GET /api/data", () => {
-  it("患者と看護記録データを取得すると200を返す", async () => {
+  it("一度もログインしてないユーザーはデータを取得できない", async () => {
+    const notAuthenticatedAgent = request.agent(app);
+
+    const response = await notAuthenticatedAgent.get("/api/data");
+
+    expect(response.status).toBe(401);
+  });
+
+  it("ログインユーザは自分の患者だけを取得できる", async () => {
     const uniqueRoom = createUniqueRoom();
 
     const createPatientResponse = await agent.post("/api/patients").send({
@@ -131,6 +138,61 @@ describe("GET /api/data", () => {
     );
     expect(otherPatientIds).toContain(createOtherPatientResponse.body.id);
     expect(otherPatientIds).not.toContain(createPatientResponse.body.id);
+  });
+
+  it("ログインユーザーは自分の看護記録だけを取得できる", async () => {
+    const uniqueRoom = createUniqueRoom();
+
+    const createPatientResponse = await agent.post("/api/patients").send({
+      name: "テスト患者",
+      room: uniqueRoom,
+    });
+    expect(createPatientResponse.status).toBe(201);
+
+    const otherUniqueRoom = createUniqueRoom();
+
+    const createOtherPatientResponse = await otherAgent
+      .post("/api/patients")
+      .send({
+        name: "他のテスト患者",
+        room: otherUniqueRoom,
+      });
+    expect(createOtherPatientResponse.status).toBe(201);
+
+    const createRecordResponse = await agent.post("/api/records").send({
+      patientId: createPatientResponse.body.id,
+      date: "2026-09-05",
+      author: "test author",
+      vitals: {},
+    });
+    expect(createRecordResponse.status).toBe(201);
+
+    const createOtherRecordResponse = await otherAgent
+      .post("/api/records")
+      .send({
+        patientId: createOtherPatientResponse.body.id,
+        date: "2026-09-05",
+        author: "other test author",
+        vitals: {},
+      });
+    expect(createOtherRecordResponse.status).toBe(201);
+
+    const agentDataResponse = await agent.get("/api/data");
+    const otherAgentDataResponse = await otherAgent.get("/api/data");
+
+    const agentRecordIds = agentDataResponse.body.records.map(
+      (record: { id: string }) => record.id,
+    );
+
+    const otherAgentRecordIds = otherAgentDataResponse.body.records.map(
+      (record: { id: string }) => record.id,
+    );
+
+    expect(agentRecordIds).toContain(createRecordResponse.body.id);
+    expect(agentRecordIds).not.toContain(createOtherRecordResponse.body.id);
+
+    expect(otherAgentRecordIds).toContain(createOtherRecordResponse.body.id);
+    expect(otherAgentRecordIds).not.toContain(createRecordResponse.body.id);
   });
 });
 
@@ -212,63 +274,6 @@ describe("GET /api/patients", () => {
     const response = await agent.get("/api/patients");
     expect(response.status).toBe(200);
     expect(Array.isArray(response.body)).toBe(true);
-  });
-});
-
-describe("POST /api/records", () => {
-  it("ログインユーザーごとのデータ分離", async () => {
-    const uniqueRoom = createUniqueRoom();
-
-    const createPatientResponse = await agent.post("/api/patients").send({
-      name: "テスト患者",
-      room: uniqueRoom,
-    });
-    expect(createPatientResponse.status).toBe(201);
-
-    const otherUniqueRoom = createUniqueRoom();
-
-    const createOtherPatientResponse = await otherAgent
-      .post("/api/patients")
-      .send({
-        name: "他のテスト患者",
-        room: otherUniqueRoom,
-      });
-    expect(createOtherPatientResponse.status).toBe(201);
-
-    const createRecordResponse = await agent.post("/api/records").send({
-      patientId: createPatientResponse.body.id,
-      date: "2026-09-05",
-      author: "test author",
-      vitals: {},
-    });
-    expect(createRecordResponse.status).toBe(201);
-
-    const createOtherRecordResponse = await otherAgent
-      .post("/api/records")
-      .send({
-        patientId: createOtherPatientResponse.body.id,
-        date: "2026-09-05",
-        author: "other test author",
-        vitals: {},
-      });
-    expect(createOtherRecordResponse.status).toBe(201);
-
-    const agentDataResponse = await agent.get("/api/data");
-    const otherAgentDataResponse = await otherAgent.get("/api/data");
-
-    const agentRecordIds = agentDataResponse.body.records.map(
-      (record: { id: string }) => record.id,
-    );
-
-    const otherAgentRecordIds = otherAgentDataResponse.body.records.map(
-      (record: { id: string }) => record.id,
-    );
-
-    expect(agentRecordIds).toContain(createRecordResponse.body.id);
-    expect(agentRecordIds).not.toContain(createOtherRecordResponse.body.id);
-
-    expect(otherAgentRecordIds).toContain(createOtherRecordResponse.body.id);
-    expect(otherAgentRecordIds).not.toContain(createRecordResponse.body.id);
   });
 });
 

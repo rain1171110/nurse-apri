@@ -2,6 +2,7 @@ import { beforeAll, afterAll, describe, expect, it } from "vitest";
 import request from "supertest";
 import { app } from "./index.js";
 import { prisma } from "./db.js";
+import { register } from "node:module";
 
 const agent = request.agent(app);
 const otherAgent = request.agent(app);
@@ -54,6 +55,19 @@ afterAll(async () => {
         in: [testUser.email, testUserB.email],
       },
     },
+  });
+});
+
+describe("POST /api/auth/register", () => {
+  it("許可されていない送信元は403になる", async () => {
+    const response = await request
+      .agent(app)
+      .post("/api/auth/register")
+      .set("Origin", "https://evil.example")
+      .send(testUser);
+
+    expect(response.status).toBe(403);
+    expect(response.body.error).toBe("Request origin is not allowed");
   });
 });
 

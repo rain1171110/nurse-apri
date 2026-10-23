@@ -34,12 +34,37 @@ const isPrismaError = (error: unknown, code: PrismaErrorCode): boolean => {
   );
 };
 
+const allowedOrigins = new Set([
+  "http://localhost:5173",
+  "https://nurse-apri.vercel.app",
+]);
+
 app.use(
   cors({
-    origin: ["http://localhost:5173", "https://nurse-apri.vercel.app"],
+    origin: [...allowedOrigins],
     credentials: true,
   }),
 );
+
+app.use((req, res, next) => {
+  const isStateChangingMethod = ["POST", "PUT", "PATCH", "DELETE"].includes(
+    req.method,
+  );
+  if (!isStateChangingMethod) {
+    next();
+    return;
+  }
+
+  const origin = req.get("Origin");
+  if (!origin || !allowedOrigins.has(origin)) {
+    res.status(403).json({
+      error: "Request origin is not allowed",
+    });
+    return;
+  }
+  next();
+});
+
 app.use(express.json());
 app.use(cookieParser());
 

@@ -2,7 +2,6 @@ import { beforeAll, afterAll, describe, expect, it } from "vitest";
 import request from "supertest";
 import { app } from "./index.js";
 import { prisma } from "./db.js";
-import { register } from "node:module";
 
 const agent = request.agent(app);
 const otherAgent = request.agent(app);
@@ -24,17 +23,23 @@ const createUniqueRoom = (): number => {
 beforeAll(async () => {
   const registerResponse = await agent
     .post("/api/auth/register")
+    .set("Origin", "http://localhost:5173")
     .send(testUser);
   expect(registerResponse.status).toBe(201);
   const registerResponseB = await otherAgent
     .post("/api/auth/register")
+    .set("Origin", "http://localhost:5173")
     .send(testUserB);
   expect(registerResponseB.status).toBe(201);
 
-  const loginResponse = await agent.post("/api/auth/login").send(testUser);
+  const loginResponse = await agent
+    .post("/api/auth/login")
+    .set("Origin", "http://localhost:5173")
+    .send(testUser);
   expect(loginResponse.status).toBe(200);
   const loginResponseB = await otherAgent
     .post("/api/auth/login")
+    .set("Origin", "http://localhost:5173")
     .send(testUserB);
   expect(loginResponseB.status).toBe(200);
 });
@@ -77,10 +82,13 @@ describe("POST /api/auth/logout", () => {
 
     const loginResponse = await logoutAgent
       .post("/api/auth/login")
+      .set("Origin", "http://localhost:5173")
       .send(testUser);
     expect(loginResponse.status).toBe(200);
 
-    const logoutResponse = await logoutAgent.post("/api/auth/logout");
+    const logoutResponse = await logoutAgent
+      .post("/api/auth/logout")
+      .set("Origin", "http://localhost:5173");
     expect(logoutResponse.status).toBe(200);
 
     const protectedResponse = await logoutAgent.get("/api/data");
@@ -92,10 +100,13 @@ describe("GET /api/patients", () => {
   it("他のユーザーの患者は取得できない", async () => {
     const uniqueRoom = createUniqueRoom();
 
-    const createPatientResponse = await agent.post("/api/patients").send({
-      name: "テスト患者",
-      room: uniqueRoom,
-    });
+    const createPatientResponse = await agent
+      .post("/api/patients")
+      .set("Origin", "http://localhost:5173")
+      .send({
+        name: "テスト患者",
+        room: uniqueRoom,
+      });
     expect(createPatientResponse.status).toBe(201);
 
     const getPatientResponse = await otherAgent.get("/api/patients");
@@ -120,15 +131,19 @@ describe("GET /api/data", () => {
   it("ログインユーザは自分の患者だけを取得できる", async () => {
     const uniqueRoom = createUniqueRoom();
 
-    const createPatientResponse = await agent.post("/api/patients").send({
-      name: "テスト患者",
-      room: uniqueRoom,
-    });
+    const createPatientResponse = await agent
+      .post("/api/patients")
+      .set("Origin", "http://localhost:5173")
+      .send({
+        name: "テスト患者",
+        room: uniqueRoom,
+      });
     expect(createPatientResponse.status).toBe(201);
 
     const otherUniqueRoom = createUniqueRoom();
     const createOtherPatientResponse = await otherAgent
       .post("/api/patients")
+      .set("Origin", "http://localhost:5173")
       .send({
         name: "他ユーザーの患者",
         room: otherUniqueRoom,
@@ -157,32 +172,40 @@ describe("GET /api/data", () => {
   it("ログインユーザーは自分の看護記録だけを取得できる", async () => {
     const uniqueRoom = createUniqueRoom();
 
-    const createPatientResponse = await agent.post("/api/patients").send({
-      name: "テスト患者",
-      room: uniqueRoom,
-    });
+    const createPatientResponse = await agent
+      .post("/api/patients")
+      .set("Origin", "http://localhost:5173")
+      .send({
+        name: "テスト患者",
+        room: uniqueRoom,
+      });
     expect(createPatientResponse.status).toBe(201);
 
     const otherUniqueRoom = createUniqueRoom();
 
     const createOtherPatientResponse = await otherAgent
       .post("/api/patients")
+      .set("Origin", "http://localhost:5173")
       .send({
         name: "他のテスト患者",
         room: otherUniqueRoom,
       });
     expect(createOtherPatientResponse.status).toBe(201);
 
-    const createRecordResponse = await agent.post("/api/records").send({
-      patientId: createPatientResponse.body.id,
-      date: "2026-09-05",
-      author: "test author",
-      vitals: {},
-    });
+    const createRecordResponse = await agent
+      .post("/api/records")
+      .set("Origin", "http://localhost:5173")
+      .send({
+        patientId: createPatientResponse.body.id,
+        date: "2026-09-05",
+        author: "test author",
+        vitals: {},
+      });
     expect(createRecordResponse.status).toBe(201);
 
     const createOtherRecordResponse = await otherAgent
       .post("/api/records")
+      .set("Origin", "http://localhost:5173")
       .send({
         patientId: createOtherPatientResponse.body.id,
         date: "2026-09-05",
@@ -212,10 +235,13 @@ describe("GET /api/data", () => {
 
 describe("POST /api/patients", () => {
   it("不正な患者データなら400を返す", async () => {
-    const response = await agent.post("/api/patients").send({
-      name: "",
-      room: 0,
-    });
+    const response = await agent
+      .post("/api/patients")
+      .set("Origin", "http://localhost:5173")
+      .send({
+        name: "",
+        room: 0,
+      });
     expect(response.status).toBe(400);
     expect(response.body.error).toBe("Invalid patient data / 無効な患者データ");
   });
@@ -225,14 +251,18 @@ describe("PUT /api/patients/:id", () => {
   it("他のユーザーの患者は更新できない", async () => {
     const uniqueRoom = createUniqueRoom();
 
-    const createPatientResponse = await otherAgent.post("/api/patients").send({
-      name: "他ユーザーの患者",
-      room: uniqueRoom,
-    });
+    const createPatientResponse = await otherAgent
+      .post("/api/patients")
+      .set("Origin", "http://localhost:5173")
+      .send({
+        name: "他ユーザーの患者",
+        room: uniqueRoom,
+      });
     expect(createPatientResponse.status).toBe(201);
 
     const updatePatientResponse = await agent
       .put(`/api/patients/${createPatientResponse.body.id}`)
+      .set("Origin", "http://localhost:5173")
       .send({
         name: "更新しようとした患者",
         room: uniqueRoom,
@@ -245,6 +275,7 @@ describe("PUT /api/patients/:id", () => {
 
     const response = await agent
       .put("/api/patients/00000000-0000-0000-0000-000000000000")
+      .set("Origin", "http://localhost:5173")
       .send({
         name: "テスト患者",
         room: uniqueRoom,
@@ -260,22 +291,26 @@ describe("DELETE /api/patients/:id", () => {
   it("他のユーザーの患者は削除できない", async () => {
     const uniqueRoom = createUniqueRoom();
 
-    const createPatientResponse = await otherAgent.post("/api/patients").send({
-      name: "他ユーザーの患者",
-      room: uniqueRoom,
-    });
+    const createPatientResponse = await otherAgent
+      .post("/api/patients")
+      .set("Origin", "http://localhost:5173")
+      .send({
+        name: "他ユーザーの患者",
+        room: uniqueRoom,
+      });
     expect(createPatientResponse.status).toBe(201);
 
-    const deletePatientResponse = await agent.delete(
-      `/api/patients/${createPatientResponse.body.id}`,
-    );
+    const deletePatientResponse = await agent
+      .delete(`/api/patients/${createPatientResponse.body.id}`)
+      .set("Origin", "http://localhost:5173");
     expect(deletePatientResponse.status).toBe(404);
   });
 
   it("存在しない患者を削除すると404を返す", async () => {
-    const response = await agent.delete(
-      "/api/patients/00000000-0000-0000-0000-000000000000",
-    );
+    const response = await agent
+      .delete("/api/patients/00000000-0000-0000-0000-000000000000")
+      .set("Origin", "http://localhost:5173");
+
     expect(response.status).toBe(404);
     expect(response.body.error).toBe(
       "Patient not found / 患者が見つかりません",
@@ -295,23 +330,32 @@ describe("POST /api/records", () => {
   it("他のユーザーの患者には看護記録を追加できない", async () => {
     const uniqueRoom = createUniqueRoom();
 
-    const createPatientResponse = await otherAgent.post("/api/patients").send({
-      name: "他ユーザの患者",
-      room: uniqueRoom,
-    });
+    const createPatientResponse = await otherAgent
+      .post("/api/patients")
+      .set("Origin", "http://localhost:5173")
+      .send({
+        name: "他ユーザの患者",
+        room: uniqueRoom,
+      });
     expect(createPatientResponse.status).toBe(201);
 
-    const createRecordResponse = await agent.post("/api/records").send({
-      patientId: createPatientResponse.body.id,
-      date: "2026-09-05",
-      author: "test author",
-      vitals: {},
-    });
+    const createRecordResponse = await agent
+      .post("/api/records")
+      .set("Origin", "http://localhost:5173")
+      .send({
+        patientId: createPatientResponse.body.id,
+        date: "2026-09-05",
+        author: "test author",
+        vitals: {},
+      });
     expect(createRecordResponse.status).toBe(404);
   });
 
   it("不正な看護記録データなら400を返す", async () => {
-    const response = await agent.post("/api/records").send({});
+    const response = await agent
+      .post("/api/records")
+      .set("Origin", "http://localhost:5173")
+      .send({});
     expect(response.status).toBe(400);
     expect(response.body.error).toBe(
       "Invalid record data / 無効な看護記録データ",
@@ -323,21 +367,27 @@ describe("DELETE /api/records/:id", () => {
   it("他のユーザーの看護記録は削除できない", async () => {
     const uniqueRoom = createUniqueRoom();
 
-    const createPatientResponse = await otherAgent.post("/api/patients").send({
-      name: "他ユーザの患者",
-      room: uniqueRoom,
-    });
+    const createPatientResponse = await otherAgent
+      .post("/api/patients")
+      .set("Origin", "http://localhost:5173")
+      .send({
+        name: "他ユーザの患者",
+        room: uniqueRoom,
+      });
     expect(createPatientResponse.status).toBe(201);
-    const createRecordResponse = await otherAgent.post("/api/records").send({
-      patientId: createPatientResponse.body.id,
-      date: "2026-09-05",
-      author: "test author",
-      vitals: {},
-    });
+    const createRecordResponse = await otherAgent
+      .post("/api/records")
+      .set("Origin", "http://localhost:5173")
+      .send({
+        patientId: createPatientResponse.body.id,
+        date: "2026-09-05",
+        author: "test author",
+        vitals: {},
+      });
     expect(createRecordResponse.status).toBe(201);
-    const deleteResponse = await agent.delete(
-      `/api/records/${createRecordResponse.body.id}`,
-    );
+    const deleteResponse = await agent
+      .delete(`/api/records/${createRecordResponse.body.id}`)
+      .set("Origin", "http://localhost:5173");
     expect(deleteResponse.status).toBe(404);
     expect(deleteResponse.body.error).toBe(
       "Record not found / 看護記録が見つかりません",
@@ -345,9 +395,9 @@ describe("DELETE /api/records/:id", () => {
   });
 
   it("存在しない看護記録を削除すると404を返す", async () => {
-    const response = await agent.delete(
-      "/api/records/00000000-0000-0000-0000-000000000000",
-    );
+    const response = await agent
+      .delete("/api/records/00000000-0000-0000-0000-000000000000")
+      .set("Origin", "http://localhost:5173");
     expect(response.status).toBe(404);
     expect(response.body.error).toBe(
       "Record not found / 看護記録が見つかりません",
@@ -359,21 +409,28 @@ describe("PUT /api/records/:id", () => {
   it("他のユーザーの看護記録は更新できない", async () => {
     const uniqueRoom = createUniqueRoom();
 
-    const createPatientResponse = await otherAgent.post("/api/patients").send({
-      name: "更新テスト患者",
-      room: uniqueRoom,
-    });
+    const createPatientResponse = await otherAgent
+      .post("/api/patients")
+      .set("Origin", "http://localhost:5173")
+      .send({
+        name: "更新テスト患者",
+        room: uniqueRoom,
+      });
     expect(createPatientResponse.status).toBe(201);
-    const createRecordResponse = await otherAgent.post("/api/records").send({
-      patientId: createPatientResponse.body.id,
-      date: "2026-09-05",
-      author: "test author",
-      vitals: {},
-    });
+    const createRecordResponse = await otherAgent
+      .post("/api/records")
+      .set("Origin", "http://localhost:5173")
+      .send({
+        patientId: createPatientResponse.body.id,
+        date: "2026-09-05",
+        author: "test author",
+        vitals: {},
+      });
     expect(createRecordResponse.status).toBe(201);
 
     const updateRecordResponse = await agent
       .put(`/api/records/${createRecordResponse.body.id}`)
+      .set("Origin", "http://localhost:5173")
       .send({
         patientId: createPatientResponse.body.id,
         date: "2026-09-05",
@@ -386,14 +443,18 @@ describe("PUT /api/records/:id", () => {
   it("存在しない看護記録を更新したら404を返す", async () => {
     const uniqueRoom = createUniqueRoom();
 
-    const createPatientResponse = await agent.post("/api/patients").send({
-      name: "更新テスト用患者",
-      room: uniqueRoom,
-    });
+    const createPatientResponse = await agent
+      .post("/api/patients")
+      .set("Origin", "http://localhost:5173")
+      .send({
+        name: "更新テスト用患者",
+        room: uniqueRoom,
+      });
     expect(createPatientResponse.status).toBe(201);
 
     const response = await agent
       .put("/api/records/00000000-0000-0000-0000-000000000000")
+      .set("Origin", "http://localhost:5173")
       .send({
         patientId: createPatientResponse.body.id,
         date: "3000-12-19",
@@ -408,6 +469,7 @@ describe("PUT /api/records/:id", () => {
   it("不正な看護記録データなら400を返す", async () => {
     const response = await agent
       .put("/api/records/00000000-0000-0000-0000-000000000000")
+      .set("Origin", "http://localhost:5173")
       .send({
         patientId: "00000000-0000-0000-0000-000000000000",
         date: "",
@@ -434,6 +496,7 @@ describe("PUT /api/patients/:id", () => {
   it("不正な患者データなら400を返す", async () => {
     const response = await agent
       .put("/api/patients/00000000-0000-0000-0000-000000000000")
+      .set("Origin", "http://localhost:5173")
       .send({
         name: "",
         room: "",

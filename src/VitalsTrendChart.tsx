@@ -88,8 +88,8 @@ export default function VitalsTrendChart({
   const margin = { top: 24, right: 24, bottom: 52, left: 68 };
   const plotWidth = width - margin.left - margin.right;
   const plotHeight = height - margin.top - margin.bottom;
-  const rawMin = Math.min(...values);
-  const rawMax = Math.max(...values);
+  const rawMin = values.length > 0 ? Math.min(...values) : 0;
+  const rawMax = values.length > 0 ? Math.max(...values) : 0;
   const rawRange = rawMax - rawMin;
   const padding = rawRange === 0 ? Math.max(Math.abs(rawMax) * 0.05, 1) : rawRange * 0.12;
   const minValue = rawMin - padding;

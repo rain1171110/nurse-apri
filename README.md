@@ -145,7 +145,9 @@
 
 Supertestのagentで2人のユーザーのCookieを保持し、認証と所有者の制限を検証しています。
 
-`server/index.test.ts`は2026年10月21日に20件すべて成功しています。
+`server/index.test.ts`は2026年11月1日に22件すべて成功しています。
+
+全体テストは2026年11月1日に10ファイル・76件すべて成功しています。
 
 - ログアウト後の保護APIへのアクセス拒否
 - 他ユーザーの患者の取得・更新・削除制限
@@ -155,28 +157,28 @@ Supertestのagentで2人のユーザーのCookieを保持し、認証と所有�
 - 存在しない患者・看護記録に対する404
 - 患者一覧・患者と看護記録データの取得
 - `GET /api/data`で、他ユーザーの患者・看護記録が含まれないこと
+- 他ユーザーによる患者の更新・削除や看護記録の更新が拒否された後、所有者が再取得して元のデータが残っていること
 
 ### 実行コマンド
 
-DBを使用するテストは、`.env.test`に設定したテスト用DBで実行します。
-Git Bashでは、各テストコマンドの先頭に`DOTENV_CONFIG_PATH=.env.test`を付けてください。
+DBを使用するテストは、`.env.test`に設定したテスト用DBで実行します。`package.json`のテスト用スクリプトがNode.jsの`--env-file=.env.test`で環境変数を読み込むため、次のコマンドをそのまま実行できます。
 
 テストを一括実行します。
 
 ```bash
-DOTENV_CONFIG_PATH=.env.test npm test
+npm test
 ```
 
 監視モードで実行します。
 
 ```bash
-DOTENV_CONFIG_PATH=.env.test npm run test:watch
+npm run test:watch
 ```
 
 APIテストだけ実行します。
 
 ```bash
-DOTENV_CONFIG_PATH=.env.test npx vitest run server/index.test.ts
+npm run test:server
 ```
 
 型チェックを実行します。

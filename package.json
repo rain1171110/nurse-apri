@@ -10,8 +10,9 @@
     "build": "prisma generate && npm run typecheck && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "vitest run",
-    "test:watch": "vitest",
+    "test": "node --env-file=.env.test ./node_modules/vitest/vitest.mjs run",
+    "test:watch": "node --env-file=.env.test ./node_modules/vitest/vitest.mjs",
+    "test:server": "node --env-file=.env.test ./node_modules/vitest/vitest.mjs run server/index.test.ts",
     "db:dev": "prisma dev",
     "db:studio": "prisma studio"
   },

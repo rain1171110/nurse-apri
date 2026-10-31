@@ -245,6 +245,28 @@ describe("POST /api/patients", () => {
     expect(response.status).toBe(400);
     expect(response.body.error).toBe("Invalid patient data / 無効な患者データ");
   });
+
+  it("部屋番号が重複していたら409を返す", async () => {
+    const uniqueRoom = createUniqueRoom();
+
+    const firstResponse = await agent
+      .post("/api/patients")
+      .set("Origin", "http://localhost:5173")
+      .send({
+        name: "最初のテスト患者",
+        room: uniqueRoom,
+      });
+    expect(firstResponse.status).toBe(201);
+
+    const duplicateResponse = await agent
+      .post("/api/patients")
+      .set("Origin", "http://localhost:5173")
+      .send({
+        name: "重複するテスト患者",
+        room: uniqueRoom,
+      });
+    expect(duplicateResponse.status).toBe(409);
+  });
 });
 
 describe("PUT /api/patients/:id", () => {
@@ -268,6 +290,17 @@ describe("PUT /api/patients/:id", () => {
         room: uniqueRoom,
       });
     expect(updatePatientResponse.status).toBe(404);
+
+    const ownerPatientsResponse = await otherAgent.get("/api/patients");
+
+    expect(ownerPatientsResponse.body).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: createPatientResponse.body.id,
+          name: "他ユーザーの患者",
+        }),
+      ]),
+    );
   });
 
   it("存在しない患者を更新すると404を返す", async () => {

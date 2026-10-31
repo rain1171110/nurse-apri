@@ -1,5 +1,6 @@
 import { useNavigate, useOutletContext } from "react-router-dom";
 import { formatValue, formatBpText } from "./Utils";
+import VitalsTrendChart from "./VitalsTrendChart";
 import type { PatientOutletContext } from "./types";
 
 type PatientVitalsOutletContext = Pick<
@@ -21,6 +22,7 @@ export default function PatientVitals() {
       <p>
         {patient.room}号室 {patient.name} さん
       </p>
+      <VitalsTrendChart records={patientRecords} />
       <div className="card">
         <div className="card-body">
           <table>

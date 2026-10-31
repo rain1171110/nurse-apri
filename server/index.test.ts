@@ -337,6 +337,17 @@ describe("DELETE /api/patients/:id", () => {
       .delete(`/api/patients/${createPatientResponse.body.id}`)
       .set("Origin", "http://localhost:5173");
     expect(deletePatientResponse.status).toBe(404);
+
+    const ownerPatientsResponse = await otherAgent.get("/api/patients");
+
+    expect(ownerPatientsResponse.body).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: createPatientResponse.body.id,
+          name: "他ユーザーの患者",
+        }),
+      ]),
+    );
   });
 
   it("存在しない患者を削除すると404を返す", async () => {
@@ -466,11 +477,24 @@ describe("PUT /api/records/:id", () => {
       .set("Origin", "http://localhost:5173")
       .send({
         patientId: createPatientResponse.body.id,
-        date: "2026-09-05",
-        author: "test author",
+        date: "2026-09-06",
+        author: "不正な更新",
         vitals: {},
       });
     expect(updateRecordResponse.status).toBe(404);
+
+    const ownerDataResponse = await otherAgent.get("/api/data");
+    expect(ownerDataResponse.status).toBe(200);
+
+    expect(ownerDataResponse.body.records).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: createRecordResponse.body.id,
+          date: "2026-09-05",
+          author: "test author",
+        }),
+      ]),
+    );
   });
 
   it("存在しない看護記録を更新したら404を返す", async () => {

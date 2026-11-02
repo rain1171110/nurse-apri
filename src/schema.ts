@@ -56,6 +56,17 @@ export type PatientOutput = z.output<
 
 export const recordSchema = z.object({
   date: z.string().trim().min(1, "日付は必須"),
+  time: z
+    .string()
+    .trim()
+    .optional()
+    .refine(
+      (value) =>
+        value === undefined ||
+        value === "" ||
+        /^([01]\d|2[0-3]):[0-5]\d$/.test(value),
+      "時刻はHH:mm形式で入力してください",
+    ),
   author: z.string().trim().min(1, "記録者は必須"),
   content: z.string().trim().optional(),
   vitals: z.object({

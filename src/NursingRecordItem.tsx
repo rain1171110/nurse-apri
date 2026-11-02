@@ -31,6 +31,7 @@ export default function NursingRecordItem({
   const initialValues = useMemo<RecordInput>(() => {
     return {
       date: record?.date ?? "",
+      time: record?.time ?? "",
       vitals: record?.vitals ?? {},
       content: record?.content ?? "",
       author: record?.author ?? "",
@@ -82,6 +83,7 @@ export default function NursingRecordItem({
           <div className="card">
             <div className="card-body">
               <p>日付:{record.date}</p>
+              <p>記録時刻:{record.time || "未記録"}</p>
               <p>
                 体温:{formatValue(T, "℃")} 脈拍:{formatValue(P, "回/分")} 呼吸:
                 {formatValue(R, "回/分")} 血圧:{bpDisplay} SPO2:

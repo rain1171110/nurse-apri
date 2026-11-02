@@ -54,6 +54,7 @@ export default function NursingRecordList({
                 setFormData({
                   ...createEmptyRecord(),
                   date: formatDate(new Date()),
+                  time: new Date().toTimeString().slice(0, 5),
                 });
                 setIsAdding(true);
               }}
@@ -79,7 +80,7 @@ export default function NursingRecordList({
               >
                 <div className="card-header">
                   <h3 className="card-title" style={{ margin: 0 }}>
-                    {r.date} {r.author}
+                    {r.date} {r.time || "時刻未記録"} {r.author}
                   </h3>
                 </div>
               </div>

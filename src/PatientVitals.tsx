@@ -1,4 +1,4 @@
-import { data, useNavigate, useOutletContext } from "react-router-dom";
+import { useNavigate, useOutletContext } from "react-router-dom";
 import { formatValue, formatBpText } from "./Utils";
 import type { PatientOutletContext } from "./types";
 

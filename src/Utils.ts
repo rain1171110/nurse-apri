@@ -14,6 +14,7 @@ export const formatValue: FormatValue = (value, unit = "", empty = "--") =>
 
 export const createEmptyRecord = (): RecordInput => ({
   date: "",
+  time: "",
   vitals: {
     T: "",
     P: "",

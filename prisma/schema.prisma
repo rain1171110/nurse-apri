@@ -29,6 +29,7 @@ model NursingRecord {
   id        String      @id @default(uuid())
   patientId String
   date      String
+  time      String?
   author    String
   content   String?
   patient   Patient     @relation(fields: [patientId], references: [id], onDelete: Cascade)

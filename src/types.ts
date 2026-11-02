@@ -23,6 +23,7 @@ export type NursingRecord = {
   id: string;
   patientId: string;
   date: string;
+  time?: string | null;
   author: string;
   content?: string;
   vitals: VitalSigns;

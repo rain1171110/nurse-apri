@@ -47,7 +47,6 @@ export default function NursingRecordForm({
     reset(initialValues);
   }, [initialValues, reset]);
 
-
   return (
     <form onSubmit={handleSubmit(onSubmit, onErrorsChange)}>
       {showDate && (
@@ -64,6 +63,23 @@ export default function NursingRecordForm({
                   helperText: errors.date?.message,
                 },
               }}
+            />
+          )}
+        />
+      )}
+      {showDate && (
+        <Controller
+          name="time"
+          control={control}
+          render={({ field }) => (
+            <TextField
+              {...field}
+              type="time"
+              label="記録時刻"
+              value={field.value ?? ""}
+              InputLabelProps={{ shrink: true }}
+              error={!!errors.time}
+              helperText={errors.time?.message}
             />
           )}
         />

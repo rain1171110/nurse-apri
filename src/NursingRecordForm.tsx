@@ -84,37 +84,21 @@ export default function NursingRecordForm({
           )}
         />
       )}
-      <Box>
-        <Controller
-          name="author"
-          control={control}
-          render={({ field }) => (
-            <Autocomplete
-              freeSolo
-              options={AUTHOR_OPTIONS}
-              value={String(field.value ?? "")}
-              onInputChange={(_, value, reason) => {
-                if (reason === "input") field.onChange(value);
-              }}
-              onChange={(_, value) => field.onChange(value ?? "")}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label="記録者"
-                  error={!!errors.author}
-                  helperText={errors.author?.message}
-                />
-              )}
-            />
-          )}
-        />
-      </Box>
-      <Box>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: 1,
+          mt: 2,
+          mb: 2,
+        }}
+      >
         <Controller
           name="vitals.T"
           control={control}
           render={({ field }) => (
             <Autocomplete
+              sx={{ flex: 1, minWidth: 0 }}
               freeSolo
               options={TEMP_OPTIONS}
               value={String(field.value ?? "")}
@@ -133,14 +117,23 @@ export default function NursingRecordForm({
             />
           )}
         />
+        <span>℃</span>
       </Box>
-      ℃
-      <Box>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: 1,
+          mt: 2,
+          mb: 2,
+        }}
+      >
         <Controller
           name="vitals.P"
           control={control}
           render={({ field }) => (
             <Autocomplete
+              sx={{ flex: 1, minWidth: 0 }}
               freeSolo
               options={PULSE_OPTIONS}
               value={String(field.value ?? "")}
@@ -159,14 +152,23 @@ export default function NursingRecordForm({
             />
           )}
         />
+        <span>回/分</span>
       </Box>
-      回
-      <Box>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: 1,
+          mt: 2,
+          mb: 2,
+        }}
+      >
         <Controller
           name="vitals.R"
           control={control}
           render={({ field }) => (
             <Autocomplete
+              sx={{ flex: 1, minWidth: 0 }}
               freeSolo
               options={RR_OPTIONS}
               value={String(field.value ?? "")}
@@ -185,14 +187,23 @@ export default function NursingRecordForm({
             />
           )}
         />
+        <span>回/分</span>
       </Box>
-      回
-      <Box>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: 1,
+          mt: 2,
+          mb: 2,
+        }}
+      >
         <Controller
           name="vitals.SBP"
           control={control}
           render={({ field }) => (
             <Autocomplete
+              sx={{ flex: 1, minWidth: 0 }}
               freeSolo
               options={SBP_OPTIONS}
               value={String(field.value ?? "")}
@@ -211,14 +222,24 @@ export default function NursingRecordForm({
             />
           )}
         />
+        <span>mmHg</span>
       </Box>
-      mmHg
-      <Box>
+
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: 1,
+          mt: 2,
+          mb: 2,
+        }}
+      >
         <Controller
           name="vitals.DBP"
           control={control}
           render={({ field }) => (
             <Autocomplete
+              sx={{ flex: 1, minWidth: 0 }}
               freeSolo
               options={DBP_OPTIONS}
               value={String(field.value ?? "")}
@@ -237,14 +258,24 @@ export default function NursingRecordForm({
             />
           )}
         />
+        <span>mmHg</span>
       </Box>
-      mmHg
-      <Box>
+
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: 1,
+          mt: 2,
+          mb: 2,
+        }}
+      >
         <Controller
           name="vitals.SPO2"
           control={control}
           render={({ field }) => (
             <Autocomplete
+              sx={{ flex: 1, minWidth: 0 }}
               freeSolo
               options={SPO2_OPTIONS}
               value={String(field.value ?? "")}
@@ -263,8 +294,9 @@ export default function NursingRecordForm({
             />
           )}
         />
+        <span>%</span>
       </Box>
-      %
+
       <div>
         <Controller
           name="content"
@@ -272,6 +304,9 @@ export default function NursingRecordForm({
           render={({ field }) => (
             <TextField
               {...field}
+              fullWidth
+              multiline
+              minRows={3}
               label="記録内容"
               error={!!errors.content}
               helperText={errors.content?.message}
@@ -279,9 +314,11 @@ export default function NursingRecordForm({
           )}
         />
       </div>
-      <button type="submit" className="btn-primary">
-        記録を保存する
-      </button>
+      <Box sx={{ mt: 2 }}>
+        <button type="submit" className="btn-primary">
+          記録を保存する
+        </button>
+      </Box>
     </form>
   );
 }

@@ -1,6 +1,7 @@
-import { useNavigate, useOutletContext } from "react-router-dom";
+import { data, useNavigate, useOutletContext } from "react-router-dom";
 import { formatValue, formatBpText } from "./Utils";
 import type { PatientOutletContext } from "./types";
+import { locale } from "dayjs";
 
 type PatientVitalsOutletContext = Pick<
   PatientOutletContext,
@@ -15,12 +16,23 @@ export default function PatientVitals() {
   if (!patient) return <div>患者が見つかりません</div>;
 
   const patientRecordsGraph = [...patientRecords];
-  patientRecordsGraph.sort((a, b) => Date.parse(a.date) - Date.parse(b.date));
+  patientRecordsGraph.sort((a, b) => {
+    const dateOrder = Date.parse(a.date) - Date.parse(b.date);
+    if (dateOrder !== 0) return dateOrder;
+
+    if (!a.time && b.time) return 1;
+    if (a.time && !b.time) return -1;
+    if (a.time === b.time) return 0;
+    if (a.time && b.time) return a.time.localeCompare(b.time);
+    return 0;
+  });
+
   const patientRecordsWithTemperature = patientRecordsGraph.filter(
     (r) => r.vitals?.T != null,
   );
   const temperatureGraphData = patientRecordsWithTemperature.map((r) => ({
     date: r.date,
+    label: `${r.date} ${r.time || "時刻未記録"}`,
     temperature: r.vitals?.T,
   }));
 
@@ -44,6 +56,7 @@ export default function PatientVitals() {
           <table>
             <thead>
               <tr>
+                <th>時刻</th>
                 <th>日付</th>
                 <th>体温</th>
                 <th>脈拍</th>
@@ -60,6 +73,7 @@ export default function PatientVitals() {
                 const bpDisplay = bpText === "--" ? "--" : `${bpText}mmHg`;
                 return (
                   <tr key={r.id}>
+                    <td>{r.time || "時刻未記録"}</td>
                     <td>{formatValue(date)}</td>
                     <td>{formatValue(T, "℃")}</td>
                     <td>{formatValue(P, "回/分")}</td>

@@ -110,7 +110,7 @@ export default function NursingRecordItem({
           <div className="card-footer">
             <button
               type="button"
-              className="btn-secondary"
+              className="btn-danger"
               onClick={() => {
                 setIsEditing(false);
                 navigate(`/patient/${patient.id}/records`);

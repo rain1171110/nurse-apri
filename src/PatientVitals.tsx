@@ -1,7 +1,14 @@
-import { data, useNavigate, useOutletContext } from "react-router-dom";
+import { useNavigate, useOutletContext } from "react-router-dom";
+import {
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 import { formatValue, formatBpText } from "./Utils";
 import type { PatientOutletContext } from "./types";
-import { locale } from "dayjs";
 
 type PatientVitalsOutletContext = Pick<
   PatientOutletContext,
@@ -31,17 +38,11 @@ export default function PatientVitals() {
     (r) => r.vitals?.T != null,
   );
   const temperatureGraphData = patientRecordsWithTemperature.map((r) => ({
-    date: r.date,
     label: `${r.date} ${r.time || "時刻未記録"}`,
     temperature: r.vitals?.T,
   }));
 
-  const graphStartDate = temperatureGraphData[0]
-    ? Date.parse(temperatureGraphData[0].date)
-    : 0;
-  const graphEndDate = temperatureGraphData.length
-    ? Date.parse(temperatureGraphData[temperatureGraphData.length - 1].date)
-    : 0;
+
 
   return (
     <div className="container-md">
@@ -88,33 +89,32 @@ export default function PatientVitals() {
         </div>
       </div>
 
-      <svg viewBox="0 0 600 300" role="img" aria-label="体温の推移">
-        <line x1="40" y1="260" x2="580" y2="260" stroke="currentColor" />
-        <line x1="40" y1="20" x2="40" y2="260" stroke="currentColor" />
-
-        {temperatureGraphData.map((item, index) => {
-          const currentDate = Date.parse(item.date);
-          const x =
-            graphStartDate === graphEndDate
-              ? 310
-              : 40 +
-                ((currentDate - graphStartDate) /
-                  (graphEndDate - graphStartDate)) *
-                  540;
-          if (item.temperature == null) return null;
-          const y = 260 - ((item.temperature - 34) / 8) * 240;
-
-          return (
-            <circle
-              key={`${item.date}-${index}`}
-              cx={x}
-              cy={y}
-              r="4"
-              fill="currentColor"
+      <div style={{ width: "100%", height: 300 }}>
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart
+            data={temperatureGraphData}
+            margin={{ top: 12, right: 16, bottom: 24, left: 8 }}
+          >
+            <XAxis
+              dataKey={"label"}
+              interval={"preserveStartEnd"}
+              angle={-35}
+              textAnchor="end"
+              height={70}
+              tick={{ fontSize: 12 }}
             />
-          );
-        })}
-      </svg>
+            <YAxis domain={[34, 42]} tickFormatter={(value) => `${value}℃`} />
+            <Tooltip />
+            <Line
+              type="monotone"
+              dataKey="temperature"
+              name="体温"
+              stroke="currentColor"
+              dot={{ r: 4 }}
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
 
       <div className="form-actions">
         <button

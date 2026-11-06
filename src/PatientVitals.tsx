@@ -9,6 +9,7 @@ import {
 } from "recharts";
 import { formatValue, formatBpText } from "./Utils";
 import type { PatientOutletContext } from "./types";
+import { xAxisDefaultProps } from "recharts/types/cartesian/XAxis";
 
 type PatientVitalsOutletContext = Pick<
   PatientOutletContext,
@@ -34,13 +35,16 @@ export default function PatientVitals() {
     return 0;
   });
 
-  const patientRecordsWithTemperature = patientRecordsGraph.filter(
-    (r) => r.vitals?.T != null,
+  const patientRecordsWith = patientRecordsGraph.filter(
+    (r) => r.vitals?.T != null || r.vitals?.P != null,
   );
-  const temperatureGraphData = patientRecordsWithTemperature.map((r) => ({
+  const GraphData = patientRecordsWith.map((r) => ({
     recordKey: r.id,
+    xDate: Date.parse(r.date),
+    date: r.date,
     label: `${r.date} ${r.time || "時刻未記録"}`,
     temperature: r.vitals?.T,
+    pulse: r.vitals?.P,
   }));
 
   return (
@@ -91,19 +95,47 @@ export default function PatientVitals() {
       <div style={{ width: "100%", height: 300 }}>
         <ResponsiveContainer width="100%" height="100%">
           <LineChart
-            data={temperatureGraphData}
+            data={GraphData}
             margin={{ top: 12, right: 16, bottom: 24, left: 8 }}
           >
-            <XAxis dataKey={"recordKey"} tick={false} />
-            <YAxis domain={[34, 42]} tickFormatter={(value) => `${value}℃`} />
+            <XAxis
+              dataKey={"xDate"}
+              type="number"
+              scale={"time"}
+              domain={["dataMin", "dataMax"]}
+              tickFormatter={(value) => {
+                const date = new Date(value);
+                return `${date.getUTCMonth() + 1}/${date.getUTCDate()}`;
+              }}
+            />
+            <YAxis
+              yAxisId="temperature"
+              domain={[34, 42]}
+              tickFormatter={(value) => `${value}℃`}
+            />
+            <YAxis
+              yAxisId="pulse"
+              domain={[0, 200]}
+              orientation="right"
+              tickFormatter={(value) => `${value}回/分`}
+            />
             <Tooltip
               labelFormatter={(_, payload) => payload?.[0]?.payload.label ?? ""}
             />
             <Line
+              yAxisId="temperature"
               type="monotone"
               dataKey="temperature"
               name="体温"
-              stroke="currentColor"
+              stroke="red"
+              dot={{ r: 4 }}
+            />
+            <Line
+              yAxisId="pulse"
+              type="monotone"
+              dataKey="pulse"
+              name="脈拍"
+              stroke="green"
               dot={{ r: 4 }}
             />
           </LineChart>

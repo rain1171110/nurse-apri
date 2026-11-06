@@ -84,6 +84,33 @@ export default function NursingRecordForm({
           )}
         />
       )}
+      <Box sx={{ mt: 2, mb: 2 }}>
+        <Controller
+          name="author"
+          control={control}
+          render={({ field }) => (
+            <Autocomplete
+              fullWidth
+              freeSolo
+              options={AUTHOR_OPTIONS}
+              value={String(field.value ?? "")}
+              onInputChange={(_, value, reason) => {
+                if (reason === "input") field.onChange(value);
+              }}
+              onChange={(_, value) => field.onChange(value ?? "")}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="記録者"
+                  required
+                  error={!!errors.author}
+                  helperText={errors.author?.message}
+                />
+              )}
+            />
+          )}
+        />
+      </Box>
       <Box
         sx={{
           display: "flex",

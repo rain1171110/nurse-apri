@@ -38,11 +38,10 @@ export default function PatientVitals() {
     (r) => r.vitals?.T != null,
   );
   const temperatureGraphData = patientRecordsWithTemperature.map((r) => ({
+    recordKey: r.id,
     label: `${r.date} ${r.time || "時刻未記録"}`,
     temperature: r.vitals?.T,
   }));
-
-
 
   return (
     <div className="container-md">
@@ -95,16 +94,11 @@ export default function PatientVitals() {
             data={temperatureGraphData}
             margin={{ top: 12, right: 16, bottom: 24, left: 8 }}
           >
-            <XAxis
-              dataKey={"label"}
-              interval={"preserveStartEnd"}
-              angle={-35}
-              textAnchor="end"
-              height={70}
-              tick={{ fontSize: 12 }}
-            />
+            <XAxis dataKey={"recordKey"} tick={false} />
             <YAxis domain={[34, 42]} tickFormatter={(value) => `${value}℃`} />
-            <Tooltip />
+            <Tooltip
+              labelFormatter={(_, payload) => payload?.[0]?.payload.label ?? ""}
+            />
             <Line
               type="monotone"
               dataKey="temperature"

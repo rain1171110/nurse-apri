@@ -9,6 +9,7 @@ import {
 } from "recharts";
 import { formatValue, formatBpText } from "./Utils";
 import type { PatientOutletContext } from "./types";
+import type { DotItemDotProps } from "recharts";
 
 type PatientVitalsOutletContext = Pick<
   PatientOutletContext,
@@ -35,19 +36,56 @@ export default function PatientVitals() {
   });
 
   const patientRecordsWith = patientRecordsGraph.filter(
-    (r) => r.vitals?.T != null || r.vitals?.P != null || r.vitals?.R != null,
+    (r) =>
+      r.vitals?.T != null ||
+      r.vitals?.P != null ||
+      r.vitals?.R != null ||
+      r.vitals?.SPO2 != null ||
+      r.vitals?.SBP != null ||
+      r.vitals?.DBP != null,
   );
+
   const GraphData = patientRecordsWith.map((r) => ({
     recordKey: r.id,
     xDate: Date.parse(`${r.date}T${r.time || "00:00"}:00Z`),
     date: r.date,
     label: `${r.date} ${r.time || "時刻未記録"}`,
-
+    temperature: r.vitals?.T,
     pulse: r.vitals?.P,
     respiration: r.vitals?.R,
     saturation: r.vitals?.SPO2,
-    temperature: r.vitals?.T,
+    systolicBloodPressure: r.vitals?.SBP,
+    diastolicBloodPressure: r.vitals?.DBP,
   }));
+
+  const SBPDot = ({ cx, cy }: DotItemDotProps) => {
+    if (cx == null || cy == null) return <g />;
+    return (
+      <text
+        x={cx}
+        y={cy}
+        textAnchor="middle"
+        dominantBaseline="central"
+        fontSize={10}
+      >
+        ▼
+      </text>
+    );
+  };
+  const DBPDot = ({ cx, cy }: DotItemDotProps) => {
+    if (cx == null || cy == null) return <g />;
+    return (
+      <text
+        x={cx}
+        y={cy}
+        textAnchor="middle"
+        dominantBaseline="central"
+        fontSize={10}
+      >
+        ▲
+      </text>
+    );
+  };
 
   return (
     <div className="container-md">
@@ -98,7 +136,7 @@ export default function PatientVitals() {
         <ResponsiveContainer width="100%" height="100%">
           <LineChart
             data={GraphData}
-            margin={{ top: 12, right: 30, bottom: 24, left: 8 }}
+            margin={{ top: 12, right: 0, bottom: 24, left: 5 }}
           >
             <XAxis
               dataKey={"xDate"}
@@ -111,12 +149,14 @@ export default function PatientVitals() {
                 return `${date.getUTCMonth() + 1}/${date.getUTCDate()}`;
               }}
             />
+
             <YAxis
               yAxisId="pulse"
               domain={[0, 200]}
               orientation="right"
               tickFormatter={(value) => `${value}回/分`}
               tick={{ fontSize: 10 }}
+              stroke="green"
             />
             <YAxis
               yAxisId="respiration"
@@ -124,23 +164,47 @@ export default function PatientVitals() {
               orientation="right"
               tickFormatter={(value) => `${value}回/分`}
               tick={{ fontSize: 10 }}
+              stroke="purple"
             />
             <YAxis
               yAxisId="saturation"
               domain={[0, 99]}
               tickFormatter={(value) => `${value}%`}
               tick={{ fontSize: 10 }}
+              stroke="blue"
+            />
+            <YAxis
+              yAxisId="pressure"
+              domain={[0, 250]}
+              tickFormatter={(value) => `${value}mmHg`}
+              tick={{ fontSize: 9 }}
             />
             <YAxis
               yAxisId="temperature"
               domain={[34, 42]}
+              mirror
               tickFormatter={(value) => `${value}℃`}
               tick={{ fontSize: 10 }}
-            />
-            <Tooltip
-              labelFormatter={(_, payload) => payload?.[0]?.payload.label ?? ""}
+              stroke="red"
             />
 
+            <Tooltip
+              labelFormatter={(_, payload) => payload?.[0]?.payload.label ?? ""}
+              itemSorter={(item) => {
+                const order = ["体温", "脈拍", "SBP", "DBP", "呼吸", "SPO2"];
+                const index = order.indexOf(String(item.name));
+
+                return index === -1 ? order.length : index;
+              }}
+            />
+            <Line
+              yAxisId="temperature"
+              type="linear"
+              dataKey="temperature"
+              name="体温"
+              stroke="red"
+              dot={{ r: 3 }}
+            />
             <Line
               yAxisId="pulse"
               type="linear"
@@ -166,12 +230,20 @@ export default function PatientVitals() {
               dot={{ r: 3 }}
             />
             <Line
-              yAxisId="temperature"
+              yAxisId="pressure"
               type="linear"
-              dataKey="temperature"
-              name="体温"
-              stroke="red"
-              dot={{ r: 3 }}
+              dataKey="systolicBloodPressure"
+              name="SBP"
+              stroke="black"
+              dot={SBPDot}
+            />
+            <Line
+              yAxisId="pressure"
+              type="linear"
+              dataKey="diastolicBloodPressure"
+              name="DBP"
+              stroke="black"
+              dot={DBPDot}
             />
           </LineChart>
         </ResponsiveContainer>

@@ -10,6 +10,9 @@ import {
 import { formatValue, formatBpText } from "./Utils";
 import type { PatientOutletContext } from "./types";
 import type { DotItemDotProps } from "recharts";
+import { red } from "@mui/material/colors";
+import { payloadSearcher } from "recharts/types/chart/SunburstChart";
+import { dividerClasses } from "@mui/material";
 
 type PatientVitalsOutletContext = Pick<
   PatientOutletContext,
@@ -57,6 +60,10 @@ export default function PatientVitals() {
     systolicBloodPressure: r.vitals?.SBP,
     diastolicBloodPressure: r.vitals?.DBP,
   }));
+
+  const getRecordsAtXDate = (xDate: number) => {
+    return GraphData.filter((r) => r.xDate === xDate);
+  };
 
   const SBPDot = ({ cx, cy }: DotItemDotProps) => {
     if (cx == null || cy == null) return <g />;
@@ -189,11 +196,34 @@ export default function PatientVitals() {
             />
 
             <Tooltip
-              labelFormatter={(_, payload) => payload?.[0]?.payload.label ?? ""}
+              trigger="click"
+              content={({ active, payload }) => {
+                if (!active || !payload?.length) return null;
+
+                const activePoint = payload[0]?.payload;
+                if (!activePoint) return null;
+
+                const records = getRecordsAtXDate(activePoint.xDate);
+
+                return (
+                  <div
+                    style={{
+                      background: "white",
+                      border: "1px solid #ccc",
+                      padding: 8,
+                    }}
+                  >
+                    {records.map((r) => (
+                      <div key={r.recordKey}>
+                        {r.label}(ID:{String(r.recordKey).slice(0, 8)})
+                      </div>
+                    ))}
+                  </div>
+                );
+              }}
               itemSorter={(item) => {
                 const order = ["体温", "脈拍", "SBP", "DBP", "呼吸", "SPO2"];
                 const index = order.indexOf(String(item.name));
-
                 return index === -1 ? order.length : index;
               }}
             />

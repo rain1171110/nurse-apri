@@ -204,6 +204,10 @@ export default function PatientVitals() {
                 if (!activePoint) return null;
 
                 const records = getRecordsAtXDate(activePoint.xDate);
+                const clickedRecordKey = payload[0]?.payload?.recordKey;
+                const filtered = records.filter(
+                  (r) => r.recordKey === clickedRecordKey,
+                );
 
                 return (
                   <div
@@ -213,9 +217,32 @@ export default function PatientVitals() {
                       padding: 8,
                     }}
                   >
-                    {records.map((r) => (
-                      <div key={r.recordKey}>
-                        {r.label}(ID:{String(r.recordKey).slice(0, 8)})
+                    {filtered.map((r) => (
+                      <div
+                        key={r.recordKey}
+                        style={{
+                          marginBottom: 8,
+                          paddingBottom: 8,
+                          borderBottom: "1px solid #eee",
+                        }}
+                      >
+                        <div style={{ fontWeight: "bold", marginBottom: 4 }}>
+                          {r.label}(ID:{String(r.recordKey).slice(0, 8)})
+                        </div>
+                        <div style={{ fontSize: 12, lineHeight: 1.6 }}>
+                          <div>体温: {formatValue(r.temperature, "℃")}</div>
+                          <div>脈拍: {formatValue(r.pulse, "回/分")}</div>
+                          <div>呼吸: {formatValue(r.respiration, "回/分")}</div>
+                          <div>
+                            血圧:{" "}
+                            {formatBpText(
+                              r.systolicBloodPressure,
+                              r.diastolicBloodPressure,
+                            )}
+                            mmHg
+                          </div>
+                          <div>SPO2: {formatValue(r.saturation, "%")}</div>
+                        </div>
                       </div>
                     ))}
                   </div>

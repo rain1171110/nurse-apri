@@ -39,6 +39,16 @@ export default function NursingRecordList({
     setFormData(createEmptyRecord());
   };
 
+    const sortedRecords = [...patientRecords].sort((a, b) => {
+    const dateOrder = a.date.localeCompare(b.date);
+    if (dateOrder !== 0) return dateOrder;
+
+    if (!a.time && b.time) return 1;
+    if (a.time && !b.time) return -1;
+
+    return (a.time ?? "").localeCompare(b.time ?? "");
+  });
+
   return (
     <div className="container-md">
       <div className="section-header">
@@ -69,7 +79,7 @@ export default function NursingRecordList({
         <>
           <p className="text-secondary">看護記録一覧</p>
           <div className="item-list">
-            {patientRecords.map((r) => (
+            {sortedRecords.map((r) => (
               <div
                 className="card"
                 key={r.id}

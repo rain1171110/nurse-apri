@@ -10,9 +10,6 @@ import {
 import { formatValue, formatBpText } from "./Utils";
 import type { PatientOutletContext } from "./types";
 import type { DotItemDotProps } from "recharts";
-import { red } from "@mui/material/colors";
-import { payloadSearcher } from "recharts/types/chart/SunburstChart";
-import { dividerClasses } from "@mui/material";
 
 type PatientVitalsOutletContext = Pick<
   PatientOutletContext,
@@ -59,6 +56,7 @@ export default function PatientVitals() {
     saturation: r.vitals?.SPO2,
     systolicBloodPressure: r.vitals?.SBP,
     diastolicBloodPressure: r.vitals?.DBP,
+    recordId: r.id,
   }));
 
   const getRecordsAtXDate = (xDate: number) => {
@@ -199,15 +197,10 @@ export default function PatientVitals() {
               trigger="click"
               content={({ active, payload }) => {
                 if (!active || !payload?.length) return null;
-
                 const activePoint = payload[0]?.payload;
                 if (!activePoint) return null;
 
                 const records = getRecordsAtXDate(activePoint.xDate);
-                const clickedRecordKey = payload[0]?.payload?.recordKey;
-                const filtered = records.filter(
-                  (r) => r.recordKey === clickedRecordKey,
-                );
 
                 return (
                   <div
@@ -217,7 +210,7 @@ export default function PatientVitals() {
                       padding: 8,
                     }}
                   >
-                    {filtered.map((r) => (
+                    {records.map((r) => (
                       <div
                         key={r.recordKey}
                         style={{
@@ -226,32 +219,46 @@ export default function PatientVitals() {
                           borderBottom: "1px solid #eee",
                         }}
                       >
-                        <div style={{ fontWeight: "bold", marginBottom: 4 }}>
-                          {r.label}(ID:{String(r.recordKey).slice(0, 8)})
+                        <div
+                          style={{
+                            fontWeight: "bold",
+                            fontSize: 10,
+                            marginBottom: 4,
+                          }}
+                        >
+                          {r.label}
                         </div>
-                        <div style={{ fontSize: 12, lineHeight: 1.6 }}>
-                          <div>体温: {formatValue(r.temperature, "℃")}</div>
-                          <div>脈拍: {formatValue(r.pulse, "回/分")}</div>
-                          <div>呼吸: {formatValue(r.respiration, "回/分")}</div>
-                          <div>
-                            血圧:{" "}
-                            {formatBpText(
-                              r.systolicBloodPressure,
-                              r.diastolicBloodPressure,
+                        <div style={{ fontSize: 10, lineHeight: 1.6 }}>
+                          {r.temperature && (
+                            <div>体温: {formatValue(r.temperature, "℃")}</div>
+                          )}
+                          {r.pulse && (
+                            <div>脈拍: {formatValue(r.pulse, "回/分")}</div>
+                          )}
+                          {r.systolicBloodPressure &&
+                            r.diastolicBloodPressure && (
+                              <div>
+                                血圧:{" "}
+                                {formatBpText(
+                                  r.systolicBloodPressure,
+                                  r.diastolicBloodPressure,
+                                )}
+                                mmHg
+                              </div>
                             )}
-                            mmHg
-                          </div>
-                          <div>SPO2: {formatValue(r.saturation, "%")}</div>
+                          {r.respiration && (
+                            <div>
+                              呼吸: {formatValue(r.respiration, "回/分")}
+                            </div>
+                          )}
+                          {r.saturation && (
+                            <div>SPO2: {formatValue(r.saturation, "%")}</div>
+                          )}
                         </div>
                       </div>
                     ))}
                   </div>
                 );
-              }}
-              itemSorter={(item) => {
-                const order = ["体温", "脈拍", "SBP", "DBP", "呼吸", "SPO2"];
-                const index = order.indexOf(String(item.name));
-                return index === -1 ? order.length : index;
               }}
             />
             <Line

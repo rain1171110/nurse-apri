@@ -1,3 +1,4 @@
+import rateLimit from "express-rate-limit";
 import express from "express";
 import cors from "cors";
 import bcrypt from "bcryptjs";
@@ -38,6 +39,12 @@ const allowedOrigins = new Set([
   "http://localhost:5173",
   "https://nurse-apri.vercel.app",
 ]);
+
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  message: "Too many login attempts",
+});
 
 app.use(
   cors({
@@ -492,57 +499,61 @@ app.post<{}, {}, RegisterBody>("/api/auth/register", async (req, res) => {
   }
 });
 
-app.post<{}, {}, LoginBody>("/api/auth/login", async (req, res) => {
-  try {
-    const result = loginSchema.safeParse(req.body);
-    if (!result.success) {
-      res.status(400).json({
-        error: "Invalid login data / 無効なログインデータ",
-        details: result.error.flatten(),
+app.post<{}, {}, LoginBody>(
+  "/api/auth/login",
+  loginLimiter,
+  async (req, res) => {
+    try {
+      const result = loginSchema.safeParse(req.body);
+      if (!result.success) {
+        res.status(400).json({
+          error: "Invalid login data / 無効なログインデータ",
+          details: result.error.flatten(),
+        });
+        return;
+      }
+      const { email, password } = result.data;
+      const user = await prisma.user.findUnique({
+        where: {
+          email,
+        },
       });
-      return;
-    }
-    const { email, password } = result.data;
-    const user = await prisma.user.findUnique({
-      where: {
-        email,
-      },
-    });
-    if (!user) {
-      res.status(401).json({
-        error:
-          "Invalid email or password / メールアドレスまたはパスワードが正しくありません",
+      if (!user) {
+        res.status(401).json({
+          error:
+            "Invalid email or password / メールアドレスまたはパスワードが正しくありません",
+        });
+        return;
+      }
+      const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
+      if (!isPasswordValid) {
+        res.status(401).json({
+          error:
+            "Invalid email or password / メールアドレスまたはパスワードが正しくありません",
+        });
+        return;
+      }
+      const token = jwt.sign({ userId: user.id }, JWT_SECRET, {
+        expiresIn: "1h",
       });
-      return;
-    }
-    const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
-    if (!isPasswordValid) {
-      res.status(401).json({
-        error:
-          "Invalid email or password / メールアドレスまたはパスワードが正しくありません",
+      res.cookie("token", token, {
+        secure: process.env.NODE_ENV === "production",
+        httpOnly: true,
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
       });
-      return;
+      res.json({
+        success: true,
+        message: "ログイン成功",
+        user: { id: user.id, email: user.email },
+      });
+    } catch (error) {
+      console.error("POST /api/auth/login", error);
+      res.status(500).json({
+        error: "Failed to login user / ユーザーログインに失敗しました",
+      });
     }
-    const token = jwt.sign({ userId: user.id }, JWT_SECRET, {
-      expiresIn: "1h",
-    });
-    res.cookie("token", token, {
-      secure: process.env.NODE_ENV === "production",
-      httpOnly: true,
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
-    });
-    res.json({
-      success: true,
-      message: "ログイン成功",
-      user: { id: user.id, email: user.email },
-    });
-  } catch (error) {
-    console.error("POST /api/auth/login", error);
-    res.status(500).json({
-      error: "Failed to login user / ユーザーログインに失敗しました",
-    });
-  }
-});
+  },
+);
 
 app.post("/api/auth/logout", (req, res) => {
   res.clearCookie("token", {

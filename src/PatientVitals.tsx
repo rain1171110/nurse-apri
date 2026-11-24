@@ -105,8 +105,8 @@ export default function PatientVitals() {
           <table>
             <thead>
               <tr>
-                <th>時刻</th>
                 <th>日付</th>
+                <th>時刻</th>
                 <th>体温</th>
                 <th>脈拍</th>
                 <th>呼吸</th>
@@ -122,8 +122,8 @@ export default function PatientVitals() {
                 const bpDisplay = bpText === "--" ? "--" : `${bpText}mmHg`;
                 return (
                   <tr key={r.id}>
-                    <td>{r.time || "時刻未記録"}</td>
                     <td>{formatValue(date)}</td>
+                    <td>{r.time || "時刻未記録"}</td>
                     <td>{formatValue(T, "℃")}</td>
                     <td>{formatValue(P, "回/分")}</td>
                     <td>{formatValue(R, "回/分")}</td>
